@@ -10,26 +10,31 @@
 
 package ch.admin.bag.covidcertificate.eval.chain
 
+import ch.admin.bag.covidcertificate.eval.EvalErrorCodes
+import ch.admin.bag.covidcertificate.eval.models.Bagdgc
 import java.time.Instant
 
-class TimestampVerificationService {
-	private val TAG = TimestampVerificationService::class.java.simpleName
 
-	fun validate(verificationResult: VerificationResult) {
-		verificationResult.timestampVerified = true
-		val now = Instant.now()
+internal object TimestampService {
+	private val TAG = TimestampService::class.java.simpleName
 
-		verificationResult.expirationTime?.also { et ->
+	fun decode(
+		dcc: Bagdgc,
+		now: Instant? = Instant.now()
+	): String? {
+		dcc.expirationTime?.also { et ->
 			if (et.isBefore(now)) {
-				verificationResult.timestampVerified = false
+				return EvalErrorCodes.SIGNATURE_TIMESTAMP_EXPIRED
 			}
 		}
 
-		verificationResult.issuedAt?.also { ia ->
+		dcc.issuedAt?.also { ia ->
 			if (ia.isAfter(now)) {
-				verificationResult.timestampVerified = false
+				return EvalErrorCodes.SIGNATURE_TIMESTAMP_NOT_YET_VALID
 			}
 		}
+
+		return null
 	}
 
 }

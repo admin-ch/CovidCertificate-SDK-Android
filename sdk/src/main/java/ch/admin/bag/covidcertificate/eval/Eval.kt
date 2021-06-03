@@ -24,58 +24,59 @@ object Eval {
 
 	private val moshi by lazy { Moshi.Builder().build() }
 
-	private val contextIdentifierService = DefaultContextIdentifierService()
-	private val base45Service = BagBase45Service()
-	private val compressorService = DecompressionService()
-	private val noopCoseService = NoopVerificationCoseService()
-	private val cborService = DefaultCborService()
-
 	private val signingKeys = getHardcodedSigningKeys()
 
 	/**
+	 * Decodes the string from a QR code into a DCC.
+	 *
+	 * Does not do any validity checks. Simply checks whether the data is decodable.
+	 *
 	 * @param qrCodeData content of the scanned qr code, of the format "HC1:base45(...)"
-	 * @return DecodeState object which contains the decoded DGC. Signature validity is NOT yet checked.
 	 */
 	fun decode(qrCodeData: String): DecodeState {
-		val verificationResult = VerificationResult()
-		val encoded = contextIdentifierService.decode(qrCodeData, verificationResult)
-		val compressed = base45Service.decode(encoded, verificationResult)
-		val cose = compressorService.decode(compressed, verificationResult)
-			?: return DecodeState.ERROR(Error(EvalErrorCodes.DECODE_Z_LIB))
-		val cbor = noopCoseService.decode(cose, verificationResult)
-		val eudgc = cborService.decode(cbor, verificationResult)
 
-		return if (verificationResult.cborDecoded) {
-			DecodeState.SUCCESS(Bagdgc(eudgc, qrCodeData, cose, verificationResult))
-		}
-		// If not successful, try to find a reasonable error to bubble up
-		else if (!verificationResult.base45Decoded) {
-			DecodeState.ERROR(Error(EvalErrorCodes.DECODE_BASE_45))
-		} else if (!verificationResult.zlibDecoded) {
-			DecodeState.ERROR(Error(EvalErrorCodes.DECODE_Z_LIB))
-		} else {
-			DecodeState.ERROR(Error(EvalErrorCodes.DECODE_UNKNOWN))
-		}
+		val encoded = PrefixIdentifierService.decode(qrCodeData) ?: return DecodeState.ERROR(Error(EvalErrorCodes.DECODE_PREFIX))
+
+		val compressed = BagBase45Service.decode(encoded) ?: return DecodeState.ERROR(Error(EvalErrorCodes.DECODE_BASE_45))
+
+		val cose = DecompressionService.decode(compressed) ?: return DecodeState.ERROR(Error(EvalErrorCodes.DECODE_Z_LIB))
+
+		val cbor = NoopVerificationCoseService.decode(cose) ?: return DecodeState.ERROR(Error(EvalErrorCodes.DECODE_COSE))
+
+		val bagdgc = CborService.decode(cbor, qrCodeData) ?: return DecodeState.ERROR(Error(EvalErrorCodes.DECODE_CBOR))
+
+		bagdgc.certType = CertTypeService.decode(bagdgc.dgc)
+
+		return DecodeState.SUCCESS(bagdgc)
 	}
 
 	/**
-	 * @param bagdgc Object which was returned from the decode function
-	 * @return State for the signature check
+	 * Checks whether the DCC has a valid signature.
+	 *
+	 * A signature is only valid if it is signed by a trusted key, but also only if other attributes are valid
+	 * (e.g. the signature is not expired - which may be different from the legal national rules).
 	 */
 	suspend fun checkSignature(bagdgc: Bagdgc, context: Context): CheckSignatureState {
-		val vr = bagdgc.verificationResult
 
-		val timestampVerificationService = TimestampVerificationService()
-		timestampVerificationService.validate(vr)
-		if (!vr.timestampVerified) {
-			return CheckSignatureState.INVALID(EvalErrorCodes.SIGNATURE_TIMESTAMP_INVALID)
+		/* Check that certificate type and signature timestamps are valid */
+
+		val type = bagdgc.certType ?: return CheckSignatureState.INVALID(EvalErrorCodes.SIGNATURE_TYPE_INVALID)
+
+		val timestampError = TimestampService.decode(bagdgc)
+		if (timestampError != null) {
+			return CheckSignatureState.INVALID(timestampError)
 		}
 
-		val coseService = VerificationCoseService(signingKeys)
-		val type = bagdgc.getType() ?: return CheckSignatureState.INVALID(EvalErrorCodes.SIGNATURE_BAGDGC_TYPE_INVALID)
-		coseService.decode(bagdgc.cose, vr, type)
+		/* Repeat decode chain to get and verify COSE signature */
 
-		return if (vr.coseVerified) CheckSignatureState.SUCCESS else CheckSignatureState.INVALID(SIGNATURE_COSE_INVALID)
+		val encoded = PrefixIdentifierService.decode(bagdgc.qrCodeData)
+			?: return CheckSignatureState.INVALID(EvalErrorCodes.DECODE_PREFIX)
+		val compressed = BagBase45Service.decode(encoded) ?: return CheckSignatureState.INVALID(EvalErrorCodes.DECODE_BASE_45)
+		val cose = DecompressionService.decode(compressed) ?: return CheckSignatureState.INVALID(EvalErrorCodes.DECODE_Z_LIB)
+
+		val valid = VerificationCoseService.decode(signingKeys, cose, type)
+
+		return if (valid) CheckSignatureState.SUCCESS else CheckSignatureState.INVALID(SIGNATURE_COSE_INVALID)
 	}
 
 	/**
