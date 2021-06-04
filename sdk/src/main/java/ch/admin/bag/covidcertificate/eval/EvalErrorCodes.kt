@@ -11,26 +11,32 @@
 package ch.admin.bag.covidcertificate.eval
 
 object EvalErrorCodes {
-	val DECODE_BASE_45 = "D|B45"
-	val DECODE_Z_LIB = "D|ZLB"
-	val DECODE_UNKNOWN = "D|UNK"
-	val SIGNATURE_NETWORK = "S|NWN"
-	val SIGNATURE_UNKNOWN= "S|UNK"
-	val REVOCATION_NETWORK = "R|NWN"
-	val REVOCATION_UNKNOWN = "R|UNK"
-	val RULESET_NETWORK = "N|NWN"
-	val RULESET_UNKNOWN = "N|UNK"
-	val LIST_LOAD_UNK = "L|UNK"
+	/* Errors during decoding */
+	const val DECODE_PREFIX = "D|PRX"
+	const val DECODE_BASE_45 = "D|B45"
+	const val DECODE_Z_LIB = "D|ZLB"
+	const val DECODE_COSE = "D|CSE"
+	const val DECODE_CBOR = "D|CBR"
 
-	val SIGNATURE_TIMESTAMP_INVALID = "S|TSI"
-	val SIGNATURE_BAGDGC_TYPE_INVALID = "S|BTI"
-	val SIGNATURE_COSE_INVALID = "S|CSI"
+	/* Errors during signature verification */
+	const val SIGNATURE_NETWORK = "S|NWN"
+	const val SIGNATURE_TIMESTAMP_NOT_YET_VALID = "S|NYV"
+	const val SIGNATURE_TIMESTAMP_EXPIRED = "S|EXP"
+	const val SIGNATURE_TYPE_INVALID = "S|TIV"
+	const val SIGNATURE_COSE_INVALID = "S|CSI"
+	const val SIGNATURE_UNKNOWN = "S|UNK"
 
-	val NO_VALID_DATE = "N|NVD"
-	val NO_VALID_PRODUCT = "N|NVP"
-	val WRONG_DISEASE_TARGET = "N|WDT"
-	val WRONG_TEST_TYPE = "N|WTT"
-	val POSITIVE_RESULT = "N|PR"
-	val NOT_FULLY_PROTECTED = "N|NFP"
+	/* Errors during revocation verification */
+	const val REVOCATION_NETWORK = "R|NWN"
+	const val REVOCATION_UNKNOWN = "R|UNK"
+
+	/* Errors during national rules verification */
+	const val NO_VALID_DATE = "N|NVD"
+	const val NO_VALID_PRODUCT = "N|NVP"
+	const val WRONG_DISEASE_TARGET = "N|WDT"
+	const val WRONG_TEST_TYPE = "N|WTT"
+	const val POSITIVE_RESULT = "N|PR"
+	const val NOT_FULLY_PROTECTED = "N|NFP"
+	const val RULESET_UNKNOWN = "N|UNK"
 
 }
