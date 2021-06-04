@@ -11,13 +11,10 @@ import com.upokecenter.cbor.CBORObject
  */
 sealed class CwtHeaderKeys private constructor(value: Int) {
 
-    private val value: CBORObject
+    private val value: CBORObject = CBORObject.FromObject(value)
+
     fun AsCBOR(): CBORObject {
         return value
-    }
-
-    init {
-        this.value = CBORObject.FromObject(value)
     }
 
     object ISSUER : CwtHeaderKeys(1)

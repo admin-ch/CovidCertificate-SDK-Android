@@ -54,10 +54,14 @@ fun TestEntry.getTestCenter(): String? {
 	return null
 }
 
-fun TestEntry.getTestCountry(): String {
+fun TestEntry.getTestCountry(deviceLang: String): String {
 	return try {
 		val loc = Locale("", this.co)
-		loc.displayCountry
+		var countryString = loc.displayCountry
+		if (deviceLang != "en") {
+			countryString = "$countryString / ${loc.getDisplayCountry(Locale.ENGLISH)}"
+		}
+		return countryString
 	} catch (e: Exception) {
 		this.co
 	}

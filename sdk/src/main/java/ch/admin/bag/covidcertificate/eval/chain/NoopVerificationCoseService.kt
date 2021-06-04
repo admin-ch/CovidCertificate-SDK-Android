@@ -15,17 +15,16 @@ import COSE.Sign1Message
 
 /**
  * A no-op COSE verification services.
- * Does not acutally check the signature, but simply extracts the message and returns it.
+ * Does not actually check the signature, but simply extracts the message and returns it.
  */
-class NoopVerificationCoseService {
+internal object NoopVerificationCoseService {
 
-	fun decode(input: ByteArray, verificationResult: VerificationResult): ByteArray {
-		verificationResult.coseVerified = false
+	fun decode(input: ByteArray): ByteArray? {
 		return try {
 			val cose: Sign1Message = Sign1Message.DecodeFromBytes(input, MessageTag.Sign1) as Sign1Message
 			cose.GetContent()
 		} catch (e: Throwable) {
-			input
+			null
 		}
 	}
 

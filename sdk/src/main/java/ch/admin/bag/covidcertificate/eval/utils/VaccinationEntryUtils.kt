@@ -10,14 +10,11 @@
 
 package ch.admin.bag.covidcertificate.eval.utils
 
-import ch.admin.bag.covidcertificate.eval.chain.VerificationResult
 import ch.admin.bag.covidcertificate.eval.data.VaccinationEntry
 import ch.admin.bag.covidcertificate.eval.products.Vaccine
 import ch.admin.bag.covidcertificate.eval.utils.AcceptanceCriterias.SINGLE_VACCINE_VALIDITY_OFFSET_IN_DAYS
-import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
-import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.*
 
@@ -81,10 +78,14 @@ fun VaccinationEntry.vaccineDate(): LocalDateTime? {
 	return date.atStartOfDay()
 }
 
-fun VaccinationEntry.getVaccinationCountry(): String {
+fun VaccinationEntry.getVaccinationCountry(deviceLang: String): String {
 	return try {
 		val loc = Locale("", this.co)
-		loc.displayCountry
+		var countryString = loc.displayCountry
+		if (deviceLang != "en") {
+			countryString = "$countryString / ${loc.getDisplayCountry(Locale.ENGLISH)}"
+		}
+		return countryString
 	} catch (e: Exception) {
 		this.co
 	}
@@ -97,19 +98,3 @@ fun VaccinationEntry.getIssuer(): String {
 fun VaccinationEntry.getCertificateIdentifier(): String {
 	return this.ci
 }
-
-fun VerificationResult.getIssueAtDate(dateFormatter: DateTimeFormatter): String? {
-	this.issuedAt?.let { instant: Instant ->
-		return try {
-			instant.atZone(ZoneId.systemDefault()).format(dateFormatter)
-		} catch (e: java.lang.Exception) {
-			instant.toString()
-		}
-	}
-	return null
-}
-
-
-
-
-

@@ -1,3 +1,12 @@
+/*
+ * Copyright (c) 2021 Ubique Innovation AG <https://www.ubique.ch>
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/.
+ *
+ * SPDX-License-Identifier: MPL-2.0
+ */
 /**
  * Adapted from https://github.com/ehn-digital-green-development/hcert-kotlin
  * published under Apache-2.0 License.
@@ -8,10 +17,13 @@ import java.io.ByteArrayOutputStream
 import java.io.OutputStream
 import java.util.zip.InflaterInputStream
 
-class DecompressionService {
 
-	fun decode(input: ByteArray, verificationResult: VerificationResult): ByteArray? {
-		verificationResult.zlibDecoded = false
+internal object DecompressionService {
+
+	fun decode(input: ByteArray): ByteArray? {
+		// Spec: https://ec.europa.eu/health/sites/default/files/ehealth/docs/digital-green-certificates_v1_en.pdf#page=7
+		// "the CWT SHALL be compressed using ZLIB"
+		// => data that is not compressed is invalid
 
 		return try {
 			val inflaterStream = InflaterInputStream(input.inputStream())
@@ -21,12 +33,11 @@ class DecompressionService {
 			if (decodedBytes == ERROR_TOO_MANY_BYTES_READ) {
 				null
 			} else {
-				verificationResult.zlibDecoded = true
 				outputStream.toByteArray()
 			}
 			// Closing ByteArray streams has no effect anyway
 		} catch (e: Throwable) {
-			input
+			null
 		}
 	}
 
@@ -57,7 +68,7 @@ private fun InflaterInputStream.copyTo(out: OutputStream, bufferSize: Int = DEFA
 		bytesCopied += bytes
 		bytes = read(buffer)
 		// begin patch
-		if (bytesCopied > MAX_DECOMPRESSED_SIZE){
+		if (bytesCopied > MAX_DECOMPRESSED_SIZE) {
 			return ERROR_TOO_MANY_BYTES_READ
 		}
 		// end patch

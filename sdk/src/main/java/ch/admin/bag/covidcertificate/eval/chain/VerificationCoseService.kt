@@ -10,17 +10,20 @@ import COSE.Sign1Message
 import ch.admin.bag.covidcertificate.eval.models.CertType
 import ch.admin.bag.covidcertificate.eval.models.Jwk
 
-class VerificationCoseService(private val keys: List<Jwk>) {
+internal object VerificationCoseService {
 	private val TAG = VerificationCoseService::class.java.simpleName
 
-	fun decode(input: ByteArray, verificationResult: VerificationResult, type: CertType): ByteArray {
-		verificationResult.coseVerified = false
+	fun decode(
+		keys: List<Jwk>,
+		input: ByteArray,
+		type: CertType
+	): Boolean {
 
 		val signature: Sign1Message = try {
 			(Sign1Message.DecodeFromBytes(input, MessageTag.Sign1) as Sign1Message)
 		} catch (e: Throwable) {
 			null
-		} ?: return input
+		} ?: return false
 
 		for (k in keys) {
 			val pk = k.getPublicKey() ?: continue
@@ -28,15 +31,14 @@ class VerificationCoseService(private val keys: List<Jwk>) {
 			try {
 				val pubKey = OneKey(pk, null)
 				if (signature.validate(pubKey)) {
-					verificationResult.coseVerified = true
-					return signature.GetContent()
+					return true
 				}
 			} catch (e: Throwable) {
 				e.printStackTrace()
 			}
 		}
 
-		return input
+		return false
 	}
 
 }
