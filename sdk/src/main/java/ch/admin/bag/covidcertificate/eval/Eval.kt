@@ -27,30 +27,6 @@ object Eval {
 	private val signingKeys = getHardcodedSigningKeys()
 
 	/**
-	 * Decodes the string from a QR code into a DCC.
-	 *
-	 * Does not do any validity checks. Simply checks whether the data is decodable.
-	 *
-	 * @param qrCodeData content of the scanned qr code, of the format "HC1:base45(...)"
-	 */
-	fun decode(qrCodeData: String): DecodeState {
-
-		val encoded = PrefixIdentifierService.decode(qrCodeData) ?: return DecodeState.ERROR(Error(EvalErrorCodes.DECODE_PREFIX))
-
-		val compressed = Base45Service.decode(encoded) ?: return DecodeState.ERROR(Error(EvalErrorCodes.DECODE_BASE_45))
-
-		val cose = DecompressionService.decode(compressed) ?: return DecodeState.ERROR(Error(EvalErrorCodes.DECODE_Z_LIB))
-
-		val cbor = NoopVerificationCoseService.decode(cose) ?: return DecodeState.ERROR(Error(EvalErrorCodes.DECODE_COSE))
-
-		val bagdgc = CborService.decode(cbor, qrCodeData) ?: return DecodeState.ERROR(Error(EvalErrorCodes.DECODE_CBOR))
-
-		bagdgc.certType = CertTypeService.decode(bagdgc.euDGC)
-
-		return DecodeState.SUCCESS(bagdgc)
-	}
-
-	/**
 	 * Checks whether the DCC has a valid signature.
 	 *
 	 * A signature is only valid if it is signed by a trusted key, but also only if other attributes are valid

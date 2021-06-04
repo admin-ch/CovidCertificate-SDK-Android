@@ -57,11 +57,11 @@ dependencies {
 	implementation 'androidx.security:security-crypto:1.0.0'
 
 	// Networking
-	implementation 'com.squareup.retrofit2:retrofit:2.9.0'
-	implementation 'com.squareup.retrofit2:converter-moshi:2.9.0'
-	implementation 'com.squareup.okhttp3:logging-interceptor:4.7.2'
-	implementation 'com.squareup.moshi:moshi:1.11.0'
-	implementation 'com.squareup.moshi:moshi-adapters:1.11.0'
+	api 'com.squareup.retrofit2:retrofit:2.9.0'
+	api 'com.squareup.retrofit2:converter-moshi:2.9.0'
+	api 'com.squareup.okhttp3:logging-interceptor:4.9.0'
+	api 'com.squareup.moshi:moshi:1.11.0'
+	api 'com.squareup.moshi:moshi-adapters:1.11.0'
 	kapt "com.squareup.moshi:moshi-kotlin-codegen:1.11.0"
 
 	//JWS Library
