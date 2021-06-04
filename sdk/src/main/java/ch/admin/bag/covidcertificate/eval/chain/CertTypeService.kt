@@ -24,7 +24,7 @@ internal object CertTypeService {
 		var type: CertType? = null
 		var numContainedContent = 0
 
-		dcc.t?.filterNotNull()?.size?.let { numTests ->
+		dcc.t?.filterNotNull()?.size?.also { numTests ->
 			if (numTests > 0) {
 				numContainedContent += numTests
 				type = CertType.TEST

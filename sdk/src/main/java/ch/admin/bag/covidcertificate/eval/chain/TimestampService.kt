@@ -20,7 +20,7 @@ internal object TimestampService {
 
 	fun decode(
 		dcc: Bagdgc,
-		now: Instant? = Instant.now()
+		now: Instant = Instant.now()
 	): String? {
 		dcc.expirationTime?.also { et ->
 			if (et.isBefore(now)) {

@@ -11,9 +11,10 @@
 package ch.admin.bag.covidcertificate.eval.chain
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import ch.admin.bag.covidcertificate.eval.EvalErrorCodes
 import ch.admin.bag.covidcertificate.eval.data.Eudgc
 import ch.admin.bag.covidcertificate.eval.models.Bagdgc
-import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -33,7 +34,7 @@ class TimestampServiceTest {
 	@Test
 	fun past_expiration() {
 		val dcc = Bagdgc(Eudgc(), "", expirationTime = Instant.now().minusSeconds(60))
-		assertNotNull(TimestampService.decode(dcc))
+		assertEquals(TimestampService.decode(dcc), EvalErrorCodes.SIGNATURE_TIMESTAMP_EXPIRED)
 	}
 
 	@Test
@@ -45,7 +46,7 @@ class TimestampServiceTest {
 	@Test
 	fun future_issuedAt() {
 		val dcc = Bagdgc(Eudgc(), "", issuedAt = Instant.now().plusSeconds(60))
-		assertNotNull(TimestampService.decode(dcc))
+		assertEquals(TimestampService.decode(dcc), EvalErrorCodes.SIGNATURE_TIMESTAMP_NOT_YET_VALID)
 	}
 
 	@Test
@@ -64,10 +65,11 @@ class TimestampServiceTest {
 	fun combined_invalid() {
 		val dcc = Bagdgc(
 			Eudgc(), "",
-			expirationTime = Instant.now().plusSeconds(120),
+			expirationTime = Instant.now().minusSeconds(120),
 			issuedAt = Instant.now().plusSeconds(60)
 		)
-		assertNotNull(TimestampService.decode(dcc))
+		// expiration is more important than future issuedAt
+		assertEquals(TimestampService.decode(dcc), EvalErrorCodes.SIGNATURE_TIMESTAMP_EXPIRED)
 	}
 
 	@Test
