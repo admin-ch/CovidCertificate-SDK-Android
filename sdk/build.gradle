@@ -67,6 +67,7 @@ dependencies {
 	implementation 'com.squareup.retrofit2:converter-moshi:2.9.0'
 	implementation 'com.squareup.okhttp3:logging-interceptor:4.7.2'
 	implementation 'com.squareup.moshi:moshi:1.11.0'
+	implementation 'com.squareup.moshi:moshi-adapters:1.11.0'
 	kapt "com.squareup.moshi:moshi-kotlin-codegen:1.11.0"
 
 	//JWS Library
@@ -78,18 +79,6 @@ dependencies {
 	androidTestImplementation 'androidx.test.ext:junit:1.1.2'
 	androidTestImplementation 'androidx.test.espresso:espresso-core:3.3.0'
 	androidTestImplementation "com.google.code.gson:gson:2.8.6"
-}
-
-// See https://github.com/joelittlejohn/jsonschema2pojo/tree/master/jsonschema2pojo-gradle-plugin
-jsonSchema2Pojo {
-		targetPackage = "ch.admin.bag.covidcertificate.eval.data"
-		includeGeneratedAnnotation = false
-		serializable = true
-		useTitleAsClassname = true
-		includeJsr303Annotations = true
-		includeJsr305Annotations = false // upstream has this as true, but then we get build issues with javax.annotation
-		initializeCollections = false
-		targetVersion = "1.8"
 }
 
 // Generate data classes from JSON

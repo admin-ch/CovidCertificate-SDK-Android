@@ -10,7 +10,7 @@
 
 package ch.admin.bag.covidcertificate.eval.utils
 
-import ch.admin.bag.covidcertificate.eval.data.VaccinationEntry
+import ch.admin.bag.covidcertificate.eval.euhelthcert.VaccinationEntry
 import ch.admin.bag.covidcertificate.eval.products.Vaccine
 import ch.admin.bag.covidcertificate.eval.utils.AcceptanceCriterias.SINGLE_VACCINE_VALIDITY_OFFSET_IN_DAYS
 import java.time.LocalDate

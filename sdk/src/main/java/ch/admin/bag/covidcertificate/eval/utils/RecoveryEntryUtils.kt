@@ -10,7 +10,7 @@
 
 package ch.admin.bag.covidcertificate.eval.utils
 
-import ch.admin.bag.covidcertificate.eval.data.RecoveryEntry
+import ch.admin.bag.covidcertificate.eval.euhelthcert.RecoveryEntry
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -61,7 +61,7 @@ fun RecoveryEntry.validUntilDate(): LocalDateTime? {
 }
 
 fun RecoveryEntry.firstPostiveResult(): LocalDateTime? {
-	if (this.fr.isNullOrEmpty()) {
+	if (this.fr.isEmpty()) {
 		return null
 	}
 	val date: LocalDate?

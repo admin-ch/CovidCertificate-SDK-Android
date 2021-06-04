@@ -11,6 +11,7 @@
 package ch.admin.bag.covidcertificate.eval.data
 
 import android.content.Context
+import ch.admin.bag.covidcertificate.eval.euhelthcert.VaccinationEntry
 import ch.admin.bag.covidcertificate.eval.products.AcceptedVaccine
 import ch.admin.bag.covidcertificate.eval.products.Vaccine
 import ch.admin.bag.covidcertificate.eval.products.ValueSet

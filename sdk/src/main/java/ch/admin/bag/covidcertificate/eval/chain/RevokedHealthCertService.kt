@@ -10,7 +10,7 @@
 
 package ch.admin.bag.covidcertificate.eval.chain
 
-import ch.admin.bag.covidcertificate.eval.data.Eudgc
+import ch.admin.bag.covidcertificate.eval.euhelthcert.Eudgc
 import ch.admin.bag.covidcertificate.eval.models.CertIdentifier
 
 class RevokedHealthCertService(private val revokedList: List<CertIdentifier>) {
@@ -30,17 +30,17 @@ class RevokedHealthCertService(private val revokedList: List<CertIdentifier>) {
 
 			if (!dgc.t.isNullOrEmpty()) {
 				for (test in dgc.t) {
-					if (entry.dgci == test.ci) return true
+					if (entry.dgci == test?.ci) return true
 				}
 			}
 			if (!dgc.v.isNullOrEmpty()) {
 				for (vaccination in dgc.v) {
-					if (entry.dgci == vaccination.ci) return true
+					if (entry.dgci == vaccination?.ci) return true
 				}
 			}
 			if (!dgc.r.isNullOrEmpty()) {
 				for (recovery in dgc.r) {
-					if (entry.dgci == recovery.ci) return true
+					if (entry.dgci == recovery?.ci) return true
 				}
 			}
 		}

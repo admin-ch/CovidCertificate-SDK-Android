@@ -13,11 +13,14 @@
  */
 package ch.admin.bag.covidcertificate.eval.chain
 
-import ch.admin.bag.covidcertificate.eval.data.Eudgc
+import ch.admin.bag.covidcertificate.eval.euhelthcert.Eudgc
 import ch.admin.bag.covidcertificate.eval.models.DccHolder
-import com.fasterxml.jackson.dataformat.cbor.databind.CBORMapper
+import com.squareup.moshi.JsonAdapter
+import com.squareup.moshi.Moshi
+import com.squareup.moshi.adapters.Rfc3339DateJsonAdapter
 import com.upokecenter.cbor.CBORObject
 import java.time.Instant
+import java.util.*
 
 
 internal object CborService {
@@ -26,6 +29,10 @@ internal object CborService {
 
 	// Takes qrCodeData to directly construct a Bagdgc AND keep the field in the DCC a val
 	fun decode(input: ByteArray, qrCodeData: String): DccHolder? {
+
+		val adapter: JsonAdapter<Eudgc> =
+			Moshi.Builder().add(Date::class.java, Rfc3339DateJsonAdapter()).build().adapter(Eudgc::class.java)
+
 		try {
 			val map = CBORObject.DecodeFromBytes(input)
 
@@ -35,8 +42,7 @@ internal object CborService {
 
 			map[CwtHeaderKeys.HCERT.AsCBOR()]?.let { hcert ->
 				hcert[keyEuDgcV1]?.let {
-					val eudgc = CBORMapper().readValue(getContents(it), Eudgc::class.java)
-
+					val eudgc = adapter.fromJson(it.ToJSONString()) ?: return null
 					return DccHolder(eudgc, qrCodeData, expirationTime, issuedAt, issuer)
 				}
 			}

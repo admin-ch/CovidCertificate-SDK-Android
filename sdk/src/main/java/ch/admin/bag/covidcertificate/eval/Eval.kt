@@ -93,11 +93,11 @@ object Eval {
 	 */
 	suspend fun checkNationalRules(dccHolder: DccHolder, context: Context): CheckNationalRulesState {
 		return if (!dccHolder.euDGC.v.isNullOrEmpty()) {
-			NationalRulesVerifier(context).verifyVaccine(dccHolder.euDGC.v[0])
+			NationalRulesVerifier(context).verifyVaccine(dccHolder.euDGC.v.first())
 		} else if (!dccHolder.euDGC.t.isNullOrEmpty()) {
-			NationalRulesVerifier(context).verifyTest(dccHolder.euDGC.t[0])
+			NationalRulesVerifier(context).verifyTest(dccHolder.euDGC.t.first())
 		} else if (!dccHolder.euDGC.r.isNullOrEmpty()) {
-			NationalRulesVerifier(context).verifyRecovery(dccHolder.euDGC.r[0])
+			NationalRulesVerifier(context).verifyRecovery(dccHolder.euDGC.r.first())
 		} else {
 			throw Exception("NO VALID DATA")
 		}

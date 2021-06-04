@@ -10,7 +10,7 @@
 
 package ch.admin.bag.covidcertificate.eval.utils
 
-import ch.admin.bag.covidcertificate.eval.data.TestEntry
+import ch.admin.bag.covidcertificate.eval.euhelthcert.TestEntry
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -72,9 +72,6 @@ fun TestEntry.getCertificateIdentifier(): String {
 }
 
 fun TestEntry.validFromDate(): LocalDateTime? {
-	if (this.sc == null) {
-		return null
-	}
 	return try {
 		this.sc.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime()
 	} catch (e: Exception) {

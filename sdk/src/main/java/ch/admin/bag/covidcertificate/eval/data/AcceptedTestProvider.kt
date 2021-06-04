@@ -11,6 +11,7 @@
 package ch.admin.bag.covidcertificate.eval.data
 
 import android.content.Context
+import ch.admin.bag.covidcertificate.eval.euhelthcert.TestEntry
 import ch.admin.bag.covidcertificate.eval.products.ValueSet
 import ch.admin.bag.covidcertificate.eval.utils.SingletonHolder
 import ch.admin.bag.covidcertificate.eval.utils.TestType
@@ -67,7 +68,10 @@ class AcceptedTestProvider private constructor(context: Context) {
 	}
 
 	fun getManufacturesIfExists(testEntry: TestEntry): String? {
-		val ma = manufactures.valueSetValues[testEntry.ma]?.display?.replace(testEntry.nm, "")?.trim()?.removeSuffix(",")
+		var ma = manufactures.valueSetValues[testEntry.ma]?.display
+		testEntry.nm?.let { nm ->
+			ma = ma?.replace(nm, "")?.trim()?.removeSuffix(",")
+		}
 		return if (ma.isNullOrEmpty()) {
 			null
 		} else {
