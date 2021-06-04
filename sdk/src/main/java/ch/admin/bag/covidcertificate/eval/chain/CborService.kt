@@ -13,7 +13,7 @@
  */
 package ch.admin.bag.covidcertificate.eval.chain
 
-import ch.admin.bag.covidcertificate.eval.euhelthcert.Eudgc
+import ch.admin.bag.covidcertificate.eval.euhealthcert.Eudgc
 import ch.admin.bag.covidcertificate.eval.models.DccHolder
 import com.squareup.moshi.JsonAdapter
 import com.squareup.moshi.Moshi
