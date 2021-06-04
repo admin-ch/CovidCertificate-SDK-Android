@@ -13,7 +13,8 @@ package ch.admin.bag.covidcertificate.eval.chain
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import ch.admin.bag.covidcertificate.eval.EvalErrorCodes
 import ch.admin.bag.covidcertificate.eval.data.Eudgc
-import ch.admin.bag.covidcertificate.eval.models.Bagdgc
+import ch.admin.bag.covidcertificate.eval.models.DccHolder
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test
@@ -27,58 +28,57 @@ class TimestampServiceTest {
 
 	@Test
 	fun future_expiration() {
-		val dcc = Bagdgc(Eudgc(), "", expirationTime = Instant.now().plusSeconds(60))
-		assertNull(TimestampService.decode(dcc))
+		val dccHolder = DccHolder(Eudgc(), "", expirationTime = Instant.now().plusSeconds(60))
+		assertNull(TimestampService.decode(dccHolder))
 	}
 
 	@Test
 	fun past_expiration() {
-		val dcc = Bagdgc(Eudgc(), "", expirationTime = Instant.now().minusSeconds(60))
-		assertEquals(TimestampService.decode(dcc), EvalErrorCodes.SIGNATURE_TIMESTAMP_EXPIRED)
+		val dccHolder = DccHolder(Eudgc(), "", expirationTime = Instant.now().minusSeconds(60))
+		assertEquals(TimestampService.decode(dccHolder), EvalErrorCodes.SIGNATURE_TIMESTAMP_EXPIRED)
 	}
 
 	@Test
 	fun no_expiration() {
-		val dcc = Bagdgc(Eudgc(), "", expirationTime = null)
-		assertNull(TimestampService.decode(dcc))
+		val dccHolder = DccHolder(Eudgc(), "", expirationTime = null)
+		assertNull(TimestampService.decode(dccHolder))
 	}
 
 	@Test
 	fun future_issuedAt() {
-		val dcc = Bagdgc(Eudgc(), "", issuedAt = Instant.now().plusSeconds(60))
-		assertEquals(TimestampService.decode(dcc), EvalErrorCodes.SIGNATURE_TIMESTAMP_NOT_YET_VALID)
+		val dccHolder = DccHolder(Eudgc(), "", issuedAt = Instant.now().plusSeconds(60))
+		assertEquals(TimestampService.decode(dccHolder), EvalErrorCodes.SIGNATURE_TIMESTAMP_NOT_YET_VALID)
 	}
 
 	@Test
 	fun past_issuedAt() {
-		val dcc = Bagdgc(Eudgc(), "", issuedAt = Instant.now().minusSeconds(60))
-		assertNull(TimestampService.decode(dcc))
+		val dccHolder = DccHolder(Eudgc(), "", issuedAt = Instant.now().minusSeconds(60))
+		assertNull(TimestampService.decode(dccHolder))
 	}
 
 	@Test
 	fun no_issuedAt() {
-		val dcc = Bagdgc(Eudgc(), "", issuedAt = null)
+		val dcc = DccHolder(Eudgc(), "", issuedAt = null)
 		assertNull(TimestampService.decode(dcc))
 	}
 
 	@Test
 	fun combined_invalid() {
-		val dcc = Bagdgc(
+		val dccHolder = DccHolder(
 			Eudgc(), "",
 			expirationTime = Instant.now().minusSeconds(120),
 			issuedAt = Instant.now().plusSeconds(60)
 		)
-		// expiration is more important than future issuedAt
-		assertEquals(TimestampService.decode(dcc), EvalErrorCodes.SIGNATURE_TIMESTAMP_EXPIRED)
+		assertEquals(TimestampService.decode(dccHolder), EvalErrorCodes.SIGNATURE_TIMESTAMP_EXPIRED)
 	}
 
 	@Test
 	fun combined_valid() {
-		val dcc = Bagdgc(
+		val dccHolder = DccHolder(
 			Eudgc(), "",
 			expirationTime = Instant.now().plusSeconds(120),
 			issuedAt = Instant.now().minusSeconds(60)
 		)
-		assertNull(TimestampService.decode(dcc))
+		assertNull(TimestampService.decode(dccHolder))
 	}
 }

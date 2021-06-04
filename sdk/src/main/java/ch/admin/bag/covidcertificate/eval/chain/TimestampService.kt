@@ -11,7 +11,7 @@
 package ch.admin.bag.covidcertificate.eval.chain
 
 import ch.admin.bag.covidcertificate.eval.EvalErrorCodes
-import ch.admin.bag.covidcertificate.eval.models.Bagdgc
+import ch.admin.bag.covidcertificate.eval.models.DccHolder
 import java.time.Instant
 
 
@@ -19,16 +19,16 @@ internal object TimestampService {
 	private val TAG = TimestampService::class.java.simpleName
 
 	fun decode(
-		dcc: Bagdgc,
+		dccHolder: DccHolder,
 		now: Instant = Instant.now()
 	): String? {
-		dcc.expirationTime?.also { et ->
+		dccHolder.expirationTime?.also { et ->
 			if (et.isBefore(now)) {
 				return EvalErrorCodes.SIGNATURE_TIMESTAMP_EXPIRED
 			}
 		}
 
-		dcc.issuedAt?.also { ia ->
+		dccHolder.issuedAt?.also { ia ->
 			if (ia.isAfter(now)) {
 				return EvalErrorCodes.SIGNATURE_TIMESTAMP_NOT_YET_VALID
 			}

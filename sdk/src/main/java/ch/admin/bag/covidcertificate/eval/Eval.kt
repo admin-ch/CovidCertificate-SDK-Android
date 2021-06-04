@@ -13,7 +13,7 @@ package ch.admin.bag.covidcertificate.eval
 import android.content.Context
 import ch.admin.bag.covidcertificate.eval.EvalErrorCodes.SIGNATURE_COSE_INVALID
 import ch.admin.bag.covidcertificate.eval.chain.*
-import ch.admin.bag.covidcertificate.eval.models.Bagdgc
+import ch.admin.bag.covidcertificate.eval.models.DccHolder
 import ch.admin.bag.covidcertificate.eval.nationalrules.NationalRulesVerifier
 import ch.admin.bag.covidcertificate.eval.utils.getHardcodedSigningKeys
 import com.squareup.moshi.Moshi
@@ -37,7 +37,7 @@ object Eval {
 
 		val encoded = PrefixIdentifierService.decode(qrCodeData) ?: return DecodeState.ERROR(Error(EvalErrorCodes.DECODE_PREFIX))
 
-		val compressed = BagBase45Service.decode(encoded) ?: return DecodeState.ERROR(Error(EvalErrorCodes.DECODE_BASE_45))
+		val compressed = Base45Service.decode(encoded) ?: return DecodeState.ERROR(Error(EvalErrorCodes.DECODE_BASE_45))
 
 		val cose = DecompressionService.decode(compressed) ?: return DecodeState.ERROR(Error(EvalErrorCodes.DECODE_Z_LIB))
 
@@ -45,7 +45,7 @@ object Eval {
 
 		val bagdgc = CborService.decode(cbor, qrCodeData) ?: return DecodeState.ERROR(Error(EvalErrorCodes.DECODE_CBOR))
 
-		bagdgc.certType = CertTypeService.decode(bagdgc.dgc)
+		bagdgc.certType = CertTypeService.decode(bagdgc.euDGC)
 
 		return DecodeState.SUCCESS(bagdgc)
 	}
@@ -56,22 +56,22 @@ object Eval {
 	 * A signature is only valid if it is signed by a trusted key, but also only if other attributes are valid
 	 * (e.g. the signature is not expired - which may be different from the legal national rules).
 	 */
-	suspend fun checkSignature(bagdgc: Bagdgc, context: Context): CheckSignatureState {
+	suspend fun checkSignature(dccHolder: DccHolder, context: Context): CheckSignatureState {
 
 		/* Check that certificate type and signature timestamps are valid */
 
-		val type = bagdgc.certType ?: return CheckSignatureState.INVALID(EvalErrorCodes.SIGNATURE_TYPE_INVALID)
+		val type = dccHolder.certType ?: return CheckSignatureState.INVALID(EvalErrorCodes.SIGNATURE_TYPE_INVALID)
 
-		val timestampError = TimestampService.decode(bagdgc)
+		val timestampError = TimestampService.decode(dccHolder)
 		if (timestampError != null) {
 			return CheckSignatureState.INVALID(timestampError)
 		}
 
 		/* Repeat decode chain to get and verify COSE signature */
 
-		val encoded = PrefixIdentifierService.decode(bagdgc.qrCodeData)
+		val encoded = PrefixIdentifierService.decode(dccHolder.qrCodeData)
 			?: return CheckSignatureState.INVALID(EvalErrorCodes.DECODE_PREFIX)
-		val compressed = BagBase45Service.decode(encoded) ?: return CheckSignatureState.INVALID(EvalErrorCodes.DECODE_BASE_45)
+		val compressed = Base45Service.decode(encoded) ?: return CheckSignatureState.INVALID(EvalErrorCodes.DECODE_BASE_45)
 		val cose = DecompressionService.decode(compressed) ?: return CheckSignatureState.INVALID(EvalErrorCodes.DECODE_Z_LIB)
 
 		val valid = VerificationCoseService.decode(signingKeys, cose, type)
@@ -80,24 +80,24 @@ object Eval {
 	}
 
 	/**
-	 * @param bagdgc Object which was returned from the decode function
+	 * @param dccHolder Object which was returned from the decode function
 	 * @return State for the revocation check
 	 */
-	suspend fun checkRevocationStatus(bagdgc: Bagdgc, context: Context): CheckRevocationState {
+	suspend fun checkRevocationStatus(dccHolder: DccHolder, context: Context): CheckRevocationState {
 		return CheckRevocationState.SUCCESS
 	}
 
 	/**
-	 * @param bagdgc Object which was returned from the decode function
+	 * @param dccHolder Object which was returned from the decode function
 	 * @return State for the Signaturecheck
 	 */
-	suspend fun checkNationalRules(bagdgc: Bagdgc, context: Context): CheckNationalRulesState {
-		return if (!bagdgc.dgc.v.isNullOrEmpty()) {
-			NationalRulesVerifier(context).verifyVaccine(bagdgc.dgc.v[0])
-		} else if (!bagdgc.dgc.t.isNullOrEmpty()) {
-			NationalRulesVerifier(context).verifyTest(bagdgc.dgc.t[0])
-		} else if (!bagdgc.dgc.r.isNullOrEmpty()) {
-			NationalRulesVerifier(context).verifyRecovery(bagdgc.dgc.r[0])
+	suspend fun checkNationalRules(dccHolder: DccHolder, context: Context): CheckNationalRulesState {
+		return if (!dccHolder.euDGC.v.isNullOrEmpty()) {
+			NationalRulesVerifier(context).verifyVaccine(dccHolder.euDGC.v[0])
+		} else if (!dccHolder.euDGC.t.isNullOrEmpty()) {
+			NationalRulesVerifier(context).verifyTest(dccHolder.euDGC.t[0])
+		} else if (!dccHolder.euDGC.r.isNullOrEmpty()) {
+			NationalRulesVerifier(context).verifyRecovery(dccHolder.euDGC.r[0])
 		} else {
 			throw Exception("NO VALID DATA")
 		}

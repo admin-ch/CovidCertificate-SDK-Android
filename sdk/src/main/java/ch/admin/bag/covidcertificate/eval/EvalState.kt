@@ -10,13 +10,13 @@
 
 package ch.admin.bag.covidcertificate.eval
 
-import ch.admin.bag.covidcertificate.eval.models.Bagdgc
+import ch.admin.bag.covidcertificate.eval.models.DccHolder
 import ch.admin.bag.covidcertificate.eval.nationalrules.NationalRulesError
 import ch.admin.bag.covidcertificate.eval.nationalrules.ValidityRange
 
 
 sealed class DecodeState {
-	data class SUCCESS(val dgc: Bagdgc) : DecodeState()
+	data class SUCCESS(val dccHolder: DccHolder) : DecodeState()
 	data class ERROR(val error: Error) : DecodeState()
 }
 
@@ -55,4 +55,4 @@ sealed class TrustListState {
 	data class ERROR(val error: Error) : TrustListState()
 }
 
-data class Error(val code: String, val message: String? = null, val bagdgc: Bagdgc? = null)
+data class Error(val code: String, val message: String? = null, val dccHolder: DccHolder? = null)

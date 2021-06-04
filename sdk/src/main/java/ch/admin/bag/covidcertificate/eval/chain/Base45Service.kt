@@ -15,7 +15,7 @@ package ch.admin.bag.covidcertificate.eval.chain
 
 import ch.admin.bag.covidcertificate.eval.utils.Base45
 
-internal object BagBase45Service {
+internal object Base45Service {
 
     fun decode(input: String): ByteArray? {
         // Spec: https://ec.europa.eu/health/sites/default/files/ehealth/docs/digital-green-certificates_v1_en.pdf#page=7

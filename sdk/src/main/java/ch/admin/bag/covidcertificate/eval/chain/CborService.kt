@@ -14,7 +14,7 @@
 package ch.admin.bag.covidcertificate.eval.chain
 
 import ch.admin.bag.covidcertificate.eval.data.Eudgc
-import ch.admin.bag.covidcertificate.eval.models.Bagdgc
+import ch.admin.bag.covidcertificate.eval.models.DccHolder
 import com.fasterxml.jackson.dataformat.cbor.databind.CBORMapper
 import com.upokecenter.cbor.CBORObject
 import java.time.Instant
@@ -25,7 +25,7 @@ internal object CborService {
 	private val keyEuDgcV1 = CBORObject.FromObject(1)
 
 	// Takes qrCodeData to directly construct a Bagdgc AND keep the field in the DCC a val
-	fun decode(input: ByteArray, qrCodeData: String): Bagdgc? {
+	fun decode(input: ByteArray, qrCodeData: String): DccHolder? {
 		try {
 			val map = CBORObject.DecodeFromBytes(input)
 
@@ -37,7 +37,7 @@ internal object CborService {
 				hcert[keyEuDgcV1]?.let {
 					val eudgc = CBORMapper().readValue(getContents(it), Eudgc::class.java)
 
-					return Bagdgc(eudgc, qrCodeData, expirationTime, issuedAt, issuer)
+					return DccHolder(eudgc, qrCodeData, expirationTime, issuedAt, issuer)
 				}
 			}
 			return null

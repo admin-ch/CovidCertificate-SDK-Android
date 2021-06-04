@@ -15,8 +15,8 @@ import java.io.Serializable
 import java.time.Instant
 
 
-data class Bagdgc(
-	val dgc: Eudgc,
+data class DccHolder(
+	val euDGC: Eudgc,
 	val qrCodeData: String,
 	val expirationTime: Instant? = null,
 	val issuedAt: Instant? = null,
@@ -30,16 +30,16 @@ data class Bagdgc(
 		if (this === other) return true
 		if (javaClass != other?.javaClass) return false
 
-		other as Bagdgc
+		other as DccHolder
 
-		if (dgc != other.dgc) return false
+		if (euDGC != other.euDGC) return false
 		if (qrCodeData != other.qrCodeData) return false
 
 		return true
 	}
 
 	override fun hashCode(): Int {
-		var result = dgc.hashCode()
+		var result = euDGC.hashCode()
 		result = 31 * result + qrCodeData.hashCode()
 		return result
 	}

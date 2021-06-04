@@ -28,7 +28,7 @@ class VerificationCoseServiceTest {
 		val bagKeys = getHardcodedSigningKeys("dev")
 
 		val encoded = PrefixIdentifierService.decode(HC1_A)
-		val compressed = BagBase45Service.decode(encoded!!)
+		val compressed = Base45Service.decode(encoded!!)
 		val cose = DecompressionService.decode(compressed!!)
 		val valid = VerificationCoseService.decode(bagKeys, cose!!, CertType.VACCINATION)
 
@@ -40,7 +40,7 @@ class VerificationCoseServiceTest {
 		val invalidKeys = getHardcodedSigningKeys("abn")
 
 		val encoded = PrefixIdentifierService.decode(HC1_A)
-		val compressed = BagBase45Service.decode(encoded!!)
+		val compressed = Base45Service.decode(encoded!!)
 		val cose = DecompressionService.decode(compressed!!)
 		val valid = VerificationCoseService.decode(invalidKeys, cose!!, CertType.VACCINATION)
 
@@ -52,7 +52,7 @@ class VerificationCoseServiceTest {
 		val invalidKeys = getInvalidSigningKeys()
 
 		val encoded = PrefixIdentifierService.decode(HC1_A)
-		val compressed = BagBase45Service.decode(encoded!!)
+		val compressed = Base45Service.decode(encoded!!)
 		val cose = DecompressionService.decode(compressed!!)
 		val valid = VerificationCoseService.decode(invalidKeys, cose!!, CertType.VACCINATION)
 
