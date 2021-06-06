@@ -10,7 +10,7 @@
 
 package ch.admin.bag.covidcertificate.eval.chain
 
-import ch.admin.bag.covidcertificate.eval.data.Eudgc
+import ch.admin.bag.covidcertificate.eval.euhealthcert.Eudgc
 import ch.admin.bag.covidcertificate.eval.models.CertIdentifier
 
 class RevokedHealthCertService(private val revokedList: List<CertIdentifier>) {
@@ -28,19 +28,19 @@ class RevokedHealthCertService(private val revokedList: List<CertIdentifier>) {
 	fun isRevoked(dgc: Eudgc): Boolean {
 		for (entry in revokedList) {
 
-			if (!dgc.t.isNullOrEmpty()) {
-				for (test in dgc.t) {
-					if (entry.dgci == test.ci) return true
+			if (!dgc.tests.isNullOrEmpty()) {
+				for (test in dgc.tests) {
+					if (entry.dgci == test?.certificateIdentifier) return true
 				}
 			}
-			if (!dgc.v.isNullOrEmpty()) {
-				for (vaccination in dgc.v) {
-					if (entry.dgci == vaccination.ci) return true
+			if (!dgc.vaccinations.isNullOrEmpty()) {
+				for (vaccination in dgc.vaccinations) {
+					if (entry.dgci == vaccination?.certificateIdentifier) return true
 				}
 			}
-			if (!dgc.r.isNullOrEmpty()) {
-				for (recovery in dgc.r) {
-					if (entry.dgci == recovery.ci) return true
+			if (!dgc.pastInfections.isNullOrEmpty()) {
+				for (recovery in dgc.pastInfections) {
+					if (entry.dgci == recovery?.certificateIdentifier) return true
 				}
 			}
 		}

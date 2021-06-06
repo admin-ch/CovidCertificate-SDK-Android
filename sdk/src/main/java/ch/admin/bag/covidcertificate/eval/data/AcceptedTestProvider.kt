@@ -11,6 +11,7 @@
 package ch.admin.bag.covidcertificate.eval.data
 
 import android.content.Context
+import ch.admin.bag.covidcertificate.eval.euhealthcert.TestEntry
 import ch.admin.bag.covidcertificate.eval.products.ValueSet
 import ch.admin.bag.covidcertificate.eval.utils.SingletonHolder
 import ch.admin.bag.covidcertificate.eval.utils.TestType
@@ -41,33 +42,36 @@ class AcceptedTestProvider private constructor(context: Context) {
 	}
 
 	fun getTestType(testEntry: TestEntry): String {
-		return acceptedEuTest.valueSetValues[testEntry.tt]?.display ?: testEntry.tt
+		return acceptedEuTest.valueSetValues[testEntry.type]?.display ?: testEntry.type
 	}
 
 	fun testIsPCRorRAT(testEntry: TestEntry): Boolean {
-		return testEntry.tt.equals(TestType.PCR.code) || testEntry.tt.equals(TestType.RAT.code)
+		return testEntry.type.equals(TestType.PCR.code) || testEntry.type.equals(TestType.RAT.code)
 	}
 
 	fun testIsAcceptedInEuAndCH(testEntry: TestEntry): Boolean {
-		if (testEntry.tt.equals(TestType.PCR.code)) {
+		if (testEntry.type.equals(TestType.PCR.code)) {
 			return true
-		} else if (testEntry.tt.equals(TestType.RAT.code)) {
-			return manufactures.valueSetValues[testEntry.ma]?.let { return true } ?: return false
+		} else if (testEntry.type.equals(TestType.RAT.code)) {
+			return manufactures.valueSetValues[testEntry.ratTestNameAndManufacturer]?.let { return true } ?: return false
 		}
 		return false
 	}
 
 	fun getTestName(testEntry: TestEntry): String? {
-		if (testEntry.tt.equals(TestType.PCR.code)) {
-			return testEntry.nm ?: "PCR"
-		} else if (testEntry.tt.equals(TestType.RAT.code)) {
-			return testEntry.nm
+		if (testEntry.type.equals(TestType.PCR.code)) {
+			return testEntry.naaTestName ?: "PCR"
+		} else if (testEntry.type.equals(TestType.RAT.code)) {
+			return testEntry.naaTestName
 		}
 		return null
 	}
 
 	fun getManufacturesIfExists(testEntry: TestEntry): String? {
-		val ma = manufactures.valueSetValues[testEntry.ma]?.display?.replace(testEntry.nm, "")?.trim()?.removeSuffix(",")
+		var ma = manufactures.valueSetValues[testEntry.ratTestNameAndManufacturer]?.display
+		testEntry.naaTestName?.let { nm ->
+			ma = ma?.replace(nm, "")?.trim()?.removeSuffix(",")
+		}
 		return if (ma.isNullOrEmpty()) {
 			null
 		} else {

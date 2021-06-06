@@ -11,6 +11,7 @@
 package ch.admin.bag.covidcertificate.eval.data
 
 import android.content.Context
+import ch.admin.bag.covidcertificate.eval.euhealthcert.VaccinationEntry
 import ch.admin.bag.covidcertificate.eval.products.AcceptedVaccine
 import ch.admin.bag.covidcertificate.eval.products.Vaccine
 import ch.admin.bag.covidcertificate.eval.products.ValueSet
@@ -55,19 +56,19 @@ class AcceptedVaccineProvider private constructor(context: Context) {
 	}
 
 	fun getVaccineName(vaccinationEntry: VaccinationEntry): String {
-		return vaccineProductsEu.valueSetValues[vaccinationEntry.mp]?.display ?: vaccinationEntry.mp
+		return vaccineProductsEu.valueSetValues[vaccinationEntry.medicinialProduct]?.display ?: vaccinationEntry.medicinialProduct
 	}
 
 	fun getProphylaxis(vaccinationEntry: VaccinationEntry): String {
-		return vaccineProphylaxisEu.valueSetValues[vaccinationEntry.vp]?.display ?: vaccinationEntry.vp
+		return vaccineProphylaxisEu.valueSetValues[vaccinationEntry.vaccine]?.display ?: vaccinationEntry.vaccine
 	}
 
 	fun getAuthHolder(vaccinationEntry: VaccinationEntry): String {
-		return vaccineManufacturersEu.valueSetValues[vaccinationEntry.ma]?.display ?: vaccinationEntry.ma
+		return vaccineManufacturersEu.valueSetValues[vaccinationEntry.marketingAuthorizationHolder]?.display ?: vaccinationEntry.marketingAuthorizationHolder
 	}
 
 	fun getVaccineDataFromList(vaccinationEntry: VaccinationEntry): Vaccine? {
-		return acceptedVaccine.entries.firstOrNull { entry -> entry.code == vaccinationEntry.mp }
+		return acceptedVaccine.entries.firstOrNull { entry -> entry.code == vaccinationEntry.medicinialProduct }
 	}
 
 }
