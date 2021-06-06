@@ -13,7 +13,6 @@ plugins {
 	id 'kotlin-android'
 	id 'kotlin-kapt'
 	id 'kotlinx-serialization'
-	id "org.jsonschema2dataclass" version "3.0.0"
 }
 
 android {
@@ -79,10 +78,4 @@ dependencies {
 	androidTestImplementation 'androidx.test.ext:junit:1.1.2'
 	androidTestImplementation 'androidx.test.espresso:espresso-core:3.3.0'
 	androidTestImplementation "com.google.code.gson:gson:2.8.6"
-}
-
-// Generate data classes from JSON
-project.beforeEvaluate {
-	preBuild.dependsOn generateJsonSchema2DataClassForDebug
-	preBuild.dependsOn generateJsonSchema2DataClassForRelease
 }
