@@ -10,7 +10,7 @@
 
 package ch.admin.bag.covidcertificate.eval.chain
 
-import ch.admin.bag.covidcertificate.eval.data.Eudgc
+import ch.admin.bag.covidcertificate.eval.euhealthcert.Eudgc
 import ch.admin.bag.covidcertificate.eval.models.CertType
 
 
@@ -24,19 +24,19 @@ internal object CertTypeService {
 		var type: CertType? = null
 		var numContainedContent = 0
 
-		dcc.t?.filterNotNull()?.size?.also { numTests ->
+		dcc.tests?.filterNotNull()?.size?.also { numTests ->
 			if (numTests > 0) {
 				numContainedContent += numTests
 				type = CertType.TEST
 			}
 		}
-		dcc.r?.filterNotNull()?.size?.also { numRecoveries ->
+		dcc.pastInfections?.filterNotNull()?.size?.also { numRecoveries ->
 			if (numRecoveries > 0) {
 				numContainedContent += numRecoveries
 				type = CertType.RECOVERY
 			}
 		}
-		dcc.v?.filterNotNull()?.size?.also { numVaccinations ->
+		dcc.vaccinations?.filterNotNull()?.size?.also { numVaccinations ->
 			if (numVaccinations > 0) {
 				numContainedContent += numVaccinations
 				type = CertType.VACCINATION

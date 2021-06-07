@@ -92,12 +92,12 @@ object Eval {
 	 * @return State for the Signaturecheck
 	 */
 	suspend fun checkNationalRules(dccHolder: DccHolder, context: Context): CheckNationalRulesState {
-		return if (!dccHolder.euDGC.v.isNullOrEmpty()) {
-			NationalRulesVerifier(context).verifyVaccine(dccHolder.euDGC.v[0])
-		} else if (!dccHolder.euDGC.t.isNullOrEmpty()) {
-			NationalRulesVerifier(context).verifyTest(dccHolder.euDGC.t[0])
-		} else if (!dccHolder.euDGC.r.isNullOrEmpty()) {
-			NationalRulesVerifier(context).verifyRecovery(dccHolder.euDGC.r[0])
+		return if (!dccHolder.euDGC.vaccinations.isNullOrEmpty()) {
+			NationalRulesVerifier(context).verifyVaccine(dccHolder.euDGC.vaccinations.first())
+		} else if (!dccHolder.euDGC.tests.isNullOrEmpty()) {
+			NationalRulesVerifier(context).verifyTest(dccHolder.euDGC.tests.first())
+		} else if (!dccHolder.euDGC.pastInfections.isNullOrEmpty()) {
+			NationalRulesVerifier(context).verifyRecovery(dccHolder.euDGC.pastInfections.first())
 		} else {
 			throw Exception("NO VALID DATA")
 		}

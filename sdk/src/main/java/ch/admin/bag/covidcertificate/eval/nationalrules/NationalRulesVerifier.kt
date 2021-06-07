@@ -13,6 +13,9 @@ package ch.admin.bag.covidcertificate.eval.nationalrules
 import android.content.Context
 import ch.admin.bag.covidcertificate.eval.CheckNationalRulesState
 import ch.admin.bag.covidcertificate.eval.data.*
+import ch.admin.bag.covidcertificate.eval.euhealthcert.RecoveryEntry
+import ch.admin.bag.covidcertificate.eval.euhealthcert.TestEntry
+import ch.admin.bag.covidcertificate.eval.euhealthcert.VaccinationEntry
 import ch.admin.bag.covidcertificate.eval.products.Vaccine
 import ch.admin.bag.covidcertificate.eval.utils.*
 import java.time.Clock

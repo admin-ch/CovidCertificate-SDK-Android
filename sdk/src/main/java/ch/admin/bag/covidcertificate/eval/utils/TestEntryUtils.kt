@@ -10,7 +10,7 @@
 
 package ch.admin.bag.covidcertificate.eval.utils
 
-import ch.admin.bag.covidcertificate.eval.data.TestEntry
+import ch.admin.bag.covidcertificate.eval.euhealthcert.TestEntry
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -18,69 +18,66 @@ import java.util.*
 
 
 fun TestEntry.isNegative(): Boolean {
-	return this.tr == AcceptanceCriterias.NEGATIVE_CODE
+	return this.result == AcceptanceCriterias.NEGATIVE_CODE
 }
 
 fun TestEntry.isTargetDiseaseCorrect(): Boolean {
-	return this.tg == AcceptanceCriterias.TARGET_DISEASE
+	return this.disease == AcceptanceCriterias.TARGET_DISEASE
 }
 
 fun TestEntry.getFormattedSampleDate(dateTimeFormatter: DateTimeFormatter): String? {
-	if (this.sc == null) {
+	if (this.timestampSample == null) {
 		return null
 	}
 	return try {
-		return this.sc.toInstant().atZone(ZoneId.systemDefault()).format(dateTimeFormatter)
+		return this.timestampSample.toInstant().atZone(ZoneId.systemDefault()).format(dateTimeFormatter)
 	} catch (e: Exception) {
 		null
 	}
 }
 
 fun TestEntry.getFormattedResultDate(dateTimeFormatter: DateTimeFormatter): String? {
-	if (this.dr == null) {
+	if (this.timestampResult == null) {
 		return null
 	}
 	return try {
-		this.dr.toInstant().atZone(ZoneId.systemDefault()).format(dateTimeFormatter)
+		this.timestampResult.toInstant().atZone(ZoneId.systemDefault()).format(dateTimeFormatter)
 	} catch (e: Exception) {
 		null
 	}
 }
 
 fun TestEntry.getTestCenter(): String? {
-	if (!this.tc.isNullOrEmpty()) {
-		return this.tc
+	if (!this.testCenter.isNullOrEmpty()) {
+		return this.testCenter
 	}
 	return null
 }
 
 fun TestEntry.getTestCountry(deviceLang: String): String {
 	return try {
-		val loc = Locale("", this.co)
+		val loc = Locale("", this.country)
 		var countryString = loc.displayCountry
 		if (deviceLang != "en") {
 			countryString = "$countryString / ${loc.getDisplayCountry(Locale.ENGLISH)}"
 		}
 		return countryString
 	} catch (e: Exception) {
-		this.co
+		this.country
 	}
 }
 
 fun TestEntry.getIssuer(): String {
-	return this.`is`
+	return this.certificateIssuer
 }
 
 fun TestEntry.getCertificateIdentifier(): String {
-	return this.ci
+	return this.certificateIdentifier
 }
 
 fun TestEntry.validFromDate(): LocalDateTime? {
-	if (this.sc == null) {
-		return null
-	}
 	return try {
-		this.sc.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime()
+		this.timestampSample.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime()
 	} catch (e: Exception) {
 		return null
 	}
@@ -88,7 +85,7 @@ fun TestEntry.validFromDate(): LocalDateTime? {
 
 fun TestEntry.validUntilDate(testEntry: TestEntry): LocalDateTime? {
 	val startDate = this.validFromDate() ?: return null
-	val testEntryCode = testEntry.tt ?: return null
+	val testEntryCode = testEntry.type ?: return null
 	if (testEntryCode == TestType.PCR.code) {
 		return startDate.plusHours(AcceptanceCriterias.PCR_TEST_VALIDITY_IN_HOURS)
 	} else if (testEntryCode == TestType.RAT.code) {

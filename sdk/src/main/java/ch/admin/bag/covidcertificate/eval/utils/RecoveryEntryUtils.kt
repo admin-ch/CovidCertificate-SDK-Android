@@ -10,7 +10,7 @@
 
 package ch.admin.bag.covidcertificate.eval.utils
 
-import ch.admin.bag.covidcertificate.eval.data.RecoveryEntry
+import ch.admin.bag.covidcertificate.eval.euhealthcert.RecoveryEntry
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -19,39 +19,39 @@ import java.util.*
 
 
 fun RecoveryEntry.isTargetDiseaseCorrect(): Boolean {
-	return this.tg == AcceptanceCriterias.TARGET_DISEASE
+	return this.disease == AcceptanceCriterias.TARGET_DISEASE
 }
 
 fun RecoveryEntry.dateFormattedOfFirstPostiveResult(dateFormatter: DateTimeFormatter): String? {
-	if (this.fr.isNullOrEmpty()) {
+	if (this.dateFirstPositiveTest.isNullOrEmpty()) {
 		return null
 	}
 	return try {
-		LocalDate.parse(this.fr, ISO_DATE).format(dateFormatter)
+		LocalDate.parse(this.dateFirstPositiveTest, ISO_DATE).format(dateFormatter)
 	} catch (e: java.lang.Exception) {
-		this.fr
+		this.dateFirstPositiveTest
 	}
 }
 
 fun RecoveryEntry.getRecoveryCountry(deviceLang: String): String {
 	return try {
-		val loc = Locale("", this.co)
+		val loc = Locale("", this.countryOfTest)
 		var countryString = loc.displayCountry
 		if (deviceLang != "en") {
 			countryString = "$countryString / ${loc.getDisplayCountry(Locale.ENGLISH)}"
 		}
 		return countryString
 	} catch (e: Exception) {
-		this.co
+		this.countryOfTest
 	}
 }
 
 fun RecoveryEntry.getIssuer(): String {
-	return this.`is`
+	return this.certificateIssuer
 }
 
 fun RecoveryEntry.getCertificateIdentifier(): String {
-	return this.ci
+	return this.certificateIdentifier
 }
 
 fun RecoveryEntry.validFromDate(): LocalDateTime? {
@@ -65,12 +65,12 @@ fun RecoveryEntry.validUntilDate(): LocalDateTime? {
 }
 
 fun RecoveryEntry.firstPostiveResult(): LocalDateTime? {
-	if (this.fr.isNullOrEmpty()) {
+	if (this.dateFirstPositiveTest.isEmpty()) {
 		return null
 	}
 	val date: LocalDate?
 	try {
-		date = LocalDate.parse(this.fr, ISO_DATE)
+		date = LocalDate.parse(this.dateFirstPositiveTest, ISO_DATE)
 	} catch (e: Exception) {
 		return null
 	}

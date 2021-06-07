@@ -10,7 +10,7 @@
 
 package ch.admin.bag.covidcertificate.eval.models
 
-import ch.admin.bag.covidcertificate.eval.data.Eudgc
+import ch.admin.bag.covidcertificate.eval.euhealthcert.Eudgc
 import java.io.Serializable
 import java.time.Instant
 

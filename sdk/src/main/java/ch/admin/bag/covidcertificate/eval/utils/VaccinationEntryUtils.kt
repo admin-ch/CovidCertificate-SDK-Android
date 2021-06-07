@@ -10,7 +10,7 @@
 
 package ch.admin.bag.covidcertificate.eval.utils
 
-import ch.admin.bag.covidcertificate.eval.data.VaccinationEntry
+import ch.admin.bag.covidcertificate.eval.euhealthcert.VaccinationEntry
 import ch.admin.bag.covidcertificate.eval.products.Vaccine
 import ch.admin.bag.covidcertificate.eval.utils.AcceptanceCriterias.SINGLE_VACCINE_VALIDITY_OFFSET_IN_DAYS
 import java.time.LocalDate
@@ -19,9 +19,9 @@ import java.time.format.DateTimeFormatter
 import java.util.*
 
 
-fun VaccinationEntry.doseNumber(): Int = this.dn
+fun VaccinationEntry.doseNumber(): Int = this.doseNumber
 
-fun VaccinationEntry.totalDoses(): Int = this.sd
+fun VaccinationEntry.totalDoses(): Int = this.totalDoses
 
 fun VaccinationEntry.hadPastInfection(vaccine: Vaccine): Boolean {
 	//if the total Doses of the vaccine is bigger then the total doses in the certificate, the patient had a past infection
@@ -33,17 +33,17 @@ fun VaccinationEntry.getNumberOverTotalDose(): String {
 }
 
 fun VaccinationEntry.isTargetDiseaseCorrect(): Boolean {
-	return this.tg == AcceptanceCriterias.TARGET_DISEASE
+	return this.disease == AcceptanceCriterias.TARGET_DISEASE
 }
 
 fun VaccinationEntry.getFormattedVaccinationDate(dateFormatter: DateTimeFormatter): String? {
-	if (this.dt.isNullOrEmpty()) {
+	if (this.vaccinationDate.isNullOrEmpty()) {
 		return null
 	}
 	return try {
-		LocalDate.parse(this.dt, DateTimeFormatter.ISO_DATE).format(dateFormatter)
+		LocalDate.parse(this.vaccinationDate, DateTimeFormatter.ISO_DATE).format(dateFormatter)
 	} catch (e: java.lang.Exception) {
-		this.dt
+		this.vaccinationDate
 	}
 }
 
@@ -66,12 +66,12 @@ fun VaccinationEntry.validUntilDate(): LocalDateTime? {
 }
 
 fun VaccinationEntry.vaccineDate(): LocalDateTime? {
-	if (this.dt.isNullOrEmpty()) {
+	if (this.vaccinationDate.isNullOrEmpty()) {
 		return null
 	}
 	val date: LocalDate?
 	try {
-		date = LocalDate.parse(this.dt, DateTimeFormatter.ISO_DATE)
+		date = LocalDate.parse(this.vaccinationDate, DateTimeFormatter.ISO_DATE)
 	} catch (e: Exception) {
 		return null
 	}
@@ -80,21 +80,21 @@ fun VaccinationEntry.vaccineDate(): LocalDateTime? {
 
 fun VaccinationEntry.getVaccinationCountry(deviceLang: String): String {
 	return try {
-		val loc = Locale("", this.co)
+		val loc = Locale("", this.country)
 		var countryString = loc.displayCountry
 		if (deviceLang != "en") {
 			countryString = "$countryString / ${loc.getDisplayCountry(Locale.ENGLISH)}"
 		}
 		return countryString
 	} catch (e: Exception) {
-		this.co
+		this.country
 	}
 }
 
 fun VaccinationEntry.getIssuer(): String {
-	return this.`is`
+	return this.certificateIssuer
 }
 
 fun VaccinationEntry.getCertificateIdentifier(): String {
-	return this.ci
+	return this.certificateIdentifier
 }
