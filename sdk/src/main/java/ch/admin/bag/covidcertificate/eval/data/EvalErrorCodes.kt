@@ -8,7 +8,7 @@
  * SPDX-License-Identifier: MPL-2.0
  */
 
-package ch.admin.bag.covidcertificate.eval
+package ch.admin.bag.covidcertificate.eval.data
 
 object EvalErrorCodes {
 	/* Errors during decoding */

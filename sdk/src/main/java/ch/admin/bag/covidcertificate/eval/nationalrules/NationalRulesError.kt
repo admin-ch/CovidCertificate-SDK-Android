@@ -10,7 +10,7 @@
 
 package ch.admin.bag.covidcertificate.eval.nationalrules
 
-import ch.admin.bag.covidcertificate.eval.EvalErrorCodes
+import ch.admin.bag.covidcertificate.eval.data.EvalErrorCodes
 
 enum class NationalRulesError(val message: String, val errorCode: String) {
 	NO_VALID_DATE("Not a valid Date format", EvalErrorCodes.NO_VALID_DATE),

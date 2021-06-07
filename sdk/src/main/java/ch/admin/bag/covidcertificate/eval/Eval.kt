@@ -11,8 +11,12 @@
 package ch.admin.bag.covidcertificate.eval
 
 import android.content.Context
-import ch.admin.bag.covidcertificate.eval.EvalErrorCodes.SIGNATURE_COSE_INVALID
 import ch.admin.bag.covidcertificate.eval.chain.*
+import ch.admin.bag.covidcertificate.eval.data.EvalErrorCodes
+import ch.admin.bag.covidcertificate.eval.data.EvalErrorCodes.SIGNATURE_COSE_INVALID
+import ch.admin.bag.covidcertificate.eval.data.state.CheckNationalRulesState
+import ch.admin.bag.covidcertificate.eval.data.state.CheckRevocationState
+import ch.admin.bag.covidcertificate.eval.data.state.CheckSignatureState
 import ch.admin.bag.covidcertificate.eval.models.DccHolder
 import ch.admin.bag.covidcertificate.eval.nationalrules.NationalRulesVerifier
 import ch.admin.bag.covidcertificate.eval.utils.getHardcodedSigningKeys

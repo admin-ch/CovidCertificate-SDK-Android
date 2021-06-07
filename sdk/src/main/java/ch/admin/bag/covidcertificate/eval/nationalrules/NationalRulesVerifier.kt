@@ -11,7 +11,7 @@
 package ch.admin.bag.covidcertificate.eval.nationalrules
 
 import android.content.Context
-import ch.admin.bag.covidcertificate.eval.CheckNationalRulesState
+import ch.admin.bag.covidcertificate.eval.data.state.CheckNationalRulesState
 import ch.admin.bag.covidcertificate.eval.data.*
 import ch.admin.bag.covidcertificate.eval.euhealthcert.RecoveryEntry
 import ch.admin.bag.covidcertificate.eval.euhealthcert.TestEntry

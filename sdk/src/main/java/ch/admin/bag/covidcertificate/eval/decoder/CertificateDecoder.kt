@@ -10,15 +10,15 @@
 
 package ch.admin.bag.covidcertificate.eval.decoder
 
-import ch.admin.bag.covidcertificate.eval.DecodeState
-import ch.admin.bag.covidcertificate.eval.Error
-import ch.admin.bag.covidcertificate.eval.EvalErrorCodes
+import ch.admin.bag.covidcertificate.eval.data.EvalErrorCodes
 import ch.admin.bag.covidcertificate.eval.chain.Base45Service
 import ch.admin.bag.covidcertificate.eval.chain.CborService
 import ch.admin.bag.covidcertificate.eval.chain.CertTypeService
 import ch.admin.bag.covidcertificate.eval.chain.DecompressionService
 import ch.admin.bag.covidcertificate.eval.chain.NoopVerificationCoseService
 import ch.admin.bag.covidcertificate.eval.chain.PrefixIdentifierService
+import ch.admin.bag.covidcertificate.eval.data.state.DecodeState
+import ch.admin.bag.covidcertificate.eval.data.state.Error
 
 object CertificateDecoder {
 
