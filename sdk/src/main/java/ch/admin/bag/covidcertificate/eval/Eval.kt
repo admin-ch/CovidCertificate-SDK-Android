@@ -10,25 +10,25 @@
 
 package ch.admin.bag.covidcertificate.eval
 
-import android.content.Context
-import ch.admin.bag.covidcertificate.eval.chain.*
+import ch.admin.bag.covidcertificate.eval.chain.Base45Service
+import ch.admin.bag.covidcertificate.eval.chain.DecompressionService
+import ch.admin.bag.covidcertificate.eval.chain.PrefixIdentifierService
+import ch.admin.bag.covidcertificate.eval.chain.RevokedHealthCertService
+import ch.admin.bag.covidcertificate.eval.chain.TimestampService
+import ch.admin.bag.covidcertificate.eval.chain.VerificationCoseService
 import ch.admin.bag.covidcertificate.eval.data.EvalErrorCodes
 import ch.admin.bag.covidcertificate.eval.data.EvalErrorCodes.SIGNATURE_COSE_INVALID
 import ch.admin.bag.covidcertificate.eval.data.state.CheckNationalRulesState
 import ch.admin.bag.covidcertificate.eval.data.state.CheckRevocationState
 import ch.admin.bag.covidcertificate.eval.data.state.CheckSignatureState
 import ch.admin.bag.covidcertificate.eval.models.DccHolder
+import ch.admin.bag.covidcertificate.eval.models.Jwks
+import ch.admin.bag.covidcertificate.eval.models.RevokedCertificates
+import ch.admin.bag.covidcertificate.eval.models.RuleSet
 import ch.admin.bag.covidcertificate.eval.nationalrules.NationalRulesVerifier
-import ch.admin.bag.covidcertificate.eval.utils.getHardcodedSigningKeys
-import com.squareup.moshi.Moshi
 
-
-object Eval {
+internal object Eval {
 	private val TAG = Eval::class.java.simpleName
-
-	private val moshi by lazy { Moshi.Builder().build() }
-
-	private val signingKeys = getHardcodedSigningKeys()
 
 	/**
 	 * Checks whether the DCC has a valid signature.
@@ -36,7 +36,7 @@ object Eval {
 	 * A signature is only valid if it is signed by a trusted key, but also only if other attributes are valid
 	 * (e.g. the signature is not expired - which may be different from the legal national rules).
 	 */
-	suspend fun checkSignature(dccHolder: DccHolder, context: Context): CheckSignatureState {
+	fun checkSignature(dccHolder: DccHolder, signatures: Jwks): CheckSignatureState {
 
 		/* Check that certificate type and signature timestamps are valid */
 
@@ -54,7 +54,7 @@ object Eval {
 		val compressed = Base45Service.decode(encoded) ?: return CheckSignatureState.INVALID(EvalErrorCodes.DECODE_BASE_45)
 		val cose = DecompressionService.decode(compressed) ?: return CheckSignatureState.INVALID(EvalErrorCodes.DECODE_Z_LIB)
 
-		val valid = VerificationCoseService.decode(signingKeys, cose, type)
+		val valid = VerificationCoseService.decode(signatures.certs, cose, type)
 
 		return if (valid) CheckSignatureState.SUCCESS else CheckSignatureState.INVALID(SIGNATURE_COSE_INVALID)
 	}
@@ -63,21 +63,32 @@ object Eval {
 	 * @param dccHolder Object which was returned from the decode function
 	 * @return State for the revocation check
 	 */
-	suspend fun checkRevocationStatus(dccHolder: DccHolder, context: Context): CheckRevocationState {
-		return CheckRevocationState.SUCCESS
+	fun checkRevocationStatus(dccHolder: DccHolder, revokedCertificates: RevokedCertificates): CheckRevocationState {
+		val revokedCertificateService = RevokedHealthCertService(revokedCertificates)
+		val containsRevokedCertificate = revokedCertificateService.isRevoked(dccHolder.euDGC)
+
+		return if (containsRevokedCertificate) {
+			CheckRevocationState.INVALID
+		} else {
+			CheckRevocationState.SUCCESS
+		}
 	}
 
 	/**
 	 * @param dccHolder Object which was returned from the decode function
 	 * @return State for the Signaturecheck
 	 */
-	suspend fun checkNationalRules(dccHolder: DccHolder, context: Context): CheckNationalRulesState {
+	fun checkNationalRules(
+		dccHolder: DccHolder,
+		nationalRulesVerifier: NationalRulesVerifier,
+		ruleSet: RuleSet
+	): CheckNationalRulesState {
 		return if (!dccHolder.euDGC.vaccinations.isNullOrEmpty()) {
-			NationalRulesVerifier(context).verifyVaccine(dccHolder.euDGC.vaccinations.first())
+			nationalRulesVerifier.verifyVaccine(dccHolder.euDGC.vaccinations.first())
 		} else if (!dccHolder.euDGC.tests.isNullOrEmpty()) {
-			NationalRulesVerifier(context).verifyTest(dccHolder.euDGC.tests.first())
+			nationalRulesVerifier.verifyTest(dccHolder.euDGC.tests.first())
 		} else if (!dccHolder.euDGC.pastInfections.isNullOrEmpty()) {
-			NationalRulesVerifier(context).verifyRecovery(dccHolder.euDGC.pastInfections.first())
+			nationalRulesVerifier.verifyRecovery(dccHolder.euDGC.pastInfections.first())
 		} else {
 			throw Exception("NO VALID DATA")
 		}

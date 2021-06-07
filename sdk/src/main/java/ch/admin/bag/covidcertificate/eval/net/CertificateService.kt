@@ -10,15 +10,20 @@
 
 package ch.admin.bag.covidcertificate.eval.net
 
-import ch.admin.bag.covidcertificate.eval.models.RevokedCertificates
+import ch.admin.bag.covidcertificate.eval.models.ActiveSignerCertificates
+import ch.admin.bag.covidcertificate.eval.models.Jwks
 import retrofit2.Response
 import retrofit2.http.GET
 import retrofit2.http.Headers
+import retrofit2.http.Query
 
-interface RevocationService {
+interface CertificateService {
 
 	@Headers("Accept: application/json")
-	@GET("revocationList")
-	suspend fun getRevokedCertificates(): Response<RevokedCertificates>
+	@GET("keys/list")
+	suspend fun getActiveSignerCertificateKeyIds(): Response<ActiveSignerCertificates>
 
+	@Headers("Accept: application/json")
+	@GET("keys/updates?certFormat=ANDROID")
+	suspend fun getSignerCertificates(@Query("since") since: Long? = null): Response<Jwks>
 }

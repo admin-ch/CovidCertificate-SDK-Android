@@ -13,12 +13,6 @@ package ch.admin.bag.covidcertificate.eval.models
 import com.squareup.moshi.JsonClass
 import kotlinx.serialization.Serializable
 
-@Serializable
-@JsonClass(generateAdapter = true)
-data class RevokedList(
-	val revokedCertificates: List<CertIdentifier> = emptyList()
-)
-
 /**
  * Unique Vaccination Certificate Identifier UVCI
  *
@@ -26,6 +20,6 @@ data class RevokedList(
  */
 @Serializable
 @JsonClass(generateAdapter = true)
-data class CertIdentifier(
-	val dgci: String
+data class RevokedCertificates(
+	val revokedCerts: List<String> = emptyList()
 )

@@ -27,9 +27,15 @@ android {
 	}
 
 	productFlavors {
-		dev {}
-		abn {}
-		prod {}
+		dev {
+			buildConfigField "String", "BASE_URL_TRUST_LIST", '"https://www.cc-d.bit.admin.ch/v1/"'
+		}
+		abn {
+			buildConfigField "String", "BASE_URL_TRUST_LIST", '"https://www.cc-a.bit.admin.ch/v1/"'
+		}
+		prod {
+			buildConfigField "String", "BASE_URL_TRUST_LIST", '"https://www.cc.bit.admin.ch/v1/"'
+		}
 	}
 
 	flavorDimensions "version"

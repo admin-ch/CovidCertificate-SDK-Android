@@ -8,15 +8,11 @@
  * SPDX-License-Identifier: MPL-2.0
  */
 
-package ch.admin.bag.covidcertificate.eval.net
+package ch.admin.bag.covidcertificate.eval.models
 
-import ch.admin.bag.covidcertificate.eval.models.Jwks
-import retrofit2.Response
-import retrofit2.http.GET
+import com.squareup.moshi.JsonClass
 
-interface SignatureService {
-
-	@GET("jwks.json")
-	suspend fun getJwks() : Response<Jwks>
-
-}
+@JsonClass(generateAdapter = true)
+data class ActiveSignerCertificates(
+	val activeKeyIds: List<String>
+)

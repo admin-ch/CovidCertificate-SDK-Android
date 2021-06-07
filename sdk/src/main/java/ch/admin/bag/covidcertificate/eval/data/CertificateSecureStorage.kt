@@ -15,14 +15,14 @@ import android.content.SharedPreferences
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKeys
 import ch.admin.bag.covidcertificate.eval.models.Jwks
-import ch.admin.bag.covidcertificate.eval.models.RevokedList
+import ch.admin.bag.covidcertificate.eval.models.RevokedCertificates
 import ch.admin.bag.covidcertificate.eval.models.RuleSet
 import ch.admin.bag.covidcertificate.eval.utils.SingletonHolder
 import com.squareup.moshi.Moshi
 import java.io.IOException
 import java.security.GeneralSecurityException
 
-class CertificateSecureStorage private constructor(context: Context) : TrustListProvider {
+internal class CertificateSecureStorage private constructor(context: Context) : TrustListStore {
 
 	companion object : SingletonHolder<CertificateSecureStorage, Context>(::CertificateSecureStorage) {
 		private const val PREFERENCES = "CertificateSecureStorage"
@@ -38,7 +38,7 @@ class CertificateSecureStorage private constructor(context: Context) : TrustList
 
 		private val moshi = Moshi.Builder().build()
 		private val jwksAdapter = moshi.adapter(Jwks::class.java)
-		private val revokedCertificatesAdapter = moshi.adapter(RevokedList::class.java)
+		private val revokedCertificatesAdapter = moshi.adapter(RevokedCertificates::class.java)
 		private val rulesetAdapter = moshi.adapter(RuleSet::class.java)
 	}
 
@@ -90,7 +90,7 @@ class CertificateSecureStorage private constructor(context: Context) : TrustList
 			preferences.edit().putLong(KEY_REVOKED_CERTIFICATES_VALID_UNTIL, value).apply()
 		}
 
-	override var revokedCertificates: RevokedList?
+	override var revokedCertificates: RevokedCertificates?
 		get() = preferences.getString(KEY_REVOKED_CERTIFICATES, null)?.let { revokedCertificatesAdapter.fromJson(it) }
 		set(value) {
 			preferences.edit().putString(KEY_REVOKED_CERTIFICATES, revokedCertificatesAdapter.toJson(value)).apply()

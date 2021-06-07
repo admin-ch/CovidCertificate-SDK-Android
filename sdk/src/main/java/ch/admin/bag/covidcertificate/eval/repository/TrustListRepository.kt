@@ -10,27 +10,30 @@
 
 package ch.admin.bag.covidcertificate.eval.repository
 
-import ch.admin.bag.covidcertificate.eval.data.TrustListProvider
+import ch.admin.bag.covidcertificate.eval.data.TrustListStore
+import ch.admin.bag.covidcertificate.eval.models.Jwk
+import ch.admin.bag.covidcertificate.eval.models.Jwks
 import ch.admin.bag.covidcertificate.eval.models.TrustList
+import ch.admin.bag.covidcertificate.eval.net.CertificateService
 import ch.admin.bag.covidcertificate.eval.net.RevocationService
 import ch.admin.bag.covidcertificate.eval.net.RuleSetService
-import ch.admin.bag.covidcertificate.eval.net.SignatureService
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.joinAll
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.time.Instant
 import java.time.temporal.ChronoUnit
 
-class TrustListRepository(
-	private val signatureService: SignatureService,
+internal class TrustListRepository(
+	private val certificateService: CertificateService,
 	private val revocationService: RevocationService,
 	private val ruleSetService: RuleSetService,
-	private val provider: TrustListProvider
+	private val store: TrustListStore
 ) {
 
 	companion object {
 		private const val DEFAULT_VALIDITY_IN_DAYS = 2L
+		private const val HEADER_NEXT_SINCE = "X-Next-Since"
 	}
 
 	/**
@@ -42,19 +45,19 @@ class TrustListRepository(
 	 */
 	suspend fun refreshTrustList(forceRefresh: Boolean) = withContext(Dispatchers.IO) {
 		listOf(
-			async { refreshCertificateSignatures(forceRefresh) },
-			async { refreshRevokedCertificates(forceRefresh) },
-			async { refreshRuleSet(forceRefresh) }
-		).awaitAll()
+			launch { refreshCertificateSignatures(forceRefresh) },
+			launch { refreshRevokedCertificates(forceRefresh) },
+			launch { refreshRuleSet(forceRefresh) }
+		).joinAll()
 	}
 
 	/**
 	 * Get the trust list from the provider or null if at least one of the values is not set
 	 */
 	fun getTrustList(): TrustList? {
-		val signatures = provider.certificateSignatures
-		val revokedCertificates = provider.revokedCertificates
-		val ruleSet = provider.ruleset
+		val signatures = store.certificateSignatures
+		val revokedCertificates = store.revokedCertificates
+		val ruleSet = store.ruleset
 
 		return if (signatures != null && revokedCertificates != null && ruleSet != null) {
 			TrustList(signatures, revokedCertificates, ruleSet)
@@ -66,15 +69,30 @@ class TrustListRepository(
 	private suspend fun refreshCertificateSignatures(forceRefresh: Boolean) = withContext(Dispatchers.IO) {
 		val now = Instant.now().toEpochMilli()
 		val shouldLoadSignatures = forceRefresh
-				|| provider.certificateSignatures == null
-				|| provider.certificateSignaturesValidUntil <= now
+				|| store.certificateSignatures == null
+				|| store.certificateSignaturesValidUntil <= now
 
 		if (shouldLoadSignatures) {
-			val response = signatureService.getJwks()
-			if (response.isSuccessful && response.body() != null) {
-				provider.certificateSignatures = response.body()
+			// Load the active certificate key IDs
+			val activeCertificatesResponse = certificateService.getActiveSignerCertificateKeyIds()
+			if (activeCertificatesResponse.isSuccessful && activeCertificatesResponse.body() != null) {
+				val activeCertificateKeyIds = activeCertificatesResponse.body()?.activeKeyIds ?: emptyList()
+				var since: Long? = null
+				val allCertificates = mutableListOf<Jwk>()
+
+				// Get the signer certificates as long as there are entries in the response list
+				var certificatesResponse = certificateService.getSignerCertificates(since)
+				while (certificatesResponse.isSuccessful && certificatesResponse.body()?.certs?.isNullOrEmpty() == false) {
+					allCertificates.addAll(certificatesResponse.body()?.certs ?: emptyList())
+					since = certificatesResponse.headers()[HEADER_NEXT_SINCE]?.toLong()
+					certificatesResponse = certificateService.getSignerCertificates(since)
+				}
+
+				// Filter out non-active certificates and store them
+				val activeCertificates = allCertificates.filter { activeCertificateKeyIds.contains(it.keyId) }
+				store.certificateSignatures = Jwks(activeCertificates)
 				val newValidUntil = Instant.now().plus(DEFAULT_VALIDITY_IN_DAYS, ChronoUnit.DAYS).toEpochMilli()
-				provider.certificateSignaturesValidUntil = newValidUntil
+				store.certificateSignaturesValidUntil = newValidUntil
 			}
 		}
 	}
@@ -82,29 +100,29 @@ class TrustListRepository(
 	private suspend fun refreshRevokedCertificates(forceRefresh: Boolean) = withContext(Dispatchers.IO) {
 		val now = Instant.now().toEpochMilli()
 		val shouldLoadRevokedCertificates = forceRefresh
-				|| provider.revokedCertificates == null
-				|| provider.revokedCertificatesValidUntil <= now
+				|| store.revokedCertificates == null
+				|| store.revokedCertificatesValidUntil <= now
 
 		if (shouldLoadRevokedCertificates) {
 			val response = revocationService.getRevokedCertificates()
 			if (response.isSuccessful && response.body() != null) {
-				provider.revokedCertificates = response.body()
+				store.revokedCertificates = response.body()
 				val newValidUntil = Instant.now().plus(DEFAULT_VALIDITY_IN_DAYS, ChronoUnit.DAYS).toEpochMilli()
-				provider.revokedCertificatesValidUntil = newValidUntil
+				store.revokedCertificatesValidUntil = newValidUntil
 			}
 		}
 	}
 
 	private suspend fun refreshRuleSet(forceRefresh: Boolean) = withContext(Dispatchers.IO) {
 		val now = Instant.now().toEpochMilli()
-		val shouldLoadRuleSet = forceRefresh || provider.ruleset == null || provider.rulesetValidUntil <= now
+		val shouldLoadRuleSet = forceRefresh || store.ruleset == null || store.rulesetValidUntil <= now
 
 		if (shouldLoadRuleSet) {
 			val response = ruleSetService.getRuleset()
 			if (response.isSuccessful && response.body() != null) {
-				provider.ruleset = response.body()
+				store.ruleset = response.body()
 				val newValidUntil = Instant.now().plus(DEFAULT_VALIDITY_IN_DAYS, ChronoUnit.DAYS).toEpochMilli()
-				provider.rulesetValidUntil = newValidUntil
+				store.rulesetValidUntil = newValidUntil
 			}
 		}
 	}
