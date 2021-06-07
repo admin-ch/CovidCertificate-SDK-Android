@@ -22,5 +22,5 @@ sealed class VerificationState {
 	) : VerificationState()
 
 	object LOADING : VerificationState()
-	data class ERROR(val error: Error, val retry: Runnable, val validityRange: ValidityRange?) : VerificationState()
+	data class ERROR(val error: Error, val validityRange: ValidityRange?) : VerificationState()
 }

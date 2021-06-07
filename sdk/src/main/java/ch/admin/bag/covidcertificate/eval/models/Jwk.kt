@@ -46,7 +46,7 @@ data class Jwk(
 ) {
 
 	companion object {
-		private const val ALG_RSA_256 = "RSA256"
+		private const val ALG_RSA_256 = "RS256"
 		private const val ALG_ES_256 = "ES256"
 
 		fun fromNE(kid: String, n: String, e: String, use: String) = Jwk(
