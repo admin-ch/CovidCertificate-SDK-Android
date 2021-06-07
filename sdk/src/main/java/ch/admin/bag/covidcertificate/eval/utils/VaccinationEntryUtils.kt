@@ -78,11 +78,11 @@ fun VaccinationEntry.vaccineDate(): LocalDateTime? {
 	return date.atStartOfDay()
 }
 
-fun VaccinationEntry.getVaccinationCountry(deviceLang: String): String {
+fun VaccinationEntry.getVaccinationCountry(showEnglishVersionForLabels: Boolean): String {
 	return try {
 		val loc = Locale("", this.country)
 		var countryString = loc.displayCountry
-		if (deviceLang != "en") {
+		if (showEnglishVersionForLabels) {
 			countryString = "$countryString / ${loc.getDisplayCountry(Locale.ENGLISH)}"
 		}
 		return countryString

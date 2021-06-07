@@ -33,11 +33,11 @@ fun RecoveryEntry.dateFormattedOfFirstPostiveResult(dateFormatter: DateTimeForma
 	}
 }
 
-fun RecoveryEntry.getRecoveryCountry(deviceLang: String): String {
+fun RecoveryEntry.getRecoveryCountry(showEnglishVersionForLabels: Boolean): String {
 	return try {
 		val loc = Locale("", this.countryOfTest)
 		var countryString = loc.displayCountry
-		if (deviceLang != "en") {
+		if (showEnglishVersionForLabels) {
 			countryString = "$countryString / ${loc.getDisplayCountry(Locale.ENGLISH)}"
 		}
 		return countryString
