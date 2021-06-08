@@ -78,10 +78,14 @@ fun VaccinationEntry.vaccineDate(): LocalDateTime? {
 	return date.atStartOfDay()
 }
 
-fun VaccinationEntry.getVaccinationCountry(): String {
+fun VaccinationEntry.getVaccinationCountry(showEnglishVersionForLabels: Boolean): String {
 	return try {
 		val loc = Locale("", this.country)
-		loc.displayCountry
+		var countryString = loc.displayCountry
+		if (showEnglishVersionForLabels) {
+			countryString = "$countryString / ${loc.getDisplayCountry(Locale.ENGLISH)}"
+		}
+		return countryString
 	} catch (e: Exception) {
 		this.country
 	}
