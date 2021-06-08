@@ -23,25 +23,27 @@ import java.io.IOException
 import java.security.GeneralSecurityException
 import java.time.Instant
 
-internal class CertificateSecureStorage private constructor(context: Context) : TrustListStore {
+internal class CertificateSecureStorage private constructor(private val context: Context) : TrustListStore {
 
 	companion object : SingletonHolder<CertificateSecureStorage, Context>(::CertificateSecureStorage) {
-		private const val PREFERENCES = "CertificateSecureStorage"
+		private const val PREFERENCES_NAME = "CertificateSecureStorage"
+		private const val FILE_PATH_CERTIFICATE_SIGNATURES = "jwks.json"
+		private const val FILE_PATH_REVOKED_CERTIFICATES = "revokedList.json"
+		private const val FILE_PATH_RULESET = "ruleset.json"
 
 		private const val KEY_CERTIFICATE_SIGNATURES_VALID_UNTIL = "KEY_CERTIFICATE_SIGNATURES_VALID_UNTIL"
-		private const val KEY_CERTIFICATE_SIGNATURES = "KEY_CERTIFICATE_SIGNATURES"
-
 		private const val KEY_REVOKED_CERTIFICATES_VALID_UNTIL = "KEY_REVOKED_CERTIFICATES_VALID_UNTIL"
-		private const val KEY_REVOKED_CERTIFICATES = "KEY_REVOKED_CERTIFICATES"
-
 		private const val KEY_RULESET_VALID_UNTIL = "KEY_RULESET_VALID_UNTIL"
-		private const val KEY_RULESET = "KEY_RULESET"
 
 		private val moshi = Moshi.Builder().build()
 		private val jwksAdapter = moshi.adapter(Jwks::class.java)
 		private val revokedCertificatesAdapter = moshi.adapter(RevokedCertificates::class.java)
 		private val rulesetAdapter = moshi.adapter(RuleSet::class.java)
 	}
+
+	private val certificateFileStorage = EncryptedFileStorage(FILE_PATH_CERTIFICATE_SIGNATURES)
+	private val revocationFileStorage = EncryptedFileStorage(FILE_PATH_REVOKED_CERTIFICATES)
+	private val ruleSetFileStorage = EncryptedFileStorage(FILE_PATH_RULESET)
 
 	private val preferences = initializeSharedPreferences(context)
 
@@ -58,8 +60,7 @@ internal class CertificateSecureStorage private constructor(context: Context) : 
 
 	/**
 	 * Create or obtain an encrypted SharedPreferences instance. Note that this method is synchronized because the AndroidX
-	 * Security
-	 * library is not thread-safe.
+	 * Security library is not thread-safe.
 	 * @see [https://developer.android.com/topic/security/data](https://developer.android.com/topic/security/data)
 	 */
 	@Synchronized
@@ -68,7 +69,7 @@ internal class CertificateSecureStorage private constructor(context: Context) : 
 		val masterKeys = MasterKeys.getOrCreate(MasterKeys.AES256_GCM_SPEC)
 		return EncryptedSharedPreferences
 			.create(
-				PREFERENCES, masterKeys, context, EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+				PREFERENCES_NAME, masterKeys, context, EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
 				EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
 			)
 	}
@@ -79,10 +80,16 @@ internal class CertificateSecureStorage private constructor(context: Context) : 
 			preferences.edit().putLong(KEY_CERTIFICATE_SIGNATURES_VALID_UNTIL, value).apply()
 		}
 
-	override var certificateSignatures: Jwks?
-		get() = preferences.getString(KEY_CERTIFICATE_SIGNATURES, null)?.let { jwksAdapter.fromJson(it) }
+	override var certificateSignatures: Jwks? = null
+		get() {
+			if (field == null) {
+				field = certificateFileStorage.read(context)?.let { jwksAdapter.fromJson(it) }
+			}
+			return field
+		}
 		set(value) {
-			preferences.edit().putString(KEY_CERTIFICATE_SIGNATURES, jwksAdapter.toJson(value)).apply()
+			certificateFileStorage.write(context, jwksAdapter.toJson(value))
+			field = value
 		}
 
 	override var revokedCertificatesValidUntil: Long
@@ -91,10 +98,16 @@ internal class CertificateSecureStorage private constructor(context: Context) : 
 			preferences.edit().putLong(KEY_REVOKED_CERTIFICATES_VALID_UNTIL, value).apply()
 		}
 
-	override var revokedCertificates: RevokedCertificates?
-		get() = preferences.getString(KEY_REVOKED_CERTIFICATES, null)?.let { revokedCertificatesAdapter.fromJson(it) }
+	override var revokedCertificates: RevokedCertificates? = null
+		get() {
+			if (field == null) {
+				field = revocationFileStorage.read(context)?.let { revokedCertificatesAdapter.fromJson(it) }
+			}
+			return field
+		}
 		set(value) {
-			preferences.edit().putString(KEY_REVOKED_CERTIFICATES, revokedCertificatesAdapter.toJson(value)).apply()
+			revocationFileStorage.write(context, revokedCertificatesAdapter.toJson(value))
+			field = value
 		}
 
 	override var rulesetValidUntil: Long
@@ -103,10 +116,16 @@ internal class CertificateSecureStorage private constructor(context: Context) : 
 			preferences.edit().putLong(KEY_RULESET_VALID_UNTIL, value).apply()
 		}
 
-	override var ruleset: RuleSet?
-		get() = preferences.getString(KEY_RULESET, null)?.let { rulesetAdapter.fromJson(it) }
+	override var ruleset: RuleSet? = null
+		get() {
+			if (field == null) {
+				field = ruleSetFileStorage.read(context)?.let { rulesetAdapter.fromJson(it) }
+			}
+			return field
+		}
 		set(value) {
-			preferences.edit().putString(KEY_RULESET, rulesetAdapter.toJson(value)).apply()
+			ruleSetFileStorage.write(context, rulesetAdapter.toJson(value))
+			field = value
 		}
 
 	override fun areSignaturesValid(): Boolean {
