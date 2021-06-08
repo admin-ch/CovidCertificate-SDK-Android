@@ -13,6 +13,7 @@ package ch.admin.bag.covidcertificate.eval.verification
 import ch.admin.bag.covidcertificate.eval.repository.TrustListRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.util.*
 
@@ -28,12 +29,17 @@ class CertificateVerificationController internal constructor(
 	/**
 	 * Trigger a refresh of the trust list unless there is already a refresh running
 	 */
-	fun refreshTrustList(coroutineScope: CoroutineScope) {
+	fun refreshTrustList(coroutineScope: CoroutineScope, onCompletionCallback: () -> Unit = {}) {
 		val job = trustListLoadingJob
 		if (job == null || job.isCompleted) {
 			trustListLoadingJob = coroutineScope.launch {
-				trustListRepository.refreshTrustList(forceRefresh = true)
-				trustListLoadingJob = null
+				try {
+					trustListRepository.refreshTrustList(forceRefresh = true)
+					trustListLoadingJob = null
+					onCompletionCallback.invoke()
+				} catch (e: Exception) {
+					// Loading trust list failed, keep using last stored version
+				}
 			}
 		}
 	}
@@ -58,19 +64,20 @@ class CertificateVerificationController internal constructor(
 		// Launch a new trust list loading job if it is not yet running, then suspend until the existing or new job is completed
 		if (trustListLoadingJob == null || trustListLoadingJob?.isCompleted == true) {
 			trustListLoadingJob = coroutineScope.launch {
-				trustListRepository.refreshTrustList(forceRefresh = false)
-				trustListLoadingJob = null
+				try {
+					trustListRepository.refreshTrustList(forceRefresh = false)
+					trustListLoadingJob = null
+				} catch (e: Exception) {
+					// Loading trust list failed, keep using last stored version
+				}
 			}
 		}
 		trustListLoadingJob?.join()
 
-		// Get the trust list from the repository. If this returns null, it means any of the backend requests failed
+		// Get the current trust list. If this returns null, it means that some or all of the content is either missing or outdated.
+		// In that case, the task will fail with a corresponding error code
 		val trustList = trustListRepository.getTrustList()
-		if (trustList == null) {
-			taskQueue.add(task)
-		} else {
-			task.execute(verifier, trustList)
-		}
+		task.execute(verifier, trustList)
 
 		// When the current task is finished, check the next task in the queue for execution
 		val nextTask = taskQueue.poll()

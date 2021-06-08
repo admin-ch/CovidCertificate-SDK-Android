@@ -39,4 +39,7 @@ object EvalErrorCodes {
 	const val NOT_FULLY_PROTECTED = "N|NFP"
 	const val RULESET_UNKNOWN = "N|UNK"
 
+	/* Errors regarding the trust list */
+	const val TRUST_LIST_MISSING = "T|MIS"
+
 }

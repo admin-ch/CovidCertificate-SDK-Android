@@ -25,4 +25,8 @@ interface TrustListStore {
 	var rulesetValidUntil: Long
 	var ruleset: RuleSet?
 
+	fun areSignaturesValid(): Boolean
+	fun areRevokedCertificatesValid(): Boolean
+	fun areRuleSetsValid(): Boolean
+
 }

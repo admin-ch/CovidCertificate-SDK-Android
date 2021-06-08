@@ -28,13 +28,13 @@ android {
 
 	productFlavors {
 		dev {
-			buildConfigField "String", "BASE_URL_TRUST_LIST", '"https://www.cc-d.bit.admin.ch/v1/"'
+			buildConfigField "String", "BASE_URL_TRUST_LIST", '"https://www.cc-d.bit.admin.ch/trust/v1/"'
 		}
 		abn {
-			buildConfigField "String", "BASE_URL_TRUST_LIST", '"https://www.cc-a.bit.admin.ch/v1/"'
+			buildConfigField "String", "BASE_URL_TRUST_LIST", '"https://www.cc-a.bit.admin.ch/trust/v1/"'
 		}
 		prod {
-			buildConfigField "String", "BASE_URL_TRUST_LIST", '"https://www.cc.bit.admin.ch/v1/"'
+			buildConfigField "String", "BASE_URL_TRUST_LIST", '"https://www.cc.bit.admin.ch/trust/v1/"'
 		}
 	}
 

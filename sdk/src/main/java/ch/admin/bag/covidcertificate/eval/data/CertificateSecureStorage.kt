@@ -21,6 +21,7 @@ import ch.admin.bag.covidcertificate.eval.utils.SingletonHolder
 import com.squareup.moshi.Moshi
 import java.io.IOException
 import java.security.GeneralSecurityException
+import java.time.Instant
 
 internal class CertificateSecureStorage private constructor(context: Context) : TrustListStore {
 
@@ -107,4 +108,16 @@ internal class CertificateSecureStorage private constructor(context: Context) : 
 		set(value) {
 			preferences.edit().putString(KEY_RULESET, rulesetAdapter.toJson(value)).apply()
 		}
+
+	override fun areSignaturesValid(): Boolean {
+		return certificateSignatures != null && Instant.now().toEpochMilli() < certificateSignaturesValidUntil
+	}
+
+	override fun areRevokedCertificatesValid(): Boolean {
+		return revokedCertificates != null && Instant.now().toEpochMilli() < revokedCertificatesValidUntil
+	}
+
+	override fun areRuleSetsValid(): Boolean {
+		return ruleset != null && Instant.now().toEpochMilli() < rulesetValidUntil
+	}
 }

@@ -10,6 +10,8 @@
 
 package ch.admin.bag.covidcertificate.eval.verification
 
+import ch.admin.bag.covidcertificate.eval.data.EvalErrorCodes
+import ch.admin.bag.covidcertificate.eval.data.state.Error
 import ch.admin.bag.covidcertificate.eval.data.state.VerificationState
 import ch.admin.bag.covidcertificate.eval.models.DccHolder
 import ch.admin.bag.covidcertificate.eval.models.TrustList
@@ -24,9 +26,20 @@ class CertificateVerificationTask(val dccHolder: DccHolder) {
 	/**
 	 * Execute this verification task with the specified verifier and trust list
 	 */
-	internal suspend fun execute(verifier: CertificateVerifier, trustList: TrustList) {
-		val state = verifier.verify(dccHolder, trustList)
-		mutableVerificationStateFlow.emit(state)
+	internal suspend fun execute(verifier: CertificateVerifier, trustList: TrustList?) {
+		if (trustList != null) {
+			val state = verifier.verify(dccHolder, trustList)
+			mutableVerificationStateFlow.emit(state)
+		} else {
+			mutableVerificationStateFlow.emit(
+				VerificationState.ERROR(
+					Error(
+						EvalErrorCodes.TRUST_LIST_MISSING,
+						dccHolder = dccHolder
+					), null
+				)
+			)
+		}
 	}
 
 }

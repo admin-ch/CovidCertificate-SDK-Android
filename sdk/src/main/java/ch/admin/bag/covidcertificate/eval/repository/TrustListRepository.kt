@@ -13,6 +13,7 @@ package ch.admin.bag.covidcertificate.eval.repository
 import ch.admin.bag.covidcertificate.eval.data.TrustListStore
 import ch.admin.bag.covidcertificate.eval.models.Jwk
 import ch.admin.bag.covidcertificate.eval.models.Jwks
+import ch.admin.bag.covidcertificate.eval.models.RuleSet
 import ch.admin.bag.covidcertificate.eval.models.TrustList
 import ch.admin.bag.covidcertificate.eval.net.CertificateService
 import ch.admin.bag.covidcertificate.eval.net.RevocationService
@@ -55,11 +56,10 @@ internal class TrustListRepository(
 	 * Get the trust list from the provider or null if at least one of the values is not set
 	 */
 	fun getTrustList(): TrustList? {
-		val signatures = store.certificateSignatures
-		val revokedCertificates = store.revokedCertificates
-		val ruleSet = store.ruleset
-
-		return if (signatures != null && revokedCertificates != null && ruleSet != null) {
+		return if (store.areSignaturesValid() && store.areRevokedCertificatesValid() /*&& store.areRuleSetsValid()*/) {
+			val signatures = store.certificateSignatures!!
+			val revokedCertificates = store.revokedCertificates!!
+			val ruleSet = store.ruleset ?: RuleSet(emptyList()) // TODO Just for testing while there is no endpoint yet
 			TrustList(signatures, revokedCertificates, ruleSet)
 		} else {
 			null
@@ -67,11 +67,7 @@ internal class TrustListRepository(
 	}
 
 	private suspend fun refreshCertificateSignatures(forceRefresh: Boolean) = withContext(Dispatchers.IO) {
-		val now = Instant.now().toEpochMilli()
-		val shouldLoadSignatures = forceRefresh
-				|| store.certificateSignatures == null
-				|| store.certificateSignaturesValidUntil <= now
-
+		val shouldLoadSignatures = forceRefresh || !store.areSignaturesValid()
 		if (shouldLoadSignatures) {
 			// Load the active certificate key IDs
 			val activeCertificatesResponse = certificateService.getActiveSignerCertificateKeyIds()
@@ -98,11 +94,7 @@ internal class TrustListRepository(
 	}
 
 	private suspend fun refreshRevokedCertificates(forceRefresh: Boolean) = withContext(Dispatchers.IO) {
-		val now = Instant.now().toEpochMilli()
-		val shouldLoadRevokedCertificates = forceRefresh
-				|| store.revokedCertificates == null
-				|| store.revokedCertificatesValidUntil <= now
-
+		val shouldLoadRevokedCertificates = forceRefresh || !store.areRevokedCertificatesValid()
 		if (shouldLoadRevokedCertificates) {
 			val response = revocationService.getRevokedCertificates()
 			if (response.isSuccessful && response.body() != null) {
@@ -114,9 +106,7 @@ internal class TrustListRepository(
 	}
 
 	private suspend fun refreshRuleSet(forceRefresh: Boolean) = withContext(Dispatchers.IO) {
-		val now = Instant.now().toEpochMilli()
-		val shouldLoadRuleSet = forceRefresh || store.ruleset == null || store.rulesetValidUntil <= now
-
+		val shouldLoadRuleSet = forceRefresh || !store.areRuleSetsValid()
 		if (shouldLoadRuleSet) {
 			val response = ruleSetService.getRuleset()
 			if (response.isSuccessful && response.body() != null) {
