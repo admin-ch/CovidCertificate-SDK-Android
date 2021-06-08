@@ -21,5 +21,6 @@ import kotlinx.serialization.Serializable
 @Serializable
 @JsonClass(generateAdapter = true)
 data class RevokedCertificates(
-	val revokedCerts: List<String> = emptyList()
+	val revokedCerts: List<String> = emptyList(),
+	val validDuration: Long
 )

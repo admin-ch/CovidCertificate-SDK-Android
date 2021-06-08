@@ -11,7 +11,6 @@
 package ch.admin.bag.covidcertificate.eval.repository
 
 import ch.admin.bag.covidcertificate.eval.data.TrustListStore
-import ch.admin.bag.covidcertificate.eval.models.Jwk
 import ch.admin.bag.covidcertificate.eval.models.Jwks
 import ch.admin.bag.covidcertificate.eval.models.RuleSet
 import ch.admin.bag.covidcertificate.eval.models.TrustList
@@ -33,7 +32,6 @@ internal class TrustListRepository(
 ) {
 
 	companion object {
-		private const val DEFAULT_VALIDITY_IN_DAYS = 2L
 		private const val HEADER_NEXT_SINCE = "X-Next-Since"
 	}
 
@@ -71,8 +69,8 @@ internal class TrustListRepository(
 		if (shouldLoadSignatures) {
 			// Load the active certificate key IDs
 			val activeCertificatesResponse = certificateService.getActiveSignerCertificateKeyIds()
-			if (activeCertificatesResponse.isSuccessful && activeCertificatesResponse.body() != null) {
-				val activeCertificateKeyIds = activeCertificatesResponse.body()?.activeKeyIds ?: emptyList()
+			val activeCertificatesBody = activeCertificatesResponse.body()
+			if (activeCertificatesResponse.isSuccessful && activeCertificatesBody != null) {
 				val allCertificates = store.certificateSignatures?.certs?.toMutableList() ?: mutableListOf()
 				var since = store.certificatesSinceHeader
 
@@ -86,9 +84,12 @@ internal class TrustListRepository(
 				store.certificatesSinceHeader = since
 
 				// Filter only active certificates and store them
+				val activeCertificateKeyIds = activeCertificatesBody.activeKeyIds
 				val activeCertificates = allCertificates.filter { activeCertificateKeyIds.contains(it.keyId) }
 				store.certificateSignatures = Jwks(activeCertificates)
-				val newValidUntil = Instant.now().plus(DEFAULT_VALIDITY_IN_DAYS, ChronoUnit.DAYS).toEpochMilli()
+
+				val validDuration = activeCertificatesBody.validDuration
+				val newValidUntil = Instant.now().plus(validDuration, ChronoUnit.MILLIS).toEpochMilli()
 				store.certificateSignaturesValidUntil = newValidUntil
 			}
 		}
@@ -98,9 +99,10 @@ internal class TrustListRepository(
 		val shouldLoadRevokedCertificates = forceRefresh || !store.areRevokedCertificatesValid()
 		if (shouldLoadRevokedCertificates) {
 			val response = revocationService.getRevokedCertificates()
-			if (response.isSuccessful && response.body() != null) {
-				store.revokedCertificates = response.body()
-				val newValidUntil = Instant.now().plus(DEFAULT_VALIDITY_IN_DAYS, ChronoUnit.DAYS).toEpochMilli()
+			val body = response.body()
+			if (response.isSuccessful && body != null) {
+				store.revokedCertificates = body
+				val newValidUntil = Instant.now().plus(body.validDuration, ChronoUnit.MILLIS).toEpochMilli()
 				store.revokedCertificatesValidUntil = newValidUntil
 			}
 		}
@@ -112,7 +114,7 @@ internal class TrustListRepository(
 			val response = ruleSetService.getRuleset()
 			if (response.isSuccessful && response.body() != null) {
 				store.ruleset = response.body()
-				val newValidUntil = Instant.now().plus(DEFAULT_VALIDITY_IN_DAYS, ChronoUnit.DAYS).toEpochMilli()
+				val newValidUntil = Instant.now().plus(2L, ChronoUnit.DAYS).toEpochMilli()
 				store.rulesetValidUntil = newValidUntil
 			}
 		}
