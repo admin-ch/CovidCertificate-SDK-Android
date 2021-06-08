@@ -73,18 +73,19 @@ internal class TrustListRepository(
 			val activeCertificatesResponse = certificateService.getActiveSignerCertificateKeyIds()
 			if (activeCertificatesResponse.isSuccessful && activeCertificatesResponse.body() != null) {
 				val activeCertificateKeyIds = activeCertificatesResponse.body()?.activeKeyIds ?: emptyList()
-				var since: Long? = null
-				val allCertificates = mutableListOf<Jwk>()
+				val allCertificates = store.certificateSignatures?.certs?.toMutableList() ?: mutableListOf()
+				var since = store.certificatesSinceHeader
 
 				// Get the signer certificates as long as there are entries in the response list
 				var certificatesResponse = certificateService.getSignerCertificates(since)
 				while (certificatesResponse.isSuccessful && certificatesResponse.body()?.certs?.isNullOrEmpty() == false) {
 					allCertificates.addAll(certificatesResponse.body()?.certs ?: emptyList())
-					since = certificatesResponse.headers()[HEADER_NEXT_SINCE]?.toLong()
+					since = certificatesResponse.headers()[HEADER_NEXT_SINCE]?.toLong() ?: 0L
 					certificatesResponse = certificateService.getSignerCertificates(since)
 				}
+				store.certificatesSinceHeader = since
 
-				// Filter out non-active certificates and store them
+				// Filter only active certificates and store them
 				val activeCertificates = allCertificates.filter { activeCertificateKeyIds.contains(it.keyId) }
 				store.certificateSignatures = Jwks(activeCertificates)
 				val newValidUntil = Instant.now().plus(DEFAULT_VALIDITY_IN_DAYS, ChronoUnit.DAYS).toEpochMilli()

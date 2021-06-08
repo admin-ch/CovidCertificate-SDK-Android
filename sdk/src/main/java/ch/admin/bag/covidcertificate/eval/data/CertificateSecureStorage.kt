@@ -32,6 +32,7 @@ internal class CertificateSecureStorage private constructor(private val context:
 		private const val FILE_PATH_RULESET = "ruleset.json"
 
 		private const val KEY_CERTIFICATE_SIGNATURES_VALID_UNTIL = "KEY_CERTIFICATE_SIGNATURES_VALID_UNTIL"
+		private const val KEY_CERTIFICATE_SIGNATURES_SINCE_HEADER = "KEY_CERTIFICATE_SIGNATURES_SINCE_HEADER"
 		private const val KEY_REVOKED_CERTIFICATES_VALID_UNTIL = "KEY_REVOKED_CERTIFICATES_VALID_UNTIL"
 		private const val KEY_RULESET_VALID_UNTIL = "KEY_RULESET_VALID_UNTIL"
 
@@ -90,6 +91,12 @@ internal class CertificateSecureStorage private constructor(private val context:
 		set(value) {
 			certificateFileStorage.write(context, jwksAdapter.toJson(value))
 			field = value
+		}
+
+	override var certificatesSinceHeader: Long
+		get() = preferences.getLong(KEY_CERTIFICATE_SIGNATURES_SINCE_HEADER, 0L)
+		set(value) {
+			preferences.edit().putLong(KEY_CERTIFICATE_SIGNATURES_SINCE_HEADER, value).apply()
 		}
 
 	override var revokedCertificatesValidUntil: Long
