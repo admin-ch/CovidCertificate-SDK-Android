@@ -13,7 +13,6 @@ package ch.admin.bag.covidcertificate.eval.verification
 import ch.admin.bag.covidcertificate.eval.repository.TrustListRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.util.*
 

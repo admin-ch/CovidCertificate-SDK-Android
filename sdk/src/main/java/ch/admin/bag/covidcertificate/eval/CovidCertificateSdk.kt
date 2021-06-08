@@ -43,6 +43,7 @@ object CovidCertificateSdk {
 	private lateinit var certificateVerificationController: CertificateVerificationController
 	private var isInitialized = false
 	private var trustListRefreshTimer: Timer? = null
+	private var trustListLifecycleObserver: TrustListLifecycleObserver? = null
 
 	fun init(context: Context) {
 		val retrofit = createRetrofit(context)
@@ -62,20 +63,15 @@ object CovidCertificateSdk {
 	fun registerWithLifecycle(lifecycle: Lifecycle) {
 		requireInitialized()
 
-		lifecycle.addObserver(object : LifecycleObserver {
-			@OnLifecycleEvent(Lifecycle.Event.ON_START)
-			fun onStart() {
-				trustListRefreshTimer?.cancel()
-				trustListRefreshTimer = timer(initialDelay = TRUST_LIST_REFRESH_INTERVAL, period = TRUST_LIST_REFRESH_INTERVAL) {
-					certificateVerificationController.refreshTrustList(lifecycle.coroutineScope)
-				}
-			}
+		trustListLifecycleObserver = TrustListLifecycleObserver(lifecycle)
+		trustListLifecycleObserver?.register(lifecycle)
+	}
 
-			@OnLifecycleEvent(Lifecycle.Event.ON_STOP)
-			fun onStop() {
-				trustListRefreshTimer?.cancel()
-			}
-		})
+	fun unregisterWithLifecycle(lifecycle: Lifecycle) {
+		requireInitialized()
+
+		trustListLifecycleObserver?.unregister(lifecycle)
+		trustListLifecycleObserver = null
 	}
 
 	fun getCertificateVerificationController(): CertificateVerificationController {
@@ -108,6 +104,29 @@ object CovidCertificateSdk {
 			.client(okHttpBuilder.build())
 			.addConverterFactory(MoshiConverterFactory.create())
 			.build()
+	}
+
+	internal class TrustListLifecycleObserver(private val lifecycle: Lifecycle) : LifecycleObserver {
+		fun register(lifecycle: Lifecycle) {
+			lifecycle.addObserver(this)
+		}
+
+		fun unregister(lifecycle: Lifecycle) {
+			lifecycle.removeObserver(this)
+		}
+
+		@OnLifecycleEvent(Lifecycle.Event.ON_START)
+		fun onStart() {
+			trustListRefreshTimer?.cancel()
+			trustListRefreshTimer = timer(initialDelay = TRUST_LIST_REFRESH_INTERVAL, period = TRUST_LIST_REFRESH_INTERVAL) {
+				certificateVerificationController.refreshTrustList(lifecycle.coroutineScope)
+			}
+		}
+
+		@OnLifecycleEvent(Lifecycle.Event.ON_STOP)
+		fun onStop() {
+			trustListRefreshTimer?.cancel()
+		}
 	}
 
 }
