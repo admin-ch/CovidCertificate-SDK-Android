@@ -22,17 +22,21 @@ import java.security.cert.X509Certificate
         for ( cert in encodedCertificates) {
             val certBytes = Base64.decode(cert, Base64.DEFAULT)
             val byteInputStream = ByteArrayInputStream(certBytes)
-            val x509 = certificateFactory.generateCertificate(byteInputStream) as X509Certificate
-            if (certificates.isNotEmpty()) {
-                val certificateToVerify = certificates.last()
-                try {
-                    certificateToVerify.verify(x509.publicKey)
+            // catch exception and rethrow
+            try {
+                val x509 = certificateFactory.generateCertificate(byteInputStream) as X509Certificate
+                if (certificates.isNotEmpty()) {
+                    val certificateToVerify = certificates.last()
+                    try {
+                        certificateToVerify.verify(x509.publicKey)
+                    } catch (e: Exception) {
+                        throw SignatureException("Certificate chain cannot be verified")
+                    }
                 }
-                catch (e: Exception) {
-                    throw SignatureException("Certificate chain cannot be verified")
-                }
+                certificates.add(x509)
+            } catch (e: Exception) {
+                throw SignatureException("x5c is not a x509 certificate")
             }
-            certificates.add(x509)
         }
 
         val checkWithRoot = certificates.last()

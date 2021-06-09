@@ -46,7 +46,7 @@ val APPLICATION_JSON = "application/json".toMediaType()
  */
  class JwsInterceptor(rootCA: X509Certificate) :
         Interceptor {
-    val keyResolver: JwsKeyResolver = JwsKeyResolver(rootCA)
+    private val keyResolver: JwsKeyResolver = JwsKeyResolver(rootCA)
 
     @Throws(IOException::class)
 
@@ -58,7 +58,7 @@ val APPLICATION_JSON = "application/json".toMediaType()
         if (response.cacheResponse != null) {
             return response
         }
-        val jws = response.body!!.string()
+        val jws = response.body?.string() ?: throw SignatureException("Body has no signature")
 
         var body = ""
         try {
@@ -73,6 +73,7 @@ val APPLICATION_JSON = "application/json".toMediaType()
         } catch (o: ExpiredJwtException) {
             throw SignatureException("Expired JWT")
         }
+
         // SAFE ZONE
         // from here on body contains a JSON-string of the payload of the JWS, whose signature we verified.
 
