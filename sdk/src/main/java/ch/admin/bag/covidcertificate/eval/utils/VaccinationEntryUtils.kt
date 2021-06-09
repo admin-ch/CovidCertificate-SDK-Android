@@ -36,17 +36,6 @@ fun VaccinationEntry.isTargetDiseaseCorrect(): Boolean {
 	return this.disease == AcceptanceCriterias.TARGET_DISEASE
 }
 
-fun VaccinationEntry.getFormattedVaccinationDate(dateFormatter: DateTimeFormatter): String? {
-	if (this.vaccinationDate.isNullOrEmpty()) {
-		return null
-	}
-	return try {
-		LocalDate.parse(this.vaccinationDate, DateTimeFormatter.ISO_DATE).format(dateFormatter)
-	} catch (e: java.lang.Exception) {
-		this.vaccinationDate
-	}
-}
-
 fun VaccinationEntry.validFromDate(vaccine: Vaccine): LocalDateTime? {
 	val vaccineDate = this.vaccineDate() ?: return null
 	val totalNumberOfDosis = vaccine.total_dosis_number
@@ -66,7 +55,7 @@ fun VaccinationEntry.validUntilDate(): LocalDateTime? {
 }
 
 fun VaccinationEntry.vaccineDate(): LocalDateTime? {
-	if (this.vaccinationDate.isNullOrEmpty()) {
+	if (this.vaccinationDate.isEmpty()) {
 		return null
 	}
 	val date: LocalDate?
