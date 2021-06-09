@@ -80,17 +80,9 @@ internal object Eval {
 	 */
 	fun checkNationalRules(
 		dccHolder: DccHolder,
-		nationalRulesVerifier: NationalRulesVerifier,
 		ruleSet: RuleSet
 	): CheckNationalRulesState {
-		return if (!dccHolder.euDGC.vaccinations.isNullOrEmpty()) {
-			nationalRulesVerifier.verifyVaccine(dccHolder.euDGC.vaccinations.first())
-		} else if (!dccHolder.euDGC.tests.isNullOrEmpty()) {
-			nationalRulesVerifier.verifyTest(dccHolder.euDGC.tests.first())
-		} else if (!dccHolder.euDGC.pastInfections.isNullOrEmpty()) {
-			nationalRulesVerifier.verifyRecovery(dccHolder.euDGC.pastInfections.first())
-		} else {
-			throw Exception("NO VALID DATA")
-		}
+		val nationalRulesVerifier = NationalRulesVerifier(ruleSet)
+		return nationalRulesVerifier.verify(dccHolder.euDGC)
 	}
 }

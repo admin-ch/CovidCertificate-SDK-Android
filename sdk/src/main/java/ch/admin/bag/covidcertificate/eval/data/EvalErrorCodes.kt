@@ -38,6 +38,9 @@ object EvalErrorCodes {
 	const val POSITIVE_RESULT = "N|PR"
 	const val NOT_FULLY_PROTECTED = "N|NFP"
 	const val RULESET_UNKNOWN = "N|UNK"
+	const val TOO_MANY_VACCINE_ENTRIES = "N|TMV"
+	const val TOO_MANY_TEST_ENTRIES = "N|TMT"
+	const val TOO_MANY_RECOVERY_ENTRIES = "N|TMR"
 
 	/* Errors regarding the trust list */
 	const val TRUST_LIST_MISSING = "T|MIS"

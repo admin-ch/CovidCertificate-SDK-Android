@@ -10,29 +10,47 @@
 
 package ch.admin.bag.covidcertificate.eval.models
 
+import ch.admin.bag.covidcertificate.eval.euhealthcert.RecoveryEntry
+import ch.admin.bag.covidcertificate.eval.euhealthcert.TestEntry
+import ch.admin.bag.covidcertificate.eval.euhealthcert.VaccinationEntry
+import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
-import kotlinx.serialization.Serializable
 
-@Serializable
 @JsonClass(generateAdapter = true)
 data class RuleSet(
-	val rules: List<Rule>
+	val rules: List<Rule>,
+	val valueSets: RuleValueSets,
+	val validDuration: Long
 )
 
-@Serializable
 @JsonClass(generateAdapter = true)
 data class Rule(
-	val name: String,
+	val id: String,
+	val businessDescription: String?,
 	val description: String,
-	val expression: Expression
+	val inputParameter: String,
+	val logic: String
 )
 
-@Serializable
 @JsonClass(generateAdapter = true)
-data class Expression(
-	val version: String,
-	val type: String,
-	val value: String
+data class RuleValueSets(
+	@Json(name = "disease-agent-targeted") val diseaseAgents: List<String>?,
+	@Json(name = "covid-19-lab-test-type") val testTypes: List<String>?,
+	@Json(name = "covid-19-lab-test-manufacturer-and-name") val testManufacturers: List<String>?
 )
 
+data class CertLogicData(
+	val payload: CertLogicPayload,
+	val external: CertLogicExternalInfo
+)
 
+data class CertLogicPayload(
+	val r: List<RecoveryEntry>? = null,
+	val t: List<TestEntry>? = null,
+	val v: List<VaccinationEntry>? = null
+)
+
+data class CertLogicExternalInfo(
+	val valueSets: RuleValueSets,
+	val validationClock: String // ISO-8601 extended offset date-time format
+)

@@ -32,6 +32,7 @@ import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
+import retrofit2.converter.scalars.ScalarsConverterFactory
 import java.util.*
 import java.util.concurrent.TimeUnit
 import kotlin.concurrent.timer
@@ -49,12 +50,12 @@ object CovidCertificateSdk {
 		val retrofit = createRetrofit(context)
 		val certificateService = retrofit.create(CertificateService::class.java)
 		val revocationService = retrofit.create(RevocationService::class.java)
-		val ruleSetService = retrofit.create(RuleSetService::class.java)
+		val nationRetrofit = createRetrofitForNationalRules(context) // TODO Just until there is a real endpoint
+		val ruleSetService = nationRetrofit.create(RuleSetService::class.java)
 
 		val certificateStorage = CertificateSecureStorage.getInstance(context)
 		val trustListRepository = TrustListRepository(certificateService, revocationService, ruleSetService, certificateStorage)
-		val nationalRulesVerifier = NationalRulesVerifier(context)
-		val certificateVerifier = CertificateVerifier(nationalRulesVerifier)
+		val certificateVerifier = CertificateVerifier()
 		certificateVerificationController = CertificateVerificationController(trustListRepository, certificateVerifier)
 
 		isInitialized = true
@@ -102,6 +103,7 @@ object CovidCertificateSdk {
 		return Retrofit.Builder()
 			.baseUrl(BuildConfig.BASE_URL_TRUST_LIST)
 			.client(okHttpBuilder.build())
+			.addConverterFactory(ScalarsConverterFactory.create())
 			.addConverterFactory(MoshiConverterFactory.create())
 			.build()
 	}
@@ -127,6 +129,30 @@ object CovidCertificateSdk {
 		fun onStop() {
 			trustListRefreshTimer?.cancel()
 		}
+	}
+
+	// TODO only temporary needed fo national rules
+	private fun createRetrofitForNationalRules(context: Context): Retrofit {
+		val okHttpBuilder = OkHttpClient.Builder()
+			.certificatePinner(CertificatePinning.pinner)
+			.addInterceptor(UserAgentInterceptor(Config.userAgent))
+
+		val cacheSize = 5 * 1024 * 1024 // 5 MB
+		val cache = Cache(context.cacheDir, cacheSize.toLong())
+		okHttpBuilder.cache(cache)
+		// https://ch-dgc.s3.eu-central-1.amazonaws.com/v1/verificationRules.json
+		val baseUrl = "https://ch-dgc.s3.eu-central-1.amazonaws.com/v1/"
+		if (BuildConfig.DEBUG) {
+			val httpInterceptor = HttpLoggingInterceptor().setLevel(HttpLoggingInterceptor.Level.BODY)
+			okHttpBuilder.addInterceptor(httpInterceptor)
+		}
+
+		return Retrofit.Builder()
+			.baseUrl(baseUrl)
+			.client(okHttpBuilder.build())
+			.addConverterFactory(ScalarsConverterFactory.create())
+			.addConverterFactory(MoshiConverterFactory.create())
+			.build()
 	}
 
 }
