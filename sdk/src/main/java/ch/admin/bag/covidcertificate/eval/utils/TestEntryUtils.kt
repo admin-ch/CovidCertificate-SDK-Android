@@ -26,9 +26,6 @@ fun TestEntry.isTargetDiseaseCorrect(): Boolean {
 }
 
 fun TestEntry.getFormattedSampleDate(dateTimeFormatter: DateTimeFormatter): String? {
-	if (this.timestampSample == null) {
-		return null
-	}
 	return try {
 		return this.timestampSample.toInstant().atZone(ZoneId.systemDefault()).format(dateTimeFormatter)
 	} catch (e: Exception) {
@@ -48,7 +45,7 @@ fun TestEntry.getFormattedResultDate(dateTimeFormatter: DateTimeFormatter): Stri
 }
 
 fun TestEntry.getTestCenter(): String? {
-	if (!this.testCenter.isNullOrEmpty()) {
+	if (this.testCenter.isNotEmpty()) {
 		return this.testCenter
 	}
 	return null
@@ -85,7 +82,7 @@ fun TestEntry.validFromDate(): LocalDateTime? {
 
 fun TestEntry.validUntilDate(testEntry: TestEntry): LocalDateTime? {
 	val startDate = this.validFromDate() ?: return null
-	val testEntryCode = testEntry.type ?: return null
+	val testEntryCode = testEntry.type
 	if (testEntryCode == TestType.PCR.code) {
 		return startDate.plusHours(AcceptanceCriterias.PCR_TEST_VALIDITY_IN_HOURS)
 	} else if (testEntryCode == TestType.RAT.code) {
