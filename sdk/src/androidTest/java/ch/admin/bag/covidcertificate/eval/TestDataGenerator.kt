@@ -10,17 +10,23 @@
 
 package ch.admin.bag.covidcertificate.eval
 
-import ch.admin.bag.covidcertificate.eval.data.Eudgc
+import ch.admin.bag.covidcertificate.eval.euhealthcert.Eudgc
 import com.google.gson.Gson
+import com.squareup.moshi.JsonAdapter
+import com.squareup.moshi.Moshi
+import com.squareup.moshi.adapters.Rfc3339DateJsonAdapter
+import java.io.IOException
 import java.time.Duration
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter
+import java.util.*
 
 object TestDataGenerator {
 
 	private val gson = Gson()
+	val adapter: JsonAdapter<Eudgc> = Moshi.Builder().add(Date::class.java, Rfc3339DateJsonAdapter()).build().adapter(Eudgc::class.java)
 
 	fun generateVaccineCert(
 		dn: Int, // dose number
@@ -57,7 +63,8 @@ object TestDataGenerator {
                  "ver": "1.0.0"
                }
             """
-		return gson.fromJson(vaccineJson, Eudgc::class.java)!!
+
+		return  adapter.fromJson(vaccineJson)!!
 	}
 
 	fun generateTestCert(
@@ -97,7 +104,8 @@ object TestDataGenerator {
                 "ver": "1.0.0"
               }
            """
-		return gson.fromJson(testJson, Eudgc::class.java)!!
+
+		return  adapter.fromJson(testJson)!!
 	}
 
 	fun generateRecoveryCertFromDate(
@@ -129,7 +137,7 @@ object TestDataGenerator {
                  "ver": "1.0.0"
                }
             """
-		return gson.fromJson(recoveryJson, Eudgc::class.java)!!
+		return  adapter.fromJson(recoveryJson)!!
 	}
 
 	fun generateRecoveryCert(
@@ -162,7 +170,7 @@ object TestDataGenerator {
                  "ver": "1.0.0"
                }
             """
-		return gson.fromJson(recoveryJson, Eudgc::class.java)!!
+		return  adapter.fromJson(recoveryJson)!!
 	}
 
 }

@@ -2,6 +2,7 @@ package ch.admin.bag.covidcertificate.eval.euhealthcert
 
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
+import kotlinx.serialization.SerialName
 import java.io.Serializable
 
 @JsonClass(generateAdapter = true)
