@@ -38,6 +38,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import java.time.Clock
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 
 class NationalRulesVerifier(private val ruleSet: RuleSet) {
@@ -70,7 +71,7 @@ class NationalRulesVerifier(private val ruleSet: RuleSet) {
 
 	fun verify(euDgc: Eudgc): CheckNationalRulesState {
 		val payload = CertLogicPayload(euDgc.pastInfections, euDgc.tests, euDgc.vaccinations)
-		val validationClock = LocalDateTime.now().format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)
+		val validationClock = ZonedDateTime.now().format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)
 		val externalInfo = CertLogicExternalInfo(ruleSet.valueSets, validationClock)
 		val ruleSetData = CertLogicData(payload, externalInfo)
 

@@ -1,16 +1,17 @@
 package ch.admin.bag.covidcertificate.eval.euhealthcert
 
+import com.fasterxml.jackson.annotation.JsonProperty
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
 import java.io.Serializable
 
 @JsonClass(generateAdapter = true)
 data class RecoveryEntry(
-	@Json(name = "tg") val disease: String,
-	@Json(name = "fr") val dateFirstPositiveTest: String,
-	@Json(name = "co") val countryOfTest: String,
-	@Json(name = "is") val certificateIssuer: String,
-	@Json(name = "df") val validFrom: String,
-	@Json(name = "du") val validUntil: String,
-	@Json(name = "ci") val certificateIdentifier: String,
+	@Json(name = "tg") @get:JsonProperty("tg") val disease: String,
+	@Json(name = "fr") @get:JsonProperty("fr") val dateFirstPositiveTest: String,
+	@Json(name = "co") @get:JsonProperty("co") val countryOfTest: String,
+	@Json(name = "is") @get:JsonProperty("is") val certificateIssuer: String,
+	@Json(name = "df") @get:JsonProperty("df") val validFrom: String,
+	@Json(name = "du") @get:JsonProperty("du") val validUntil: String,
+	@Json(name = "ci") @get:JsonProperty("ci") val certificateIdentifier: String,
 ) : Serializable

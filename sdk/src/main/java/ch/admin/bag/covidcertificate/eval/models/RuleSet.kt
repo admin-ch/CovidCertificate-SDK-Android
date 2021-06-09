@@ -10,9 +10,11 @@
 
 package ch.admin.bag.covidcertificate.eval.models
 
+import ch.admin.bag.covidcertificate.eval.data.moshi.DataString
 import ch.admin.bag.covidcertificate.eval.euhealthcert.RecoveryEntry
 import ch.admin.bag.covidcertificate.eval.euhealthcert.TestEntry
 import ch.admin.bag.covidcertificate.eval.euhealthcert.VaccinationEntry
+import com.fasterxml.jackson.annotation.JsonProperty
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
 
@@ -29,14 +31,20 @@ data class Rule(
 	val businessDescription: String?,
 	val description: String,
 	val inputParameter: String,
-	val logic: String
+	@DataString val logic: String
 )
 
 @JsonClass(generateAdapter = true)
 data class RuleValueSets(
-	@Json(name = "disease-agent-targeted") val diseaseAgents: List<String>?,
-	@Json(name = "covid-19-lab-test-type") val testTypes: List<String>?,
-	@Json(name = "covid-19-lab-test-manufacturer-and-name") val testManufacturers: List<String>?
+	@Json(name = "disease-agent-targeted")
+	@get:JsonProperty("disease-agent-targeted")
+	val diseaseAgents: List<String>?,
+	@Json(name = "covid-19-lab-test-type")
+	@get:JsonProperty("covid-19-lab-test-type")
+	val testTypes: List<String>?,
+	@Json(name = "covid-19-lab-test-manufacturer-and-name")
+	@get:JsonProperty("covid-19-lab-test-manufacturer-and-name")
+	val testManufacturers: List<String>?
 )
 
 data class CertLogicData(
