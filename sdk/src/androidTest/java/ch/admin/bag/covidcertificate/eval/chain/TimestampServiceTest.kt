@@ -25,7 +25,8 @@ import java.time.Instant
 class TimestampServiceTest {
 
 	// RECALL: The service returns null if there was NO error
-	private val emptyEuDgc = Eudgc("", PersonName(null, "", null, null), "", null, null, null)
+	private val emptyEuDgc =
+		Eudgc("1.0", PersonName(null, "standardizedFamilyName", null, null), "1985-09-21", emptyList(), emptyList(), emptyList())
 
 
 	@Test

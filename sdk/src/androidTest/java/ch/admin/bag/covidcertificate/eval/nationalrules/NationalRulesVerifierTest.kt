@@ -161,7 +161,6 @@ class NationalRulesVerifierTest {
 		)
 
 		var result = nationalRulesVerifier.verify(validCert, nationalRuleSet, clock)
-		// VR-CH-0005
 		assertTrue(result is CheckNationalRulesState.SUCCESS)
 
 		val invalidCert = TestDataGenerator.generateVaccineCert(

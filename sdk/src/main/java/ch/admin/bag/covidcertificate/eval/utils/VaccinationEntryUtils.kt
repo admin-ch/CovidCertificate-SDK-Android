@@ -36,22 +36,11 @@ fun VaccinationEntry.isTargetDiseaseCorrect(): Boolean {
 	return this.disease == AcceptanceCriterias.TARGET_DISEASE
 }
 
-fun VaccinationEntry.getFormattedVaccinationDate(dateFormatter: DateTimeFormatter): String? {
-	if (this.vaccinationDate.isNullOrEmpty()) {
-		return null
-	}
-	return try {
-		LocalDate.parse(this.vaccinationDate, DateTimeFormatter.ISO_DATE).format(dateFormatter)
-	} catch (e: java.lang.Exception) {
-		this.vaccinationDate
-	}
-}
-
 fun VaccinationEntry.validFromDate(vaccine: Vaccine): LocalDateTime? {
 	val vaccineDate = this.vaccineDate() ?: return null
 	val totalNumberOfDosis = vaccine.total_dosis_number
-	// if this is a vaccine, which only needs one shot AND we had no previous infections, the vaccine is valid 15 days after the date of vaccination
-	return if (!this.hadPastInfection(vaccine) && totalNumberOfDosis == 1) {
+	// if this is a vaccine, which only needs one shot, the vaccine is valid 15 days after the date of vaccination
+	return if (totalNumberOfDosis == 1) {
 		return vaccineDate.plusDays(SINGLE_VACCINE_VALIDITY_OFFSET_IN_DAYS)
 	} else {
 		// In any other case the vaccine is valid from the date of vaccination
@@ -66,7 +55,7 @@ fun VaccinationEntry.validUntilDate(): LocalDateTime? {
 }
 
 fun VaccinationEntry.vaccineDate(): LocalDateTime? {
-	if (this.vaccinationDate.isNullOrEmpty()) {
+	if (this.vaccinationDate.isEmpty()) {
 		return null
 	}
 	val date: LocalDate?

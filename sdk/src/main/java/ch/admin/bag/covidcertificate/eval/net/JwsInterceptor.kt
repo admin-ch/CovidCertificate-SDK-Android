@@ -10,12 +10,14 @@
 
 package ch.admin.bag.covidcertificate.eval.net
 
+import android.util.Base64
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.Types
 
 import io.jsonwebtoken.Claims
 import io.jsonwebtoken.ExpiredJwtException
 import io.jsonwebtoken.Jws
+import io.jsonwebtoken.Jwt
 import io.jsonwebtoken.Jwts
 import okhttp3.Interceptor
 
@@ -23,10 +25,15 @@ import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.Response
 
 import okhttp3.ResponseBody.Companion.toResponseBody
+import java.io.ByteArrayInputStream
 import java.io.IOException
+import java.lang.Exception
 import java.security.PublicKey
 
 import java.security.SignatureException
+import java.security.cert.Certificate
+import java.security.cert.CertificateFactory
+import java.security.cert.X509Certificate
 
 /// application/json media type for the payload of a JWS
 val APPLICATION_JSON = "application/json".toMediaType()
@@ -37,8 +44,10 @@ val APPLICATION_JSON = "application/json".toMediaType()
    is `application/json`.
  The signature of the JWS is verified with `publicKey`.
  */
- class JwsInterceptor(private val publicKey: PublicKey) :
+ class JwsInterceptor(rootCA: X509Certificate) :
         Interceptor {
+    private val keyResolver: JwsKeyResolver = JwsKeyResolver(rootCA)
+
     @Throws(IOException::class)
 
     override fun intercept(chain: Interceptor.Chain): Response {
@@ -49,12 +58,12 @@ val APPLICATION_JSON = "application/json".toMediaType()
         if (response.cacheResponse != null) {
             return response
         }
-        val jws = response.body!!.string()
+        val jws = response.body?.string() ?: throw SignatureException("Body has no signature")
 
         var body = ""
         try {
             val claimsJws : Jws<Claims> = Jwts.parserBuilder()
-                    .setSigningKey(publicKey)
+                .setSigningKeyResolver(keyResolver)
                     .build()
                     .parseClaimsJws(jws)
             // now that the JWS is verified, we can safely assume that the body can be trusted, so serialize it to JSON again
@@ -64,6 +73,7 @@ val APPLICATION_JSON = "application/json".toMediaType()
         } catch (o: ExpiredJwtException) {
             throw SignatureException("Expired JWT")
         }
+
         // SAFE ZONE
         // from here on body contains a JSON-string of the payload of the JWS, whose signature we verified.
 

@@ -60,6 +60,7 @@ object TestDataGenerator {
                  "ver": "1.0.0"
                }
             """
+
 		return adapter.fromJson(vaccineJson)!!
 	}
 
@@ -100,6 +101,7 @@ object TestDataGenerator {
                 "ver": "1.0.0"
               }
            """
+
 		return adapter.fromJson(testJson)!!
 	}
 
@@ -132,6 +134,7 @@ object TestDataGenerator {
                  "ver": "1.0.0"
                }
             """
+
 		return adapter.fromJson(recoveryJson)!!
 	}
 
@@ -165,6 +168,7 @@ object TestDataGenerator {
                  "ver": "1.0.0"
                }
             """
+
 		return adapter.fromJson(recoveryJson)!!
 	}
 

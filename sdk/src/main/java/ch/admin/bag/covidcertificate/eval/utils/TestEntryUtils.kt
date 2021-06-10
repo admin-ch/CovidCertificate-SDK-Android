@@ -26,9 +26,6 @@ fun TestEntry.isTargetDiseaseCorrect(): Boolean {
 }
 
 fun TestEntry.getFormattedSampleDate(dateTimeFormatter: DateTimeFormatter): String? {
-	if (this.timestampSample == null) {
-		return null
-	}
 	return try {
 		return this.timestampSample.toInstant().atZone(ZoneId.systemDefault()).format(dateTimeFormatter)
 	} catch (e: Exception) {
@@ -48,7 +45,7 @@ fun TestEntry.getFormattedResultDate(dateTimeFormatter: DateTimeFormatter): Stri
 }
 
 fun TestEntry.getTestCenter(): String? {
-	if (!this.testCenter.isNullOrEmpty()) {
+	if (this.testCenter.isNotEmpty()) {
 		return this.testCenter
 	}
 	return null
