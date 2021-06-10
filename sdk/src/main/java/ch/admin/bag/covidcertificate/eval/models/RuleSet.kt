@@ -10,7 +10,7 @@
 
 package ch.admin.bag.covidcertificate.eval.models
 
-import ch.admin.bag.covidcertificate.eval.data.moshi.DataString
+import ch.admin.bag.covidcertificate.eval.data.moshi.RawJsonString
 import ch.admin.bag.covidcertificate.eval.euhealthcert.RecoveryEntry
 import ch.admin.bag.covidcertificate.eval.euhealthcert.TestEntry
 import ch.admin.bag.covidcertificate.eval.euhealthcert.VaccinationEntry
@@ -31,7 +31,7 @@ data class Rule(
 	val businessDescription: String?,
 	val description: String,
 	val inputParameter: String,
-	@DataString val logic: String,
+	@RawJsonString val logic: String,
 )
 
 @JsonClass(generateAdapter = true)
@@ -96,4 +96,5 @@ data class CertLogicPayload(
 data class CertLogicExternalInfo(
 	val valueSets: RuleValueSets,
 	val validationClock: String, // ISO-8601 extended offset date-time format
+	val validationClockAtStartOfDay: String, // ISO-8601 date format
 )

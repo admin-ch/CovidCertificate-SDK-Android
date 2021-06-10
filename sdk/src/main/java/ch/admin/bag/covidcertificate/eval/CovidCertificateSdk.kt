@@ -17,7 +17,7 @@ import androidx.lifecycle.OnLifecycleEvent
 import androidx.lifecycle.coroutineScope
 import ch.admin.bag.covidcertificate.eval.data.CertificateSecureStorage
 import ch.admin.bag.covidcertificate.eval.data.Config
-import ch.admin.bag.covidcertificate.eval.data.moshi.DataAsStringAdapter
+import ch.admin.bag.covidcertificate.eval.data.moshi.RawJsonStringAdapter
 import ch.admin.bag.covidcertificate.eval.nationalrules.NationalRulesVerifier
 import ch.admin.bag.covidcertificate.eval.net.CertificatePinning
 import ch.admin.bag.covidcertificate.eval.net.CertificateService
@@ -155,7 +155,7 @@ object CovidCertificateSdk {
 			.baseUrl(baseUrl)
 			.client(okHttpBuilder.build())
 			.addConverterFactory(ScalarsConverterFactory.create())
-			.addConverterFactory(MoshiConverterFactory.create(Moshi.Builder().add(DataAsStringAdapter()).build()))
+			.addConverterFactory(MoshiConverterFactory.create(Moshi.Builder().add(RawJsonStringAdapter()).build()))
 			.build()
 	}
 

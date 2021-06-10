@@ -37,6 +37,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import java.time.Clock
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 
@@ -45,10 +46,11 @@ class NationalRulesVerifier(context: Context) {
 	private val acceptedVaccineProvider = AcceptedVaccineProvider.getInstance(context)
 	private val acceptedTestProvider = AcceptedTestProvider.getInstance(context)
 
-	fun verify(euDgc: Eudgc, ruleSet: RuleSet): CheckNationalRulesState {
+	fun verify(euDgc: Eudgc, ruleSet: RuleSet, clock: Clock = Clock.systemDefaultZone()): CheckNationalRulesState {
 		val payload = CertLogicPayload(euDgc.pastInfections, euDgc.tests, euDgc.vaccinations)
-		val validationClock = ZonedDateTime.now().format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)
-		val externalInfo = CertLogicExternalInfo(ruleSet.valueSets, validationClock)
+		val validationClock = ZonedDateTime.now(clock).format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)
+		val validationClockAtStartOfDay = LocalDate.now(clock).atStartOfDay(ZoneId.systemDefault()).format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)
+		val externalInfo = CertLogicExternalInfo(ruleSet.valueSets, validationClock, validationClockAtStartOfDay)
 		val ruleSetData = CertLogicData(payload, externalInfo)
 
 		val jacksonMapper = ObjectMapper()
@@ -79,13 +81,13 @@ class NationalRulesVerifier(context: Context) {
 			"VR-CH-0002" -> CheckNationalRulesState.INVALID(NationalRulesError.NO_VALID_PRODUCT, rule.id)
 			"VR-CH-0003" -> CheckNationalRulesState.INVALID(NationalRulesError.NO_VALID_DATE, rule.id)
 			"VR-CH-0004" -> getValidityRange(euDgc)?.let {
-				CheckNationalRulesState.NOT_YET_VALID(it)
+				CheckNationalRulesState.NOT_YET_VALID(it, rule.id)
 			} ?: CheckNationalRulesState.INVALID(NationalRulesError.NO_VALID_DATE, rule.id)
 			"VR-CH-0005" -> getValidityRange(euDgc)?.let {
-				CheckNationalRulesState.NOT_YET_VALID(it)
+				CheckNationalRulesState.NOT_YET_VALID(it, rule.id)
 			} ?: CheckNationalRulesState.INVALID(NationalRulesError.NO_VALID_DATE, rule.id)
 			"VR-CH-0006" -> getValidityRange(euDgc)?.let {
-				CheckNationalRulesState.NOT_VALID_ANYMORE(it)
+				CheckNationalRulesState.NOT_VALID_ANYMORE(it, rule.id)
 			} ?: CheckNationalRulesState.INVALID(NationalRulesError.NO_VALID_DATE, rule.id)
 			"TR-CH-0000" -> CheckNationalRulesState.INVALID(NationalRulesError.TOO_MANY_TEST_ENTRIES, rule.id)
 			"TR-CH-0001" -> CheckNationalRulesState.INVALID(NationalRulesError.POSITIVE_RESULT, rule.id)
@@ -93,21 +95,21 @@ class NationalRulesVerifier(context: Context) {
 			"TR-CH-0003" -> CheckNationalRulesState.INVALID(NationalRulesError.NO_VALID_PRODUCT, rule.id)
 			"TR-CH-0004" -> CheckNationalRulesState.INVALID(NationalRulesError.NO_VALID_DATE, rule.id)
 			"TR-CH-0005" -> getValidityRange(euDgc)?.let {
-				CheckNationalRulesState.NOT_YET_VALID(it)
+				CheckNationalRulesState.NOT_YET_VALID(it, rule.id)
 			} ?: CheckNationalRulesState.INVALID(NationalRulesError.NO_VALID_DATE, rule.id)
 			"TR-CH-0006" -> getValidityRange(euDgc)?.let {
-				CheckNationalRulesState.NOT_VALID_ANYMORE(it)
+				CheckNationalRulesState.NOT_VALID_ANYMORE(it, rule.id)
 			} ?: CheckNationalRulesState.INVALID(NationalRulesError.NO_VALID_DATE, rule.id)
 			"TR-CH-0007" -> getValidityRange(euDgc)?.let {
-				CheckNationalRulesState.NOT_VALID_ANYMORE(it)
+				CheckNationalRulesState.NOT_VALID_ANYMORE(it, rule.id)
 			} ?: CheckNationalRulesState.INVALID(NationalRulesError.NO_VALID_DATE, rule.id)
 			"RR-CH-0000" -> CheckNationalRulesState.INVALID(NationalRulesError.TOO_MANY_RECOVERY_ENTRIES, rule.id)
 			"RR-CH-0001" -> CheckNationalRulesState.INVALID(NationalRulesError.NO_VALID_DATE, rule.id)
 			"RR-CH-0002" -> getValidityRange(euDgc)?.let {
-				CheckNationalRulesState.NOT_YET_VALID(it)
+				CheckNationalRulesState.NOT_YET_VALID(it, rule.id)
 			} ?: CheckNationalRulesState.INVALID(NationalRulesError.NO_VALID_DATE, rule.id)
 			"RR-CH-0003" -> getValidityRange(euDgc)?.let {
-				CheckNationalRulesState.NOT_VALID_ANYMORE(it)
+				CheckNationalRulesState.NOT_VALID_ANYMORE(it, rule.id)
 			} ?: CheckNationalRulesState.INVALID(NationalRulesError.NO_VALID_DATE, rule.id)
 			else -> CheckNationalRulesState.INVALID(NationalRulesError.UNKNOWN_RULE_FAILED, rule.id)
 		}

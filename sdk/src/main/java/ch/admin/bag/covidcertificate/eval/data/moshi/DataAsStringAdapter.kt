@@ -17,27 +17,31 @@ import com.squareup.moshi.JsonReader
 import com.squareup.moshi.JsonWriter
 import com.squareup.moshi.ToJson
 import okio.Buffer
-
+import okio.ByteString
+import okio.buffer
+import okio.source
+import java.io.ByteArrayInputStream
+import java.nio.charset.Charset
 
 @Retention(AnnotationRetention.RUNTIME)
 @JsonQualifier
-annotation class DataString
+annotation class RawJsonString
 
 /**
  * A Moshi json adapter that parses a JSON object as a string.
  */
-class DataAsStringAdapter {
+class RawJsonStringAdapter {
 
 	@ToJson
-	fun toJson(writer: JsonWriter, @DataString string: String) {
-		writer.value(Buffer().writeUtf8(string))
+	fun toJson(writer: JsonWriter, @RawJsonString value: String?) {
+		value?.let {
+			writer.value(ByteArrayInputStream(value.toByteArray()).source().buffer())
+		} ?: writer.jsonValue(null)
 	}
-
 	@FromJson
-	@DataString
-	fun fromJson(reader: JsonReader, delegate: JsonAdapter<Any>): String {
-		val data = reader.readJsonValue()
-		return delegate.toJson(data)
+	@RawJsonString
+	fun fromJson(reader: JsonReader): String {
+		return reader.nextSource().readString(Charset.defaultCharset())
 	}
 
 }

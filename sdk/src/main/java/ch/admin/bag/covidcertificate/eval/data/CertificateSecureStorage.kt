@@ -14,7 +14,7 @@ import android.content.Context
 import android.content.SharedPreferences
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKeys
-import ch.admin.bag.covidcertificate.eval.data.moshi.DataAsStringAdapter
+import ch.admin.bag.covidcertificate.eval.data.moshi.RawJsonStringAdapter
 import ch.admin.bag.covidcertificate.eval.models.Jwks
 import ch.admin.bag.covidcertificate.eval.models.RevokedCertificates
 import ch.admin.bag.covidcertificate.eval.models.RuleSet
@@ -37,7 +37,7 @@ internal class CertificateSecureStorage private constructor(private val context:
 		private const val KEY_REVOKED_CERTIFICATES_VALID_UNTIL = "KEY_REVOKED_CERTIFICATES_VALID_UNTIL"
 		private const val KEY_RULESET_VALID_UNTIL = "KEY_RULESET_VALID_UNTIL"
 
-		private val moshi = Moshi.Builder().add(DataAsStringAdapter()).build()
+		private val moshi = Moshi.Builder().add(RawJsonStringAdapter()).build()
 		private val jwksAdapter = moshi.adapter(Jwks::class.java)
 		private val revokedCertificatesAdapter = moshi.adapter(RevokedCertificates::class.java)
 		private val rulesetAdapter = moshi.adapter(RuleSet::class.java)

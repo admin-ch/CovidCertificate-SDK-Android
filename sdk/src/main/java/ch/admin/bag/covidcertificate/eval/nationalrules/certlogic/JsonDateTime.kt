@@ -8,10 +8,8 @@ import com.fasterxml.jackson.databind.node.JsonNodeType
 import com.fasterxml.jackson.databind.node.ValueNode
 import java.io.IOException
 import java.time.LocalDate
-import java.time.LocalDateTime
 import java.time.OffsetDateTime
 import java.time.ZoneId
-import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 import java.time.format.DateTimeParseException
 
@@ -24,8 +22,8 @@ class JsonDateTime protected constructor(dateTime: OffsetDateTime) : ValueNode()
 
 	fun plusTime(amount: Long, unit: TimeUnit?): JsonDateTime {
 		return when (unit?.name) {
-			TimeUnit.DAY.name -> JsonDateTime(_value.plusDays(amount))
-			TimeUnit.HOUR.name -> JsonDateTime(_value.plusHours(amount))
+			TimeUnit.DAY.name -> JsonDateTime(_value.plusDays(amount).atZoneSimilarLocal(ZoneId.systemDefault()).toOffsetDateTime())
+			TimeUnit.HOUR.name -> JsonDateTime(_value.plusHours(amount).atZoneSimilarLocal(ZoneId.systemDefault()).toOffsetDateTime())
 			else -> throw RuntimeException(String.format("time unit \"%s\" not handled", unit))
 		}
 	}
