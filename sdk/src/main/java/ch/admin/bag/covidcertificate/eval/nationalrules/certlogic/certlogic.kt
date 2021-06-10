@@ -1,12 +1,26 @@
+/*
+ * Copyright (c) 2021 Ubique Innovation AG <https://www.ubique.ch>
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/.
+ *
+ * SPDX-License-Identifier: MPL-2.0
+ */
+/**
+ * Adapted from https://github.com/ehn-dcc-development/dgc-business-rules/tree/main/certlogic/certlogic-kotlin
+ * published under Apache-2.0 License.
+ */
 package ch.admin.bag.covidcertificate.eval.nationalrules.certlogic
 
 import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.databind.node.*
-import java.util.*
-
-
-//This code is from https://github.com/ehn-dcc-development/dgc-business-rules/tree/main/certlogic/certlogic-kotlin
-
+import com.fasterxml.jackson.databind.node.ArrayNode
+import com.fasterxml.jackson.databind.node.BooleanNode
+import com.fasterxml.jackson.databind.node.IntNode
+import com.fasterxml.jackson.databind.node.JsonNodeFactory
+import com.fasterxml.jackson.databind.node.NullNode
+import com.fasterxml.jackson.databind.node.ObjectNode
+import com.fasterxml.jackson.databind.node.TextNode
 
 internal fun isFalsy(value: JsonNode): Boolean = when (value) {
 	is BooleanNode -> value == BooleanNode.FALSE
