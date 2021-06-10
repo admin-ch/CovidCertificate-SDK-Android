@@ -44,7 +44,6 @@ import java.time.format.DateTimeFormatter
 class NationalRulesVerifier(context: Context) {
 
 	private val acceptedVaccineProvider = AcceptedVaccineProvider.getInstance(context)
-	private val acceptedTestProvider = AcceptedTestProvider.getInstance(context)
 
 	fun verify(euDgc: Eudgc, ruleSet: RuleSet, clock: Clock = Clock.systemDefaultZone()): CheckNationalRulesState {
 		val payload = CertLogicPayload(euDgc.pastInfections, euDgc.tests, euDgc.vaccinations)
@@ -134,131 +133,6 @@ class NationalRulesVerifier(context: Context) {
 			}
 			else -> null
 		}
-	}
-
-	@Deprecated("This method still uses hardcoded rules")
-	fun verifyVaccine(
-		vaccinationEntry: VaccinationEntry,
-		clock: Clock = Clock.systemDefaultZone(),
-	): CheckNationalRulesState {
-
-		// tg must be sars-cov2
-		// GR-CH-0001
-		if (!vaccinationEntry.isTargetDiseaseCorrect()) {
-			return CheckNationalRulesState.INVALID(NationalRulesError.WRONG_DISEASE_TARGET)
-		}
-
-		// dosis number must be greater or equal to total number of dosis
-		// VR-CH-0001
-		if (vaccinationEntry.doseNumber() < vaccinationEntry.totalDoses()) {
-			return CheckNationalRulesState.INVALID(NationalRulesError.NOT_FULLY_PROTECTED)
-		}
-
-		// check if vaccine is in accepted product. We only check the mp now, since the same product held by different license holder should work the same -- right?
-		// VR-CH-0002
-		val foundEntry: Vaccine = acceptedVaccineProvider.getVaccineDataFromList(vaccinationEntry)
-			?: return CheckNationalRulesState.INVALID(NationalRulesError.NO_VALID_PRODUCT)
-
-		val today = LocalDate.now(clock).atStartOfDay()
-		val validFromDate = vaccinationEntry.validFromDate(foundEntry) // if (hadPastInfection) dt + 15 else dt
-		val validUntilDate = vaccinationEntry.validUntilDate() // dt + 179
-
-		// VR-CH-0003
-		if (validFromDate == null || validUntilDate == null) {
-			return CheckNationalRulesState.INVALID(NationalRulesError.NO_VALID_DATE)
-		}
-
-		// VR-CH-0004 & VR-CH-0005
-		if (validFromDate.isAfter(today)) {
-			return CheckNationalRulesState.NOT_YET_VALID(ValidityRange(validFromDate, validUntilDate))
-		}
-
-		// VR-CH-0006
-		if (validUntilDate.isBefore(today)) {
-			return CheckNationalRulesState.NOT_VALID_ANYMORE(ValidityRange(validFromDate, validUntilDate))
-		}
-		return CheckNationalRulesState.SUCCESS(ValidityRange(validFromDate, validUntilDate))
-	}
-
-	@Deprecated("This method still uses hardcoded rules")
-	fun verifyTest(
-		testEntry: TestEntry,
-		clock: Clock = Clock.systemDefaultZone(),
-	): CheckNationalRulesState {
-		// tg must be sars-cov2
-		// GR-CH-0001
-		if (!testEntry.isTargetDiseaseCorrect()) {
-			return CheckNationalRulesState.INVALID(NationalRulesError.WRONG_DISEASE_TARGET)
-		}
-
-		// TR-CH-0001
-		if (!testEntry.isNegative()) {
-			return CheckNationalRulesState.INVALID(NationalRulesError.POSITIVE_RESULT)
-		}
-
-		// test type must be RAT or PCR
-		// TR-CH-0002
-		if (!acceptedTestProvider.testIsPCRorRAT(testEntry)) {
-			return CheckNationalRulesState.INVALID(NationalRulesError.WRONG_TEST_TYPE)
-		}
-
-		// TR-CH-0003
-		if (!acceptedTestProvider.testIsAcceptedInEuAndCH(testEntry)) {
-			return CheckNationalRulesState.INVALID(NationalRulesError.NO_VALID_PRODUCT)
-		}
-
-		val today = LocalDateTime.now(clock)
-		val validFromDate = testEntry.validFromDate() // sc
-		val validUntilDate = testEntry.validUntilDate() // sc + 72h (PCR) / 24h (RAT)
-
-		// TR-CH-0004
-		if (validFromDate == null || validUntilDate == null) {
-			return CheckNationalRulesState.INVALID(NationalRulesError.NO_VALID_DATE)
-		}
-
-		// TR-CH-0005
-		if (validFromDate.isAfter(today)) {
-			return CheckNationalRulesState.NOT_YET_VALID(ValidityRange(validFromDate, validUntilDate))
-		}
-
-		// TR-CH-0006 & TR-CH-0007
-		if (validUntilDate.isBefore(today)) {
-			return CheckNationalRulesState.NOT_VALID_ANYMORE(ValidityRange(validFromDate, validUntilDate))
-		}
-		return CheckNationalRulesState.SUCCESS(ValidityRange(validFromDate, validUntilDate))
-	}
-
-	@Deprecated("This method still uses hardcoded rules")
-	fun verifyRecovery(
-		recoveryEntry: RecoveryEntry,
-		clock: Clock = Clock.systemDefaultZone(),
-	): CheckNationalRulesState {
-
-		// tg must be sars-cov2
-		// GR-CH-0001
-		if (!recoveryEntry.isTargetDiseaseCorrect()) {
-			return CheckNationalRulesState.INVALID(NationalRulesError.WRONG_DISEASE_TARGET)
-		}
-
-		val today = LocalDate.now(clock).atStartOfDay()
-		val validFromDate = recoveryEntry.validFromDate() // fr + 10
-		val validUntilDate = recoveryEntry.validUntilDate() // fr + 179
-
-		// RR-CH-0001
-		if (validFromDate == null || validUntilDate == null) {
-			return CheckNationalRulesState.INVALID(NationalRulesError.NO_VALID_DATE)
-		}
-
-		// RR-CH-0002
-		if (validFromDate.isAfter(today)) {
-			return CheckNationalRulesState.NOT_YET_VALID(ValidityRange(validFromDate, validUntilDate))
-		}
-
-		// RR-CH-0003
-		if (validUntilDate.isBefore(today)) {
-			return CheckNationalRulesState.NOT_VALID_ANYMORE(ValidityRange(validFromDate, validUntilDate))
-		}
-		return CheckNationalRulesState.SUCCESS(ValidityRange(validFromDate, validUntilDate))
 	}
 }
 
