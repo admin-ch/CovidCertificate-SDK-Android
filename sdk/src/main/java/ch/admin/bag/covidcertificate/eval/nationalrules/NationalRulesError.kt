@@ -21,5 +21,6 @@ enum class NationalRulesError(val message: String, val errorCode: String) {
 	NOT_FULLY_PROTECTED("Missing vaccine shots, only partially protected", EvalErrorCodes.NOT_FULLY_PROTECTED),
 	TOO_MANY_VACCINE_ENTRIES("Certificate contains more than one vaccine entries", EvalErrorCodes.TOO_MANY_VACCINE_ENTRIES),
 	TOO_MANY_TEST_ENTRIES("Certificate contains more than one test entries", EvalErrorCodes.TOO_MANY_TEST_ENTRIES),
-	TOO_MANY_RECOVERY_ENTRIES("Certificate contains more than one recovery entries", EvalErrorCodes.TOO_MANY_RECOVERY_ENTRIES)
+	TOO_MANY_RECOVERY_ENTRIES("Certificate contains more than one recovery entries", EvalErrorCodes.TOO_MANY_RECOVERY_ENTRIES),
+	UNKNOWN_RULE_FAILED("An unknown rule failed to verify", EvalErrorCodes.UNKNOWN_RULE_FAILED)
 }

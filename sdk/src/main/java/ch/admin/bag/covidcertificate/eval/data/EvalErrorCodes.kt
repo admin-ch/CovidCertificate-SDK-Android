@@ -41,6 +41,7 @@ object EvalErrorCodes {
 	const val TOO_MANY_VACCINE_ENTRIES = "N|TMV"
 	const val TOO_MANY_TEST_ENTRIES = "N|TMT"
 	const val TOO_MANY_RECOVERY_ENTRIES = "N|TMR"
+	const val UNKNOWN_RULE_FAILED = "N|UNK"
 
 	/* Errors regarding the trust list */
 	const val TRUST_LIST_MISSING = "T|MIS"

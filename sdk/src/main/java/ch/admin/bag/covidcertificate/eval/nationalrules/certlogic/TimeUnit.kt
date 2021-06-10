@@ -1,8 +1,16 @@
 package ch.admin.bag.covidcertificate.eval.nationalrules.certlogic
 
-enum class TimeUnit(name: String) {
-	DAY(name = "day"),
-	HOUR(name = "hour")
+enum class TimeUnit(val identifier: String) {
+	DAY(identifier = "day"),
+	HOUR(identifier = "hour");
+
+	companion object {
+		fun fromName(identifier: String): TimeUnit {
+			return values().find {
+				it.identifier == identifier
+			} ?: throw IllegalArgumentException("No TimeUnit enum constant with identifier $identifier")
+		}
+	}
 }
 
 /**

@@ -18,6 +18,7 @@ import androidx.lifecycle.coroutineScope
 import ch.admin.bag.covidcertificate.eval.data.CertificateSecureStorage
 import ch.admin.bag.covidcertificate.eval.data.Config
 import ch.admin.bag.covidcertificate.eval.data.moshi.DataAsStringAdapter
+import ch.admin.bag.covidcertificate.eval.nationalrules.NationalRulesVerifier
 import ch.admin.bag.covidcertificate.eval.net.CertificatePinning
 import ch.admin.bag.covidcertificate.eval.net.CertificateService
 import ch.admin.bag.covidcertificate.eval.net.RevocationService
@@ -56,7 +57,8 @@ object CovidCertificateSdk {
 
 		val certificateStorage = CertificateSecureStorage.getInstance(context)
 		val trustListRepository = TrustListRepository(certificateService, revocationService, ruleSetService, certificateStorage)
-		val certificateVerifier = CertificateVerifier()
+		val nationalRulesVerifier = NationalRulesVerifier(context)
+		val certificateVerifier = CertificateVerifier(nationalRulesVerifier)
 		certificateVerificationController = CertificateVerificationController(trustListRepository, certificateVerifier)
 
 		isInitialized = true
@@ -141,6 +143,7 @@ object CovidCertificateSdk {
 		val cacheSize = 5 * 1024 * 1024 // 5 MB
 		val cache = Cache(context.cacheDir, cacheSize.toLong())
 		okHttpBuilder.cache(cache)
+
 		// https://ch-dgc.s3.eu-central-1.amazonaws.com/v1/verificationRules.json
 		val baseUrl = "https://ch-dgc.s3.eu-central-1.amazonaws.com/v1/"
 		if (BuildConfig.DEBUG) {

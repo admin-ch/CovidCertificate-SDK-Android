@@ -10,11 +10,10 @@
 
 package ch.admin.bag.covidcertificate.eval.nationalrules
 
+import android.content.Context
 import ch.admin.bag.covidcertificate.eval.data.AcceptedTestProvider
 import ch.admin.bag.covidcertificate.eval.data.AcceptedVaccineProvider
-import ch.admin.bag.covidcertificate.eval.data.EvalErrorCodes
 import ch.admin.bag.covidcertificate.eval.data.state.CheckNationalRulesState
-import ch.admin.bag.covidcertificate.eval.data.state.Error
 import ch.admin.bag.covidcertificate.eval.euhealthcert.Eudgc
 import ch.admin.bag.covidcertificate.eval.euhealthcert.RecoveryEntry
 import ch.admin.bag.covidcertificate.eval.euhealthcert.TestEntry
@@ -41,35 +40,12 @@ import java.time.LocalDateTime
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 
-class NationalRulesVerifier(private val ruleSet: RuleSet) {
+class NationalRulesVerifier(context: Context) {
 
-	private fun getErrorStateForRule(rule: Rule, euDgc: Eudgc): CheckNationalRulesState? {
-		return when (rule.id) {
-			"GR-CH-0001" -> CheckNationalRulesState.INVALID(NationalRulesError.WRONG_DISEASE_TARGET)
-			"VR-CH-0000" -> CheckNationalRulesState.INVALID(NationalRulesError.TOO_MANY_VACCINE_ENTRIES)
-			"VR-CH-0001" -> CheckNationalRulesState.INVALID(NationalRulesError.NOT_FULLY_PROTECTED)
-			"VR-CH-0002" -> CheckNationalRulesState.INVALID(NationalRulesError.NO_VALID_PRODUCT)
-			"VR-CH-0003" -> CheckNationalRulesState.INVALID(NationalRulesError.NO_VALID_DATE)
-			"VR-CH-0004" -> getValidityRange(euDgc)?.let { CheckNationalRulesState.NOT_YET_VALID(it) } ?: CheckNationalRulesState.INVALID(NationalRulesError.NO_VALID_DATE)
-			"VR-CH-0005" -> getValidityRange(euDgc)?.let { CheckNationalRulesState.NOT_YET_VALID(it) } ?: CheckNationalRulesState.INVALID(NationalRulesError.NO_VALID_DATE)
-			"VR-CH-0006" -> getValidityRange(euDgc)?.let { CheckNationalRulesState.NOT_VALID_ANYMORE(it) } ?: CheckNationalRulesState.INVALID(NationalRulesError.NO_VALID_DATE)
-			"TR-CH-0000" -> CheckNationalRulesState.INVALID(NationalRulesError.TOO_MANY_TEST_ENTRIES)
-			"TR-CH-0001" -> CheckNationalRulesState.INVALID(NationalRulesError.POSITIVE_RESULT)
-			"TR-CH-0002" -> CheckNationalRulesState.INVALID(NationalRulesError.WRONG_TEST_TYPE)
-			"TR-CH-0003" -> CheckNationalRulesState.INVALID(NationalRulesError.NO_VALID_PRODUCT)
-			"TR-CH-0004" -> CheckNationalRulesState.INVALID(NationalRulesError.NO_VALID_DATE)
-			"TR-CH-0005" -> getValidityRange(euDgc)?.let { CheckNationalRulesState.NOT_YET_VALID(it) } ?: CheckNationalRulesState.INVALID(NationalRulesError.NO_VALID_DATE)
-			"TR-CH-0006" -> getValidityRange(euDgc)?.let { CheckNationalRulesState.NOT_VALID_ANYMORE(it) } ?: CheckNationalRulesState.INVALID(NationalRulesError.NO_VALID_DATE)
-			"TR-CH-0007" -> getValidityRange(euDgc)?.let { CheckNationalRulesState.NOT_VALID_ANYMORE(it) } ?: CheckNationalRulesState.INVALID(NationalRulesError.NO_VALID_DATE)
-			"RR-CH-0000" -> CheckNationalRulesState.INVALID(NationalRulesError.TOO_MANY_RECOVERY_ENTRIES)
-			"RR-CH-0001" -> CheckNationalRulesState.INVALID(NationalRulesError.NO_VALID_DATE)
-			"RR-CH-0002" -> getValidityRange(euDgc)?.let { CheckNationalRulesState.NOT_YET_VALID(it) } ?: CheckNationalRulesState.INVALID(NationalRulesError.NO_VALID_DATE)
-			"RR-CH-0003" -> getValidityRange(euDgc)?.let { CheckNationalRulesState.NOT_VALID_ANYMORE(it) } ?: CheckNationalRulesState.INVALID(NationalRulesError.NO_VALID_DATE)
-			else -> null
-		}
-	}
+	private val acceptedVaccineProvider = AcceptedVaccineProvider.getInstance(context)
+	private val acceptedTestProvider = AcceptedTestProvider.getInstance(context)
 
-	fun verify(euDgc: Eudgc): CheckNationalRulesState {
+	fun verify(euDgc: Eudgc, ruleSet: RuleSet): CheckNationalRulesState {
 		val payload = CertLogicPayload(euDgc.pastInfections, euDgc.tests, euDgc.vaccinations)
 		val validationClock = ZonedDateTime.now().format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)
 		val externalInfo = CertLogicExternalInfo(ruleSet.valueSets, validationClock)
@@ -83,9 +59,7 @@ class NationalRulesVerifier(private val ruleSet: RuleSet) {
 			val isSuccessful = isTruthy(evaluate(ruleLogic, data))
 
 			if (!isSuccessful) {
-				val nationalRulesError = getErrorStateForRule(rule, euDgc)
-				// TODO ERROR or INVALID if null?
-				return nationalRulesError ?: CheckNationalRulesState.ERROR(Error(EvalErrorCodes.RULESET_UNKNOWN))
+				return getErrorStateForRule(rule, euDgc)
 			}
 		}
 
@@ -94,6 +68,48 @@ class NationalRulesVerifier(private val ruleSet: RuleSet) {
 			CheckNationalRulesState.SUCCESS(validityRange)
 		} else {
 			CheckNationalRulesState.INVALID(NationalRulesError.NO_VALID_DATE)
+		}
+	}
+
+	private fun getErrorStateForRule(rule: Rule, euDgc: Eudgc): CheckNationalRulesState {
+		return when (rule.id) {
+			"GR-CH-0001" -> CheckNationalRulesState.INVALID(NationalRulesError.WRONG_DISEASE_TARGET, rule.id)
+			"VR-CH-0000" -> CheckNationalRulesState.INVALID(NationalRulesError.TOO_MANY_VACCINE_ENTRIES, rule.id)
+			"VR-CH-0001" -> CheckNationalRulesState.INVALID(NationalRulesError.NOT_FULLY_PROTECTED, rule.id)
+			"VR-CH-0002" -> CheckNationalRulesState.INVALID(NationalRulesError.NO_VALID_PRODUCT, rule.id)
+			"VR-CH-0003" -> CheckNationalRulesState.INVALID(NationalRulesError.NO_VALID_DATE, rule.id)
+			"VR-CH-0004" -> getValidityRange(euDgc)?.let {
+				CheckNationalRulesState.NOT_YET_VALID(it)
+			} ?: CheckNationalRulesState.INVALID(NationalRulesError.NO_VALID_DATE, rule.id)
+			"VR-CH-0005" -> getValidityRange(euDgc)?.let {
+				CheckNationalRulesState.NOT_YET_VALID(it)
+			} ?: CheckNationalRulesState.INVALID(NationalRulesError.NO_VALID_DATE, rule.id)
+			"VR-CH-0006" -> getValidityRange(euDgc)?.let {
+				CheckNationalRulesState.NOT_VALID_ANYMORE(it)
+			} ?: CheckNationalRulesState.INVALID(NationalRulesError.NO_VALID_DATE, rule.id)
+			"TR-CH-0000" -> CheckNationalRulesState.INVALID(NationalRulesError.TOO_MANY_TEST_ENTRIES, rule.id)
+			"TR-CH-0001" -> CheckNationalRulesState.INVALID(NationalRulesError.POSITIVE_RESULT, rule.id)
+			"TR-CH-0002" -> CheckNationalRulesState.INVALID(NationalRulesError.WRONG_TEST_TYPE, rule.id)
+			"TR-CH-0003" -> CheckNationalRulesState.INVALID(NationalRulesError.NO_VALID_PRODUCT, rule.id)
+			"TR-CH-0004" -> CheckNationalRulesState.INVALID(NationalRulesError.NO_VALID_DATE, rule.id)
+			"TR-CH-0005" -> getValidityRange(euDgc)?.let {
+				CheckNationalRulesState.NOT_YET_VALID(it)
+			} ?: CheckNationalRulesState.INVALID(NationalRulesError.NO_VALID_DATE, rule.id)
+			"TR-CH-0006" -> getValidityRange(euDgc)?.let {
+				CheckNationalRulesState.NOT_VALID_ANYMORE(it)
+			} ?: CheckNationalRulesState.INVALID(NationalRulesError.NO_VALID_DATE, rule.id)
+			"TR-CH-0007" -> getValidityRange(euDgc)?.let {
+				CheckNationalRulesState.NOT_VALID_ANYMORE(it)
+			} ?: CheckNationalRulesState.INVALID(NationalRulesError.NO_VALID_DATE, rule.id)
+			"RR-CH-0000" -> CheckNationalRulesState.INVALID(NationalRulesError.TOO_MANY_RECOVERY_ENTRIES, rule.id)
+			"RR-CH-0001" -> CheckNationalRulesState.INVALID(NationalRulesError.NO_VALID_DATE, rule.id)
+			"RR-CH-0002" -> getValidityRange(euDgc)?.let {
+				CheckNationalRulesState.NOT_YET_VALID(it)
+			} ?: CheckNationalRulesState.INVALID(NationalRulesError.NO_VALID_DATE, rule.id)
+			"RR-CH-0003" -> getValidityRange(euDgc)?.let {
+				CheckNationalRulesState.NOT_VALID_ANYMORE(it)
+			} ?: CheckNationalRulesState.INVALID(NationalRulesError.NO_VALID_DATE, rule.id)
+			else -> CheckNationalRulesState.INVALID(NationalRulesError.UNKNOWN_RULE_FAILED, rule.id)
 		}
 	}
 
@@ -118,9 +134,7 @@ class NationalRulesVerifier(private val ruleSet: RuleSet) {
 		}
 	}
 
-	private lateinit var acceptedVaccineProvider: AcceptedVaccineProvider // = AcceptedVaccineProvider.getInstance(context)
-	private lateinit var acceptedTestProvider: AcceptedTestProvider // = AcceptedTestProvider.getInstance(context)
-
+	@Deprecated("This method still uses hardcoded rules")
 	fun verifyVaccine(
 		vaccinationEntry: VaccinationEntry,
 		clock: Clock = Clock.systemDefaultZone(),
@@ -164,6 +178,7 @@ class NationalRulesVerifier(private val ruleSet: RuleSet) {
 		return CheckNationalRulesState.SUCCESS(ValidityRange(validFromDate, validUntilDate))
 	}
 
+	@Deprecated("This method still uses hardcoded rules")
 	fun verifyTest(
 		testEntry: TestEntry,
 		clock: Clock = Clock.systemDefaultZone(),
@@ -211,6 +226,7 @@ class NationalRulesVerifier(private val ruleSet: RuleSet) {
 		return CheckNationalRulesState.SUCCESS(ValidityRange(validFromDate, validUntilDate))
 	}
 
+	@Deprecated("This method still uses hardcoded rules")
 	fun verifyRecovery(
 		recoveryEntry: RecoveryEntry,
 		clock: Clock = Clock.systemDefaultZone(),

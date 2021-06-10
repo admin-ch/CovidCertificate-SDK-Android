@@ -2,6 +2,7 @@ package ch.admin.bag.covidcertificate.eval.nationalrules.certlogic
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.*
+import java.util.*
 
 
 //This code is from https://github.com/ehn-dcc-development/dgc-business-rules/tree/main/certlogic/certlogic-kotlin
@@ -17,6 +18,7 @@ internal fun isTruthy(value: JsonNode): Boolean = when (value) {
 	is BooleanNode -> value == BooleanNode.TRUE
 	is ArrayNode -> value.size() > 0
 	is ObjectNode -> true
+	is TextNode -> true
 	else -> false
 }
 
@@ -149,18 +151,26 @@ private fun isTimeUnit(unit: JsonNode): Boolean {
 }
 
 internal fun evaluatePlusTime(dateOperand: JsonNode, amount: JsonNode, unit: JsonNode, data: JsonNode): JsonDateTime {
-	if (amount !is IntNode) {
-		throw RuntimeException("\"amount\" argument (#2) of \"plusTime\" must be an integer")
+	var numericAmountNode = amount
+	if (amount is ObjectNode) {
+		numericAmountNode = evaluate(amount, data)
 	}
+
+	val longAmount = if (numericAmountNode.isNumber) {
+		numericAmountNode.longValue()
+	} else {
+		throw RuntimeException("\"amount\" argument (#2) of \"plusTime\" must be a number")
+	}
+
 	if (!isTimeUnit(unit)) {
 		throw RuntimeException("\"unit\" argument (#3) of \"plusTime\" must be a string 'day' or 'hour'")
 	}
-	val timeUnit = TimeUnit.valueOf(unit.textValue())
+	val timeUnit = TimeUnit.fromName(unit.textValue())
 	val dateTimeStr = evaluate(dateOperand, data)
 	if (dateTimeStr !is TextNode) {
 		throw RuntimeException("date argument of \"plusTime\" must be a string")
 	}
-	return JsonDateTime.fromIso8601(dateTimeStr.asText()).plusTime(amount.longValue(), timeUnit)
+	return JsonDateTime.fromIso8601(dateTimeStr.asText()).plusTime(longAmount, timeUnit)
 }
 
 

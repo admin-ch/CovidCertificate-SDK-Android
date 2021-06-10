@@ -27,13 +27,13 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.withContext
 
-internal class CertificateVerifier {
+internal class CertificateVerifier(private val nationalRulesVerifier: NationalRulesVerifier) {
 
 	suspend fun verify(dccHolder: DccHolder, trustList: TrustList): VerificationState = withContext(Dispatchers.Default) {
 		// Execute all three checks in parallel...
 		val checkSignatureStateDeferred = async { checkSignature(dccHolder, trustList.signatures) }
 		val checkRevocationStateDeferred = async { checkRevocationStatus(dccHolder, trustList.revokedCertificates) }
-		val checkNationalRulesStateDeferred = async { checkNationalRules(dccHolder, trustList.ruleSet) }
+		val checkNationalRulesStateDeferred = async { checkNationalRules(dccHolder, nationalRulesVerifier, trustList.ruleSet) }
 
 		// ... but wait for all of them to finish
 		val checkSignatureState = checkSignatureStateDeferred.await()
@@ -89,10 +89,11 @@ internal class CertificateVerifier {
 
 	private suspend fun checkNationalRules(
 		dccHolder: DccHolder,
+		nationalRulesVerifier: NationalRulesVerifier,
 		ruleSet: RuleSet
 	) = withContext(Dispatchers.Default) {
 		try {
-			Eval.checkNationalRules(dccHolder, ruleSet)
+			Eval.checkNationalRules(dccHolder, nationalRulesVerifier, ruleSet)
 		} catch (e: Exception) {
 			CheckNationalRulesState.ERROR(Error(EvalErrorCodes.RULESET_UNKNOWN, e.message.toString(), dccHolder))
 		}

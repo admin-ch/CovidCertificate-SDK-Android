@@ -80,9 +80,9 @@ internal object Eval {
 	 */
 	fun checkNationalRules(
 		dccHolder: DccHolder,
+		nationalRulesVerifier: NationalRulesVerifier,
 		ruleSet: RuleSet
 	): CheckNationalRulesState {
-		val nationalRulesVerifier = NationalRulesVerifier(ruleSet)
-		return nationalRulesVerifier.verify(dccHolder.euDGC)
+		return nationalRulesVerifier.verify(dccHolder.euDGC, ruleSet)
 	}
 }

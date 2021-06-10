@@ -7,7 +7,11 @@ import com.fasterxml.jackson.databind.SerializerProvider
 import com.fasterxml.jackson.databind.node.JsonNodeType
 import com.fasterxml.jackson.databind.node.ValueNode
 import java.io.IOException
+import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.OffsetDateTime
+import java.time.ZoneId
+import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 import java.time.format.DateTimeParseException
 
@@ -62,7 +66,11 @@ class JsonDateTime protected constructor(dateTime: OffsetDateTime) : ValueNode()
 			return try {
 				JsonDateTime(OffsetDateTime.parse(dateTimeString, formatter))
 			} catch (e: DateTimeParseException) {
-				throw e
+				try {
+					JsonDateTime(LocalDate.parse(dateTimeString, DateTimeFormatter.ISO_DATE).atStartOfDay(ZoneId.systemDefault()).toOffsetDateTime())
+				} catch (e: DateTimeParseException) {
+					throw e
+				}
 			}
 		}
 	}
