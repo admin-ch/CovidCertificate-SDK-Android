@@ -10,7 +10,7 @@
 
 package ch.admin.bag.covidcertificate.eval.chain
 
-import ch.admin.bag.covidcertificate.eval.EvalErrorCodes
+import ch.admin.bag.covidcertificate.eval.data.EvalErrorCodes
 import ch.admin.bag.covidcertificate.eval.models.DccHolder
 import java.time.Instant
 

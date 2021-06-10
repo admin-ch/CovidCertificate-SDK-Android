@@ -23,7 +23,7 @@ private const val TAG = "Jwk"
 @Serializable
 @JsonClass(generateAdapter = true)
 data class Jwks(
-	val keys: List<Jwk>
+	val certs: List<Jwk>
 )
 
 /**
@@ -32,8 +32,7 @@ data class Jwks(
 @Serializable
 @JsonClass(generateAdapter = true)
 data class Jwk(
-	val kid: String,
-	val kty: String,
+	val keyId: String,
 	val alg: String,
 	val use: String, // For which type of health cert the signing key is valid. One of: r,v,t.
 	val x5a: X5A? = null,
@@ -47,32 +46,33 @@ data class Jwk(
 ) {
 
 	companion object {
+		private const val ALG_RSA_256 = "RS256"
+		private const val ALG_ES_256 = "ES256"
+
 		fun fromNE(kid: String, n: String, e: String, use: String) = Jwk(
-			kid = kid,
-			kty = "RSA",
-			alg = "RSA256",
+			keyId = kid,
+			alg = ALG_RSA_256,
 			use = use,
 			n = n,
 			e = e,
 		)
 
 		fun fromXY(kid: String, x: String, y: String, use: String) = Jwk(
-			kid = kid,
-			kty = "EC",
-			alg = "ES256",
+			keyId = kid,
+			alg = ALG_ES_256,
 			use = use,
 			x = x,
 			y = y,
 		)
 	}
 
-	fun getKid(): ByteArray = kid.fromBase64()
+	fun getKid(): ByteArray = keyId.fromBase64()
 
 	fun getPublicKey(): PublicKey? {
 		try {
-			return when (kty) {
-				"EC" -> CryptoUtil.ecPublicKeyFromCoordinate(x!!.fromBase64(), y!!.fromBase64())
-				"RSA" -> CryptoUtil.rsaPublicKeyFromModulusExponent(n!!.fromBase64(), e!!.fromBase64())
+			return when (alg) {
+				ALG_ES_256 -> CryptoUtil.ecPublicKeyFromCoordinate(x!!.fromBase64(), y!!.fromBase64())
+				ALG_RSA_256 -> CryptoUtil.rsaPublicKeyFromModulusExponent(n!!.fromBase64(), e!!.fromBase64())
 				else -> {
 					Log.e(TAG, "Invalid kty!")
 					null
@@ -82,7 +82,7 @@ data class Jwk(
 			// Can throw e.g. if the (x, y) pair is not a point on the curve
 			e.printStackTrace()
 		}
-		Log.w(TAG, "Failed to create PublicKey for kid $kid")
+		Log.w(TAG, "Failed to create PublicKey for kid $keyId")
 		return null
 	}
 

@@ -8,7 +8,7 @@
  * SPDX-License-Identifier: MPL-2.0
  */
 
-package ch.admin.bag.covidcertificate.eval
+package ch.admin.bag.covidcertificate.eval.data.state
 
 import ch.admin.bag.covidcertificate.eval.models.DccHolder
 import ch.admin.bag.covidcertificate.eval.nationalrules.NationalRulesError
@@ -36,9 +36,9 @@ sealed class CheckRevocationState {
 
 sealed class CheckNationalRulesState {
 	data class SUCCESS(val validityRange: ValidityRange) : CheckNationalRulesState()
-	data class NOT_YET_VALID(val validityRange: ValidityRange) : CheckNationalRulesState()
-	data class NOT_VALID_ANYMORE(val validityRange: ValidityRange) : CheckNationalRulesState()
-	data class INVALID(val nationalRulesError: NationalRulesError) : CheckNationalRulesState()
+	data class NOT_YET_VALID(val validityRange: ValidityRange, val ruleId: String? = null) : CheckNationalRulesState()
+	data class NOT_VALID_ANYMORE(val validityRange: ValidityRange, val ruleId: String? = null) : CheckNationalRulesState()
+	data class INVALID(val nationalRulesError: NationalRulesError, val ruleId: String? = null) : CheckNationalRulesState()
 	object LOADING : CheckNationalRulesState()
 	data class ERROR(val error: Error) : CheckNationalRulesState()
 

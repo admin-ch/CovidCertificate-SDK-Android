@@ -10,7 +10,7 @@
 
 package ch.admin.bag.covidcertificate.eval.nationalrules
 
-import ch.admin.bag.covidcertificate.eval.EvalErrorCodes
+import ch.admin.bag.covidcertificate.eval.data.EvalErrorCodes
 
 enum class NationalRulesError(val message: String, val errorCode: String) {
 	NO_VALID_DATE("Not a valid Date format", EvalErrorCodes.NO_VALID_DATE),
@@ -18,5 +18,9 @@ enum class NationalRulesError(val message: String, val errorCode: String) {
 	WRONG_DISEASE_TARGET("Only SarsCov2 is a valid disease target", EvalErrorCodes.WRONG_DISEASE_TARGET),
 	WRONG_TEST_TYPE("Test type invalid", EvalErrorCodes.WRONG_TEST_TYPE),
 	POSITIVE_RESULT("Test result was positive", EvalErrorCodes.POSITIVE_RESULT),
-	NOT_FULLY_PROTECTED("Missing vaccine shots, only partially protected", EvalErrorCodes.NOT_FULLY_PROTECTED)
+	NOT_FULLY_PROTECTED("Missing vaccine shots, only partially protected", EvalErrorCodes.NOT_FULLY_PROTECTED),
+	TOO_MANY_VACCINE_ENTRIES("Certificate contains more than one vaccine entries", EvalErrorCodes.TOO_MANY_VACCINE_ENTRIES),
+	TOO_MANY_TEST_ENTRIES("Certificate contains more than one test entries", EvalErrorCodes.TOO_MANY_TEST_ENTRIES),
+	TOO_MANY_RECOVERY_ENTRIES("Certificate contains more than one recovery entries", EvalErrorCodes.TOO_MANY_RECOVERY_ENTRIES),
+	UNKNOWN_RULE_FAILED("An unknown rule failed to verify", EvalErrorCodes.UNKNOWN_RULE_FAILED)
 }

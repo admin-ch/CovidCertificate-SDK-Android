@@ -27,9 +27,15 @@ android {
 	}
 
 	productFlavors {
-		dev {}
-		abn {}
-		prod {}
+		dev {
+			buildConfigField "String", "BASE_URL_TRUST_LIST", '"https://www.cc-d.bit.admin.ch/trust/v1/"'
+		}
+		abn {
+			buildConfigField "String", "BASE_URL_TRUST_LIST", '"https://www.cc-a.bit.admin.ch/trust/v1/"'
+		}
+		prod {
+			buildConfigField "String", "BASE_URL_TRUST_LIST", '"https://www.cc.bit.admin.ch/trust/v1/"'
+		}
 	}
 
 	flavorDimensions "version"
@@ -52,22 +58,29 @@ dependencies {
 	implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.4.2'
 	implementation "org.jetbrains.kotlinx:kotlinx-serialization-json:1.2.0"
 
+	implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.3.1'
+	kapt 'androidx.lifecycle:lifecycle-compiler:2.3.1'
+
 	// Crypto
 	implementation "com.augustcellars.cose:cose-java:1.1.0"
 	implementation 'androidx.security:security-crypto:1.0.0'
 
 	// Networking
-	implementation 'com.squareup.retrofit2:retrofit:2.9.0'
-	implementation 'com.squareup.retrofit2:converter-moshi:2.9.0'
-	implementation 'com.squareup.okhttp3:logging-interceptor:4.7.2'
-	implementation 'com.squareup.moshi:moshi:1.11.0'
-	implementation 'com.squareup.moshi:moshi-adapters:1.11.0'
+	api 'com.squareup.retrofit2:retrofit:2.9.0'
+	api 'com.squareup.retrofit2:converter-scalars:2.9.0'
+	api 'com.squareup.retrofit2:converter-moshi:2.9.0'
+	api 'com.squareup.okhttp3:logging-interceptor:4.9.0'
+	api 'com.squareup.moshi:moshi:1.11.0'
+	api 'com.squareup.moshi:moshi-adapters:1.11.0'
 	kapt "com.squareup.moshi:moshi-kotlin-codegen:1.11.0"
 
 	//JWS Library
 	implementation 'io.jsonwebtoken:jjwt-api:0.11.2'
 	api 'io.jsonwebtoken:jjwt-impl:0.11.2',
 			'io.jsonwebtoken:jjwt-jackson:0.11.2'
+
+	//jackson for natinoal rules
+	implementation 'com.fasterxml.jackson.core:jackson-databind:2.12.3'
 
 	testImplementation 'junit:junit:4.+'
 	androidTestImplementation 'androidx.test.ext:junit:1.1.2'

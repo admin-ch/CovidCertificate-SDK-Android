@@ -8,7 +8,7 @@
  * SPDX-License-Identifier: MPL-2.0
  */
 
-package ch.admin.bag.covidcertificate.eval
+package ch.admin.bag.covidcertificate.eval.data
 
 object EvalErrorCodes {
 	/* Errors during decoding */
@@ -38,5 +38,12 @@ object EvalErrorCodes {
 	const val POSITIVE_RESULT = "N|PR"
 	const val NOT_FULLY_PROTECTED = "N|NFP"
 	const val RULESET_UNKNOWN = "N|UNK"
+	const val TOO_MANY_VACCINE_ENTRIES = "N|TMV"
+	const val TOO_MANY_TEST_ENTRIES = "N|TMT"
+	const val TOO_MANY_RECOVERY_ENTRIES = "N|TMR"
+	const val UNKNOWN_RULE_FAILED = "N|UNK"
+
+	/* Errors regarding the trust list */
+	const val TRUST_LIST_MISSING = "T|MIS"
 
 }
