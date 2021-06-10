@@ -13,9 +13,9 @@ package ch.admin.bag.covidcertificate.eval.nationalrules
 import android.content.Context
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
+import ch.admin.bag.covidcertificate.eval.CheckNationalRulesState
 import ch.admin.bag.covidcertificate.eval.TestDataGenerator
 import ch.admin.bag.covidcertificate.eval.data.AcceptedVaccineProvider
-import ch.admin.bag.covidcertificate.eval.data.state.CheckNationalRulesState
 import ch.admin.bag.covidcertificate.eval.utils.*
 import org.junit.Assert.*
 import org.junit.Before
