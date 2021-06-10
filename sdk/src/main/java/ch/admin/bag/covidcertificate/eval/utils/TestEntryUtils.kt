@@ -83,14 +83,12 @@ fun TestEntry.validFromDate(): LocalDateTime? {
 	}
 }
 
-fun TestEntry.validUntilDate(testEntry: TestEntry): LocalDateTime? {
+fun TestEntry.validUntilDate(): LocalDateTime? {
 	val startDate = this.validFromDate() ?: return null
-	val testEntryCode = testEntry.type ?: return null
-	if (testEntryCode == TestType.PCR.code) {
-		return startDate.plusHours(AcceptanceCriterias.PCR_TEST_VALIDITY_IN_HOURS)
-	} else if (testEntryCode == TestType.RAT.code) {
-		return startDate.plusHours(AcceptanceCriterias.RAT_TEST_VALIDITY_IN_HOURS)
+	return when (type) {
+		TestType.PCR.code -> startDate.plusHours(AcceptanceCriterias.PCR_TEST_VALIDITY_IN_HOURS)
+		TestType.RAT.code -> startDate.plusHours(AcceptanceCriterias.RAT_TEST_VALIDITY_IN_HOURS)
+		else -> null
 	}
-	return null
 }
 

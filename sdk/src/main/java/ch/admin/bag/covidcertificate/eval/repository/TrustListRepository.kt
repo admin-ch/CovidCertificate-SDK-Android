@@ -11,9 +11,7 @@
 package ch.admin.bag.covidcertificate.eval.repository
 
 import ch.admin.bag.covidcertificate.eval.data.TrustListStore
-import ch.admin.bag.covidcertificate.eval.models.Jwks
-import ch.admin.bag.covidcertificate.eval.models.RuleSet
-import ch.admin.bag.covidcertificate.eval.models.TrustList
+import ch.admin.bag.covidcertificate.eval.models.*
 import ch.admin.bag.covidcertificate.eval.net.CertificateService
 import ch.admin.bag.covidcertificate.eval.net.RevocationService
 import ch.admin.bag.covidcertificate.eval.net.RuleSetService
@@ -54,10 +52,10 @@ internal class TrustListRepository(
 	 * Get the trust list from the provider or null if at least one of the values is not set
 	 */
 	fun getTrustList(): TrustList? {
-		return if (store.areSignaturesValid() && store.areRevokedCertificatesValid() /*&& store.areRuleSetsValid()*/) {
+		return if (store.areSignaturesValid() && store.areRevokedCertificatesValid() && store.areRuleSetsValid()) {
 			val signatures = store.certificateSignatures!!
 			val revokedCertificates = store.revokedCertificates!!
-			val ruleSet = store.ruleset ?: RuleSet(emptyList()) // TODO Just for testing while there is no endpoint yet
+			val ruleSet = store.ruleset!!
 			TrustList(signatures, revokedCertificates, ruleSet)
 		} else {
 			null
@@ -112,9 +110,10 @@ internal class TrustListRepository(
 		val shouldLoadRuleSet = forceRefresh || !store.areRuleSetsValid()
 		if (shouldLoadRuleSet) {
 			val response = ruleSetService.getRuleset()
-			if (response.isSuccessful && response.body() != null) {
-				store.ruleset = response.body()
-				val newValidUntil = Instant.now().plus(2L, ChronoUnit.DAYS).toEpochMilli()
+			val body = response.body()
+			if (response.isSuccessful && body != null) {
+				store.ruleset = body
+				val newValidUntil = Instant.now().plus(body.validDuration, ChronoUnit.MILLIS).toEpochMilli()
 				store.rulesetValidUntil = newValidUntil
 			}
 		}

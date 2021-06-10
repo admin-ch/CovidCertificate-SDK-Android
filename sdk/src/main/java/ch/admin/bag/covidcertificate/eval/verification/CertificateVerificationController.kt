@@ -10,6 +10,7 @@
 
 package ch.admin.bag.covidcertificate.eval.verification
 
+import android.util.Log
 import ch.admin.bag.covidcertificate.eval.repository.TrustListRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
@@ -20,6 +21,10 @@ class CertificateVerificationController internal constructor(
 	private val trustListRepository: TrustListRepository,
 	private val verifier: CertificateVerifier
 ) {
+
+	companion object {
+		private val TAG = CertificateVerificationController::class.java.simpleName
+	}
 
 	private val taskQueue: Queue<CertificateVerificationTask> = LinkedList()
 	private var trustListLoadingJob: Job? = null
@@ -38,6 +43,7 @@ class CertificateVerificationController internal constructor(
 					onCompletionCallback.invoke()
 				} catch (e: Exception) {
 					// Loading trust list failed, keep using last stored version
+					Log.e(TAG, "Manually refreshing trust list failed", e)
 				}
 			}
 		}
@@ -68,6 +74,7 @@ class CertificateVerificationController internal constructor(
 					trustListLoadingJob = null
 				} catch (e: Exception) {
 					// Loading trust list failed, keep using last stored version
+					Log.e(TAG, "Refreshing trust list as part of certificate verification task failed", e)
 				}
 			}
 		}

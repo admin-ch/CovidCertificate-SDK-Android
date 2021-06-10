@@ -16,7 +16,7 @@ import retrofit2.http.GET
 
 interface RuleSetService {
 
-	@GET("ruleset.json")
+	@GET("verificationRules.json")
 	suspend fun getRuleset() : Response<RuleSet>
 
 }

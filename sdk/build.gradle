@@ -67,6 +67,7 @@ dependencies {
 
 	// Networking
 	api 'com.squareup.retrofit2:retrofit:2.9.0'
+	api 'com.squareup.retrofit2:converter-scalars:2.9.0'
 	api 'com.squareup.retrofit2:converter-moshi:2.9.0'
 	api 'com.squareup.okhttp3:logging-interceptor:4.9.0'
 	api 'com.squareup.moshi:moshi:1.11.0'
@@ -77,6 +78,9 @@ dependencies {
 	implementation 'io.jsonwebtoken:jjwt-api:0.11.2'
 	api 'io.jsonwebtoken:jjwt-impl:0.11.2',
 			'io.jsonwebtoken:jjwt-jackson:0.11.2'
+
+	//jackson for natinoal rules
+	implementation 'com.fasterxml.jackson.core:jackson-databind:2.12.3'
 
 	testImplementation 'junit:junit:4.+'
 	androidTestImplementation 'androidx.test.ext:junit:1.1.2'

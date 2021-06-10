@@ -11,125 +11,128 @@
 package ch.admin.bag.covidcertificate.eval.nationalrules
 
 import android.content.Context
+import ch.admin.bag.covidcertificate.eval.data.AcceptedTestProvider
+import ch.admin.bag.covidcertificate.eval.data.AcceptedVaccineProvider
 import ch.admin.bag.covidcertificate.eval.data.state.CheckNationalRulesState
-import ch.admin.bag.covidcertificate.eval.data.*
+import ch.admin.bag.covidcertificate.eval.euhealthcert.Eudgc
 import ch.admin.bag.covidcertificate.eval.euhealthcert.RecoveryEntry
 import ch.admin.bag.covidcertificate.eval.euhealthcert.TestEntry
 import ch.admin.bag.covidcertificate.eval.euhealthcert.VaccinationEntry
+import ch.admin.bag.covidcertificate.eval.models.CertLogicData
+import ch.admin.bag.covidcertificate.eval.models.CertLogicExternalInfo
+import ch.admin.bag.covidcertificate.eval.models.CertLogicPayload
+import ch.admin.bag.covidcertificate.eval.models.Rule
+import ch.admin.bag.covidcertificate.eval.models.RuleSet
+import ch.admin.bag.covidcertificate.eval.nationalrules.certlogic.evaluate
+import ch.admin.bag.covidcertificate.eval.nationalrules.certlogic.isTruthy
 import ch.admin.bag.covidcertificate.eval.products.Vaccine
-import ch.admin.bag.covidcertificate.eval.utils.*
+import ch.admin.bag.covidcertificate.eval.utils.doseNumber
+import ch.admin.bag.covidcertificate.eval.utils.isNegative
+import ch.admin.bag.covidcertificate.eval.utils.isTargetDiseaseCorrect
+import ch.admin.bag.covidcertificate.eval.utils.totalDoses
+import ch.admin.bag.covidcertificate.eval.utils.validFromDate
+import ch.admin.bag.covidcertificate.eval.utils.validUntilDate
+import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.databind.ObjectMapper
 import java.time.Clock
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.ZoneId
+import java.time.ZonedDateTime
+import java.time.format.DateTimeFormatter
 
 class NationalRulesVerifier(context: Context) {
 
-	private val acceptedVaccineProvider: AcceptedVaccineProvider = AcceptedVaccineProvider.getInstance(context)
-	private val acceptedTestProvider: AcceptedTestProvider = AcceptedTestProvider.getInstance(context)
+	private val acceptedVaccineProvider = AcceptedVaccineProvider.getInstance(context)
 
-	fun verifyVaccine(
-		vaccinationEntry: VaccinationEntry,
-		clock: Clock = Clock.systemDefaultZone(),
-	): CheckNationalRulesState {
+	fun verify(euDgc: Eudgc, ruleSet: RuleSet, clock: Clock = Clock.systemDefaultZone()): CheckNationalRulesState {
+		val payload = CertLogicPayload(euDgc.pastInfections, euDgc.tests, euDgc.vaccinations)
+		val validationClock = ZonedDateTime.now(clock).format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)
+		val validationClockAtStartOfDay = LocalDate.now(clock).atStartOfDay(ZoneId.systemDefault()).format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)
+		val externalInfo = CertLogicExternalInfo(ruleSet.valueSets, validationClock, validationClockAtStartOfDay)
+		val ruleSetData = CertLogicData(payload, externalInfo)
 
-		// tg must be sars-cov2
-		if (!vaccinationEntry.isTargetDiseaseCorrect()) {
-			return CheckNationalRulesState.INVALID(NationalRulesError.WRONG_DISEASE_TARGET)
+		val jacksonMapper = ObjectMapper()
+		val data = jacksonMapper.valueToTree<JsonNode>(ruleSetData)
+
+		for (rule in ruleSet.rules) {
+			val ruleLogic = jacksonMapper.readTree(rule.logic)
+			val isSuccessful = isTruthy(evaluate(ruleLogic, data))
+
+			if (!isSuccessful) {
+				return getErrorStateForRule(rule, euDgc)
+			}
 		}
 
-		// dosis number must be greater or equal to total number of dosis
-		if (vaccinationEntry.doseNumber() < vaccinationEntry.totalDoses()) {
-			return CheckNationalRulesState.INVALID(NationalRulesError.NOT_FULLY_PROTECTED)
+		val validityRange = getValidityRange(euDgc)
+		return if (validityRange != null) {
+			CheckNationalRulesState.SUCCESS(validityRange)
+		} else {
+			CheckNationalRulesState.INVALID(NationalRulesError.NO_VALID_DATE)
 		}
-
-		// check if vaccine is in accepted product. We only check the mp now, since the same product held by different license holder should work the same -- right?
-		val foundEntry: Vaccine = acceptedVaccineProvider.getVaccineDataFromList(vaccinationEntry)
-			?: return CheckNationalRulesState.INVALID(NationalRulesError.NO_VALID_PRODUCT)
-
-		val today = LocalDate.now(clock).atStartOfDay()
-		val validFromDate = vaccinationEntry.validFromDate(foundEntry)
-		val validUntilDate = vaccinationEntry.validUntilDate()
-
-		if (validFromDate == null || validUntilDate == null) {
-			return CheckNationalRulesState.INVALID(NationalRulesError.NO_VALID_DATE)
-		}
-
-		if (validFromDate.isAfter(today)) {
-			return CheckNationalRulesState.NOT_YET_VALID(ValidityRange(validFromDate, validUntilDate))
-		}
-
-		if (validUntilDate.isBefore(today)) {
-			return CheckNationalRulesState.NOT_VALID_ANYMORE(ValidityRange(validFromDate, validUntilDate))
-		}
-		return CheckNationalRulesState.SUCCESS(ValidityRange(validFromDate, validUntilDate))
 	}
 
-
-	fun verifyTest(
-		testEntry: TestEntry,
-		clock: Clock = Clock.systemDefaultZone(),
-	): CheckNationalRulesState {
-		// tg must be sars-cov2
-		if (!testEntry.isTargetDiseaseCorrect()) {
-			return CheckNationalRulesState.INVALID(NationalRulesError.WRONG_DISEASE_TARGET)
+	private fun getErrorStateForRule(rule: Rule, euDgc: Eudgc): CheckNationalRulesState {
+		return when (rule.id) {
+			"GR-CH-0001" -> CheckNationalRulesState.INVALID(NationalRulesError.WRONG_DISEASE_TARGET, rule.id)
+			"VR-CH-0000" -> CheckNationalRulesState.INVALID(NationalRulesError.TOO_MANY_VACCINE_ENTRIES, rule.id)
+			"VR-CH-0001" -> CheckNationalRulesState.INVALID(NationalRulesError.NOT_FULLY_PROTECTED, rule.id)
+			"VR-CH-0002" -> CheckNationalRulesState.INVALID(NationalRulesError.NO_VALID_PRODUCT, rule.id)
+			"VR-CH-0003" -> CheckNationalRulesState.INVALID(NationalRulesError.NO_VALID_DATE, rule.id)
+			"VR-CH-0004" -> getValidityRange(euDgc)?.let {
+				CheckNationalRulesState.NOT_YET_VALID(it, rule.id)
+			} ?: CheckNationalRulesState.INVALID(NationalRulesError.NO_VALID_DATE, rule.id)
+			"VR-CH-0005" -> getValidityRange(euDgc)?.let {
+				CheckNationalRulesState.NOT_YET_VALID(it, rule.id)
+			} ?: CheckNationalRulesState.INVALID(NationalRulesError.NO_VALID_DATE, rule.id)
+			"VR-CH-0006" -> getValidityRange(euDgc)?.let {
+				CheckNationalRulesState.NOT_VALID_ANYMORE(it, rule.id)
+			} ?: CheckNationalRulesState.INVALID(NationalRulesError.NO_VALID_DATE, rule.id)
+			"TR-CH-0000" -> CheckNationalRulesState.INVALID(NationalRulesError.TOO_MANY_TEST_ENTRIES, rule.id)
+			"TR-CH-0001" -> CheckNationalRulesState.INVALID(NationalRulesError.POSITIVE_RESULT, rule.id)
+			"TR-CH-0002" -> CheckNationalRulesState.INVALID(NationalRulesError.WRONG_TEST_TYPE, rule.id)
+			"TR-CH-0003" -> CheckNationalRulesState.INVALID(NationalRulesError.NO_VALID_PRODUCT, rule.id)
+			"TR-CH-0004" -> CheckNationalRulesState.INVALID(NationalRulesError.NO_VALID_DATE, rule.id)
+			"TR-CH-0005" -> getValidityRange(euDgc)?.let {
+				CheckNationalRulesState.NOT_YET_VALID(it, rule.id)
+			} ?: CheckNationalRulesState.INVALID(NationalRulesError.NO_VALID_DATE, rule.id)
+			"TR-CH-0006" -> getValidityRange(euDgc)?.let {
+				CheckNationalRulesState.NOT_VALID_ANYMORE(it, rule.id)
+			} ?: CheckNationalRulesState.INVALID(NationalRulesError.NO_VALID_DATE, rule.id)
+			"TR-CH-0007" -> getValidityRange(euDgc)?.let {
+				CheckNationalRulesState.NOT_VALID_ANYMORE(it, rule.id)
+			} ?: CheckNationalRulesState.INVALID(NationalRulesError.NO_VALID_DATE, rule.id)
+			"RR-CH-0000" -> CheckNationalRulesState.INVALID(NationalRulesError.TOO_MANY_RECOVERY_ENTRIES, rule.id)
+			"RR-CH-0001" -> CheckNationalRulesState.INVALID(NationalRulesError.NO_VALID_DATE, rule.id)
+			"RR-CH-0002" -> getValidityRange(euDgc)?.let {
+				CheckNationalRulesState.NOT_YET_VALID(it, rule.id)
+			} ?: CheckNationalRulesState.INVALID(NationalRulesError.NO_VALID_DATE, rule.id)
+			"RR-CH-0003" -> getValidityRange(euDgc)?.let {
+				CheckNationalRulesState.NOT_VALID_ANYMORE(it, rule.id)
+			} ?: CheckNationalRulesState.INVALID(NationalRulesError.NO_VALID_DATE, rule.id)
+			else -> CheckNationalRulesState.INVALID(NationalRulesError.UNKNOWN_RULE_FAILED, rule.id)
 		}
-
-		if (!testEntry.isNegative()) {
-			return CheckNationalRulesState.INVALID(NationalRulesError.POSITIVE_RESULT)
-		}
-
-		// test type must be RAT or PCR
-		if (!acceptedTestProvider.testIsPCRorRAT(testEntry)) {
-			return CheckNationalRulesState.INVALID(NationalRulesError.WRONG_TEST_TYPE)
-		}
-
-		if (!acceptedTestProvider.testIsAcceptedInEuAndCH(testEntry)) {
-			return CheckNationalRulesState.INVALID(NationalRulesError.NO_VALID_PRODUCT)
-		}
-
-		val today = LocalDateTime.now(clock)
-		val validFromDate = testEntry.validFromDate()
-		val validUntilDate = testEntry.validUntilDate(testEntry)
-
-		if (validFromDate == null || validUntilDate == null) {
-			return CheckNationalRulesState.INVALID(NationalRulesError.NO_VALID_DATE)
-		}
-
-		if (validFromDate.isAfter(today)) {
-			return CheckNationalRulesState.NOT_YET_VALID(ValidityRange(validFromDate, validUntilDate))
-		}
-		if (validUntilDate.isBefore(today)) {
-			return CheckNationalRulesState.NOT_VALID_ANYMORE(ValidityRange(validFromDate, validUntilDate))
-		}
-		return CheckNationalRulesState.SUCCESS(ValidityRange(validFromDate, validUntilDate))
 	}
 
-	fun verifyRecovery(
-		recoveryEntry: RecoveryEntry,
-		clock: Clock = Clock.systemDefaultZone(),
-	): CheckNationalRulesState {
-
-		// tg must be sars-cov2
-		if (!recoveryEntry.isTargetDiseaseCorrect()) {
-			return CheckNationalRulesState.INVALID(NationalRulesError.WRONG_DISEASE_TARGET)
+	private fun getValidityRange(euDgc: Eudgc) : ValidityRange? {
+		return when {
+			!euDgc.vaccinations.isNullOrEmpty() -> {
+				val vaccination = euDgc.vaccinations.first()
+				val usedVaccine = acceptedVaccineProvider.getVaccineDataFromList(vaccination)
+				usedVaccine?.let {
+					ValidityRange(vaccination.validFromDate(it), vaccination.validUntilDate())
+				}
+			}
+			!euDgc.tests.isNullOrEmpty() -> {
+				val test = euDgc.tests.first()
+				ValidityRange(test.validFromDate(), test.validUntilDate())
+			}
+			!euDgc.pastInfections.isNullOrEmpty() -> {
+				val recovery = euDgc.pastInfections.first()
+				ValidityRange(recovery.validFromDate(), recovery.validUntilDate())
+			}
+			else -> null
 		}
-
-		val today = LocalDate.now(clock).atStartOfDay()
-		val validFromDate = recoveryEntry.validFromDate()
-		val validUntilDate = recoveryEntry.validUntilDate()
-
-		if (validFromDate == null || validUntilDate == null) {
-			return CheckNationalRulesState.INVALID(NationalRulesError.NO_VALID_DATE)
-		}
-
-		if (validFromDate.isAfter(today)) {
-			return CheckNationalRulesState.NOT_YET_VALID(ValidityRange(validFromDate, validUntilDate))
-		}
-
-		if (validUntilDate.isBefore(today)) {
-			return CheckNationalRulesState.NOT_VALID_ANYMORE(ValidityRange(validFromDate, validUntilDate))
-		}
-		return CheckNationalRulesState.SUCCESS(ValidityRange(validFromDate, validUntilDate))
 	}
 }
 
