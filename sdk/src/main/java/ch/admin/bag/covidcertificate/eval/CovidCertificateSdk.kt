@@ -19,6 +19,7 @@ import ch.admin.bag.covidcertificate.eval.data.CertificateSecureStorage
 import ch.admin.bag.covidcertificate.eval.data.Config
 import ch.admin.bag.covidcertificate.eval.data.moshi.RawJsonStringAdapter
 import ch.admin.bag.covidcertificate.eval.nationalrules.NationalRulesVerifier
+import ch.admin.bag.covidcertificate.eval.net.ApiKeyInterceptor
 import ch.admin.bag.covidcertificate.eval.net.CertificatePinning
 import ch.admin.bag.covidcertificate.eval.net.CertificateService
 import ch.admin.bag.covidcertificate.eval.net.JwsInterceptor
@@ -106,6 +107,7 @@ object CovidCertificateSdk {
 		val okHttpBuilder = OkHttpClient.Builder()
 			.certificatePinner(CertificatePinning.pinner)
 			.addInterceptor(JwsInterceptor(rootCa))
+			.addInterceptor(ApiKeyInterceptor())
 			.addInterceptor(UserAgentInterceptor(Config.userAgent))
 
 		val cacheSize = 5 * 1024 * 1024 // 5 MB
