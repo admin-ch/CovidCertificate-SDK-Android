@@ -10,76 +10,65 @@
 
 package ch.admin.bag.covidcertificate.eval.net
 
-import android.util.Base64
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.Types
-
 import io.jsonwebtoken.Claims
 import io.jsonwebtoken.ExpiredJwtException
 import io.jsonwebtoken.Jws
-import io.jsonwebtoken.Jwt
 import io.jsonwebtoken.Jwts
 import okhttp3.Interceptor
-
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.Response
-
 import okhttp3.ResponseBody.Companion.toResponseBody
-import java.io.ByteArrayInputStream
 import java.io.IOException
-import java.lang.Exception
-import java.security.PublicKey
-
 import java.security.SignatureException
-import java.security.cert.Certificate
-import java.security.cert.CertificateFactory
 import java.security.cert.X509Certificate
 
-/// application/json media type for the payload of a JWS
-val APPLICATION_JSON = "application/json".toMediaType()
-
 /**
-   This class can be used as an interceptor to verify a JWS and return a response with a plain JSON-Object.
-   Since we need a JWS with a JSON body (we explicitly ask for it), we can savely assume that the content-type
-   is `application/json`.
- The signature of the JWS is verified with `publicKey`.
+ * This class can be used as an interceptor to verify a JWS and return a response with a plain JSON-Object.
+ * Since we need a JWS with a JSON body (we explicitly ask for it), we can savely assume that the content-type
+ * is `application/json`.
+ * The signature of the JWS is verified with `publicKey`.
  */
- class JwsInterceptor(rootCA: X509Certificate) :
-        Interceptor {
-    private val keyResolver: JwsKeyResolver = JwsKeyResolver(rootCA)
+class JwsInterceptor(rootCA: X509Certificate) : Interceptor {
 
-    @Throws(IOException::class)
+	companion object {
+		// application/json media type for the payload of a JWS
+		private val APPLICATION_JSON = "application/json".toMediaType()
+	}
 
-    override fun intercept(chain: Interceptor.Chain): Response {
-        val response: Response = chain.proceed(chain.request())
-        if (!response.isSuccessful) {
-            return response
-        }
-        if (response.cacheResponse != null) {
-            return response
-        }
-        val jws = response.body?.string() ?: throw SignatureException("Body has no signature")
+	private val keyResolver: JwsKeyResolver = JwsKeyResolver(rootCA)
 
-        var body = ""
-        try {
-            val claimsJws : Jws<Claims> = Jwts.parserBuilder()
-                .setSigningKeyResolver(keyResolver)
-                    .build()
-                    .parseClaimsJws(jws)
-            // now that the JWS is verified, we can safely assume that the body can be trusted, so serialize it to JSON again
-            body = Moshi.Builder().build().adapter<Claims>(Types.newParameterizedType(Map::class.java, String::class.java, Object::class.java)).toJson(claimsJws.body)
-        } catch (e: io.jsonwebtoken.security.SignatureException) {
-            throw SignatureException("Invalid Signature")
-        } catch (o: ExpiredJwtException) {
-            throw SignatureException("Expired JWT")
-        }
+	@Throws(IOException::class)
+	override fun intercept(chain: Interceptor.Chain): Response {
+		val response: Response = chain.proceed(chain.request())
+		if (!response.isSuccessful) {
+			return response
+		}
 
-        // SAFE ZONE
-        // from here on body contains a JSON-string of the payload of the JWS, whose signature we verified.
+		val jws = response.body?.string() ?: throw SignatureException("Body has no signature")
+		val body: String
+		try {
+			val claimsJws: Jws<Claims> = Jwts.parserBuilder()
+				.setSigningKeyResolver(keyResolver)
+				.build()
+				.parseClaimsJws(jws)
+			// now that the JWS is verified, we can safely assume that the body can be trusted, so serialize it to JSON again
+			body = Moshi.Builder().build()
+				.adapter<Claims>(Types.newParameterizedType(Map::class.java, String::class.java, Object::class.java))
+				.toJson(claimsJws.body)
+		} catch (e: io.jsonwebtoken.security.SignatureException) {
+			throw SignatureException("Invalid Signature")
+		} catch (o: ExpiredJwtException) {
+			throw SignatureException("Expired JWT")
+		}
 
-        return response.newBuilder()
-                .body(
-                        body.toResponseBody(APPLICATION_JSON)
-                ).build()
-    }
+		// SAFE ZONE
+		// from here on body contains a JSON-string of the payload of the JWS, whose signature we verified.
+
+		return response.newBuilder()
+			.body(
+				body.toResponseBody(APPLICATION_JSON)
+			).build()
+	}
 }

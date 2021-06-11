@@ -26,7 +26,6 @@ internal class EncryptedFileStorage(private val path: String) {
 
 		val file = File(context.filesDir, path)
 		if (file.exists()) {
-			// Yeah, interesting design choice by Google, see also https://stackoverflow.com/q/63127401
 			file.delete()
 		}
 

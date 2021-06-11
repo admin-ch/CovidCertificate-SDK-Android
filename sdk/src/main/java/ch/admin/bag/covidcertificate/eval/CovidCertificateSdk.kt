@@ -21,6 +21,7 @@ import ch.admin.bag.covidcertificate.eval.data.moshi.RawJsonStringAdapter
 import ch.admin.bag.covidcertificate.eval.nationalrules.NationalRulesVerifier
 import ch.admin.bag.covidcertificate.eval.net.CertificatePinning
 import ch.admin.bag.covidcertificate.eval.net.CertificateService
+import ch.admin.bag.covidcertificate.eval.net.JwsInterceptor
 import ch.admin.bag.covidcertificate.eval.net.RevocationService
 import ch.admin.bag.covidcertificate.eval.net.RuleSetService
 import ch.admin.bag.covidcertificate.eval.net.UserAgentInterceptor
@@ -35,11 +36,17 @@ import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
 import retrofit2.converter.scalars.ScalarsConverterFactory
+import java.security.cert.Certificate
+import java.security.cert.CertificateFactory
+import java.security.cert.X509Certificate
 import java.util.*
 import java.util.concurrent.TimeUnit
 import kotlin.concurrent.timer
 
 object CovidCertificateSdk {
+
+	private const val ROOT_CA_TYPE = "X.509"
+	private const val ASSET_PATH_ROOT_CA = "swiss_governmentrootcaii.der"
 
 	private val TRUST_LIST_REFRESH_INTERVAL = TimeUnit.HOURS.toMillis(1L)
 
@@ -52,8 +59,7 @@ object CovidCertificateSdk {
 		val retrofit = createRetrofit(context)
 		val certificateService = retrofit.create(CertificateService::class.java)
 		val revocationService = retrofit.create(RevocationService::class.java)
-		val nationRetrofit = createRetrofitForNationalRules(context) // TODO Just until there is a real endpoint
-		val ruleSetService = nationRetrofit.create(RuleSetService::class.java)
+		val ruleSetService = retrofit.create(RuleSetService::class.java)
 
 		val certificateStorage = CertificateSecureStorage.getInstance(context)
 		val trustListRepository = TrustListRepository(certificateService, revocationService, ruleSetService, certificateStorage)
@@ -83,6 +89,12 @@ object CovidCertificateSdk {
 		return certificateVerificationController
 	}
 
+	fun getRootCa(context: Context): X509Certificate {
+		val certificateFactory = CertificateFactory.getInstance(ROOT_CA_TYPE)
+		val inputStream = context.assets.open(ASSET_PATH_ROOT_CA)
+		return certificateFactory.generateCertificate(inputStream) as X509Certificate
+	}
+
 	private fun requireInitialized() {
 		if (!isInitialized) {
 			throw IllegalStateException("CovidCertificateSdk must be initialized by calling init(context)")
@@ -90,8 +102,10 @@ object CovidCertificateSdk {
 	}
 
 	private fun createRetrofit(context: Context): Retrofit {
+		val rootCa = getRootCa(context)
 		val okHttpBuilder = OkHttpClient.Builder()
 			.certificatePinner(CertificatePinning.pinner)
+			.addInterceptor(JwsInterceptor(rootCa))
 			.addInterceptor(UserAgentInterceptor(Config.userAgent))
 
 		val cacheSize = 5 * 1024 * 1024 // 5 MB
@@ -107,7 +121,7 @@ object CovidCertificateSdk {
 			.baseUrl(BuildConfig.BASE_URL_TRUST_LIST)
 			.client(okHttpBuilder.build())
 			.addConverterFactory(ScalarsConverterFactory.create())
-			.addConverterFactory(MoshiConverterFactory.create())
+			.addConverterFactory(MoshiConverterFactory.create(Moshi.Builder().add(RawJsonStringAdapter()).build()))
 			.build()
 	}
 
@@ -132,31 +146,6 @@ object CovidCertificateSdk {
 		fun onStop() {
 			trustListRefreshTimer?.cancel()
 		}
-	}
-
-	// TODO only temporary needed fo national rules
-	private fun createRetrofitForNationalRules(context: Context): Retrofit {
-		val okHttpBuilder = OkHttpClient.Builder()
-			.certificatePinner(CertificatePinning.pinner)
-			.addInterceptor(UserAgentInterceptor(Config.userAgent))
-
-		val cacheSize = 5 * 1024 * 1024 // 5 MB
-		val cache = Cache(context.cacheDir, cacheSize.toLong())
-		okHttpBuilder.cache(cache)
-
-		// https://ch-dgc.s3.eu-central-1.amazonaws.com/v1/verificationRules.json
-		val baseUrl = "https://ch-dgc.s3.eu-central-1.amazonaws.com/v1/"
-		if (BuildConfig.DEBUG) {
-			val httpInterceptor = HttpLoggingInterceptor().setLevel(HttpLoggingInterceptor.Level.BODY)
-			okHttpBuilder.addInterceptor(httpInterceptor)
-		}
-
-		return Retrofit.Builder()
-			.baseUrl(baseUrl)
-			.client(okHttpBuilder.build())
-			.addConverterFactory(ScalarsConverterFactory.create())
-			.addConverterFactory(MoshiConverterFactory.create(Moshi.Builder().add(RawJsonStringAdapter()).build()))
-			.build()
 	}
 
 }

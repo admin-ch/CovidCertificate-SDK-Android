@@ -19,11 +19,11 @@ import retrofit2.http.Query
 
 interface CertificateService {
 
-	@Headers("Accept: application/json")
+	@Headers("Accept: application/json+jws")
 	@GET("keys/list")
 	suspend fun getActiveSignerCertificateKeyIds(): Response<ActiveSignerCertificates>
 
-	@Headers("Accept: application/json")
+	@Headers("Accept: application/json+jws")
 	@GET("keys/updates?certFormat=ANDROID")
 	suspend fun getSignerCertificates(@Query("since") since: Long? = null): Response<Jwks>
 }
