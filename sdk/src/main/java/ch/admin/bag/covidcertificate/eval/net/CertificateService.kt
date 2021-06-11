@@ -25,5 +25,5 @@ interface CertificateService {
 
 	@Headers("Accept: application/json+jws")
 	@GET("keys/updates?certFormat=ANDROID")
-	suspend fun getSignerCertificates(@Query("since") since: Long? = null): Response<Jwks>
+	suspend fun getSignerCertificates(@Query("since") since: String? = null): Response<Jwks>
 }

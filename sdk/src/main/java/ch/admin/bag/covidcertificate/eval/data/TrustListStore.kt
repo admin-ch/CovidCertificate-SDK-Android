@@ -18,7 +18,7 @@ interface TrustListStore {
 
 	var certificateSignaturesValidUntil: Long
 	var certificateSignatures: Jwks?
-	var certificatesSinceHeader: Long
+	var certificatesSinceHeader: String?
 
 	var revokedCertificatesValidUntil: Long
 	var revokedCertificates: RevokedCertificates?
