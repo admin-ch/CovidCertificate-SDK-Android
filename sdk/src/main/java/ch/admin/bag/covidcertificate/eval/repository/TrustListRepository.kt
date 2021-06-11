@@ -73,10 +73,17 @@ internal class TrustListRepository(
 				var since = store.certificatesSinceHeader
 
 				// Get the signer certificates as long as there are entries in the response list
+				var count = 0
 				var certificatesResponse = certificateService.getSignerCertificates(since)
 				while (certificatesResponse.isSuccessful && certificatesResponse.body()?.certs?.isNullOrEmpty() == false) {
 					allCertificates.addAll(certificatesResponse.body()?.certs ?: emptyList())
-					since = certificatesResponse.headers()[HEADER_NEXT_SINCE]?.toLong() ?: 0L
+
+					// Get the next since and check that it changed, otherwise break the loop
+					val nextSince = certificatesResponse.headers()[HEADER_NEXT_SINCE]
+					if (count >= 20 || nextSince == since) break
+
+					count++
+					since = nextSince
 					certificatesResponse = certificateService.getSignerCertificates(since)
 				}
 				store.certificatesSinceHeader = since

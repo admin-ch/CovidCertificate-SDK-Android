@@ -94,10 +94,10 @@ internal class CertificateSecureStorage private constructor(private val context:
 			field = value
 		}
 
-	override var certificatesSinceHeader: Long
-		get() = preferences.getLong(KEY_CERTIFICATE_SIGNATURES_SINCE_HEADER, 0L)
+	override var certificatesSinceHeader: String?
+		get() = preferences.getString(KEY_CERTIFICATE_SIGNATURES_SINCE_HEADER, null)
 		set(value) {
-			preferences.edit().putLong(KEY_CERTIFICATE_SIGNATURES_SINCE_HEADER, value).apply()
+			preferences.edit().putString(KEY_CERTIFICATE_SIGNATURES_SINCE_HEADER, value).apply()
 		}
 
 	override var revokedCertificatesValidUntil: Long
