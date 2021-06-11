@@ -17,7 +17,7 @@ import retrofit2.http.Headers
 
 interface RevocationService {
 
-	@Headers("Accept: application/json")
+	@Headers("Accept: application/json+jws")
 	@GET("revocationList")
 	suspend fun getRevokedCertificates(): Response<RevokedCertificates>
 
