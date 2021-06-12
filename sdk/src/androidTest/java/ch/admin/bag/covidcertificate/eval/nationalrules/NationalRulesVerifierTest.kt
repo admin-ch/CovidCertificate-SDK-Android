@@ -18,7 +18,7 @@ import ch.admin.bag.covidcertificate.eval.data.AcceptedVaccineProvider
 import ch.admin.bag.covidcertificate.eval.data.moshi.RawJsonStringAdapter
 import ch.admin.bag.covidcertificate.eval.data.state.CheckNationalRulesState
 import ch.admin.bag.covidcertificate.eval.models.RuleSet
-import ch.admin.bag.covidcertificate.eval.utils.AcceptanceCriterias
+import ch.admin.bag.covidcertificate.eval.utils.AcceptanceCriteriasConstants
 import ch.admin.bag.covidcertificate.eval.utils.TestType
 import ch.admin.bag.covidcertificate.eval.utils.isTargetDiseaseCorrect
 import ch.admin.bag.covidcertificate.eval.utils.validFromDate
@@ -64,7 +64,7 @@ class NationalRulesVerifierTest {
 			2,
 			"ORG-100001699",
 			"EU/1/21/1529",
-			AcceptanceCriterias.TARGET_DISEASE,
+			AcceptanceCriteriasConstants.TARGET_DISEASE,
 			"J07BX03",
 			vaccinationDate,
 		)
@@ -83,7 +83,7 @@ class NationalRulesVerifierTest {
 			2,
 			"ORG-100001699",
 			"EU/1/21/1529",
-			AcceptanceCriterias.TARGET_DISEASE,
+			AcceptanceCriteriasConstants.TARGET_DISEASE,
 			"1119349007",
 			vaccinationDate,
 		)
@@ -92,7 +92,7 @@ class NationalRulesVerifierTest {
 			2,
 			"ORG-100001699",
 			"EU/1/21/1529/INVALID",
-			AcceptanceCriterias.TARGET_DISEASE,
+			AcceptanceCriteriasConstants.TARGET_DISEASE,
 			"1119349007",
 			vaccinationDate,
 		)
@@ -114,7 +114,7 @@ class NationalRulesVerifierTest {
 			2,
 			"ORG-100001699",
 			"EU/1/21/1529",
-			AcceptanceCriterias.TARGET_DISEASE,
+			AcceptanceCriteriasConstants.TARGET_DISEASE,
 			"J07BX03",
 			vaccinationDate,
 		)
@@ -133,7 +133,7 @@ class NationalRulesVerifierTest {
 			1,
 			"ORG-100001699",
 			"EU/1/21/1529",
-			AcceptanceCriterias.TARGET_DISEASE,
+			AcceptanceCriteriasConstants.TARGET_DISEASE,
 			"J07BX03",
 			vaccinationDate,
 		)
@@ -155,7 +155,7 @@ class NationalRulesVerifierTest {
 			1,
 			"ORG-100001417",
 			"EU/1/20/1525",
-			AcceptanceCriterias.TARGET_DISEASE,
+			AcceptanceCriteriasConstants.TARGET_DISEASE,
 			"J07BX03",
 			nowDate.minusDays(15),
 		)
@@ -168,7 +168,7 @@ class NationalRulesVerifierTest {
 			1,
 			"ORG-100001417",
 			"EU/1/20/1525",
-			AcceptanceCriterias.TARGET_DISEASE,
+			AcceptanceCriteriasConstants.TARGET_DISEASE,
 			"J07BX03",
 			nowDate.minusDays(14),
 		)
@@ -191,7 +191,7 @@ class NationalRulesVerifierTest {
 			2,
 			"ORG-100001699",
 			"EU/1/21/1529",
-			AcceptanceCriterias.TARGET_DISEASE,
+			AcceptanceCriteriasConstants.TARGET_DISEASE,
 			"J07BX03",
 			validDateFrom,
 		)
@@ -236,7 +236,7 @@ class NationalRulesVerifierTest {
 			2,
 			"ORG-100001699",
 			"EU/1/21/1529",
-			AcceptanceCriterias.TARGET_DISEASE,
+			AcceptanceCriteriasConstants.TARGET_DISEASE,
 			"J07BX03",
 			nowDate,
 		)
@@ -248,7 +248,7 @@ class NationalRulesVerifierTest {
 			2,
 			"ORG-100001699",
 			"EU/1/21/1529",
-			AcceptanceCriterias.TARGET_DISEASE,
+			AcceptanceCriteriasConstants.TARGET_DISEASE,
 			"J07BX03",
 			nowDate,
 		)
@@ -266,9 +266,9 @@ class NationalRulesVerifierTest {
 		val duration = Duration.ofHours(-10)
 		val validCert = TestDataGenerator.generateTestCert(
 			TestType.PCR.code,
-			AcceptanceCriterias.NEGATIVE_CODE,
+			AcceptanceCriteriasConstants.NEGATIVE_CODE,
 			"Nucleic acid amplification with probe detection",
-			AcceptanceCriterias.TARGET_DISEASE,
+			AcceptanceCriteriasConstants.TARGET_DISEASE,
 			duration
 		)
 		assertTrue(validCert.tests!!.first().isTargetDiseaseCorrect())
@@ -277,7 +277,7 @@ class NationalRulesVerifierTest {
 
 		val invalidCert = TestDataGenerator.generateTestCert(
 			TestType.PCR.code,
-			AcceptanceCriterias.NEGATIVE_CODE,
+			AcceptanceCriteriasConstants.NEGATIVE_CODE,
 			"Nucleic acid amplification with probe detection",
 			"01123",
 			duration
@@ -295,23 +295,23 @@ class NationalRulesVerifierTest {
 	fun testTypeHasToBePcrOrRat() {
 		val validRat = TestDataGenerator.generateTestCert(
 			TestType.RAT.code,
-			AcceptanceCriterias.NEGATIVE_CODE,
+			AcceptanceCriteriasConstants.NEGATIVE_CODE,
 			"1232",
-			AcceptanceCriterias.TARGET_DISEASE,
+			AcceptanceCriteriasConstants.TARGET_DISEASE,
 			Duration.ofHours(-10)
 		)
 		val validPcr = TestDataGenerator.generateTestCert(
 			TestType.PCR.code,
-			AcceptanceCriterias.NEGATIVE_CODE,
+			AcceptanceCriteriasConstants.NEGATIVE_CODE,
 			"Nucleic acid amplification with probe detection",
-			AcceptanceCriterias.TARGET_DISEASE,
+			AcceptanceCriteriasConstants.TARGET_DISEASE,
 			Duration.ofHours(-10)
 		)
 		val invalidTest = TestDataGenerator.generateTestCert(
 			"INVALID_TEST_TYPE",
-			AcceptanceCriterias.NEGATIVE_CODE,
+			AcceptanceCriteriasConstants.NEGATIVE_CODE,
 			"Nucleic acid amplification with probe detection",
-			AcceptanceCriterias.TARGET_DISEASE,
+			AcceptanceCriteriasConstants.TARGET_DISEASE,
 			Duration.ofHours(-10)
 		)
 
@@ -334,9 +334,9 @@ class NationalRulesVerifierTest {
 	fun testTestHasToBeInWhitelist() {
 		val invalidTest = TestDataGenerator.generateTestCert(
 			TestType.RAT.code,
-			AcceptanceCriterias.NEGATIVE_CODE,
+			AcceptanceCriteriasConstants.NEGATIVE_CODE,
 			"abcdef",
-			AcceptanceCriterias.TARGET_DISEASE,
+			AcceptanceCriteriasConstants.TARGET_DISEASE,
 			Duration.ofHours(-10)
 		)
 		val invalidTestResult = nationalRulesVerifier.verify(invalidTest, nationalRuleSet)
@@ -351,9 +351,9 @@ class NationalRulesVerifierTest {
 	fun testPcrTestsAreAlwaysAccepted() {
 		var validTest = TestDataGenerator.generateTestCert(
 			TestType.RAT.code,
-			AcceptanceCriterias.NEGATIVE_CODE,
+			AcceptanceCriteriasConstants.NEGATIVE_CODE,
 			"1097",
-			AcceptanceCriterias.TARGET_DISEASE,
+			AcceptanceCriteriasConstants.TARGET_DISEASE,
 			Duration.ofHours(-10)
 		)
 		var result = nationalRulesVerifier.verify(validTest, nationalRuleSet)
@@ -364,9 +364,9 @@ class NationalRulesVerifierTest {
 	fun testPcrIsValidFor72h() {
 		var validPcr = TestDataGenerator.generateTestCert(
 			TestType.PCR.code,
-			AcceptanceCriterias.NEGATIVE_CODE,
+			AcceptanceCriteriasConstants.NEGATIVE_CODE,
 			"Nucleic acid amplification with probe detection",
-			AcceptanceCriterias.TARGET_DISEASE,
+			AcceptanceCriteriasConstants.TARGET_DISEASE,
 			Duration.ofHours(-71)
 		)
 		var result = nationalRulesVerifier.verify(validPcr, nationalRuleSet)
@@ -374,9 +374,9 @@ class NationalRulesVerifierTest {
 
 		var invalidPcr = TestDataGenerator.generateTestCert(
 			TestType.PCR.code,
-			AcceptanceCriterias.NEGATIVE_CODE,
+			AcceptanceCriteriasConstants.NEGATIVE_CODE,
 			"Nucleic acid amplification with probe detection",
-			AcceptanceCriterias.TARGET_DISEASE,
+			AcceptanceCriteriasConstants.TARGET_DISEASE,
 			Duration.ofHours(-72)
 		)
 		var invalid = nationalRulesVerifier.verify(invalidPcr, nationalRuleSet)
@@ -391,9 +391,9 @@ class NationalRulesVerifierTest {
 	fun testRatIsValidFor24h() {
 		var validRat = TestDataGenerator.generateTestCert(
 			TestType.RAT.code,
-			AcceptanceCriterias.NEGATIVE_CODE,
+			AcceptanceCriteriasConstants.NEGATIVE_CODE,
 			"1232",
-			AcceptanceCriterias.TARGET_DISEASE,
+			AcceptanceCriteriasConstants.TARGET_DISEASE,
 			Duration.ofHours(-23)
 		)
 		var result = nationalRulesVerifier.verify(validRat, nationalRuleSet)
@@ -401,9 +401,9 @@ class NationalRulesVerifierTest {
 
 		var invalidPcr = TestDataGenerator.generateTestCert(
 			TestType.RAT.code,
-			AcceptanceCriterias.NEGATIVE_CODE,
+			AcceptanceCriteriasConstants.NEGATIVE_CODE,
 			"1232",
-			AcceptanceCriterias.TARGET_DISEASE,
+			AcceptanceCriteriasConstants.TARGET_DISEASE,
 			Duration.ofHours(-24)
 		)
 		var invalid = nationalRulesVerifier.verify(invalidPcr, nationalRuleSet)
@@ -420,14 +420,14 @@ class NationalRulesVerifierTest {
 			TestType.RAT.code,
 			"positive",
 			"1232",
-			AcceptanceCriterias.TARGET_DISEASE,
+			AcceptanceCriteriasConstants.TARGET_DISEASE,
 			Duration.ofHours(-10)
 		)
 		var validPcr = TestDataGenerator.generateTestCert(
 			TestType.PCR.code,
 			"positive",
 			"Nucleic acid amplification with probe detection",
-			AcceptanceCriterias.TARGET_DISEASE,
+			AcceptanceCriteriasConstants.TARGET_DISEASE,
 			Duration.ofHours(-10)
 		)
 
@@ -452,7 +452,7 @@ class NationalRulesVerifierTest {
 			Duration.ofDays(-10),
 			Duration.ofDays(180),
 			Duration.ofDays(-20),
-			AcceptanceCriterias.TARGET_DISEASE
+			AcceptanceCriteriasConstants.TARGET_DISEASE
 		)
 		var invalidRecovery = TestDataGenerator.generateRecoveryCert(
 			Duration.ofDays(-10),
@@ -479,7 +479,7 @@ class NationalRulesVerifierTest {
 			validDateFrom = validDateFrom,
 			validDateUntil = validDateUntil,
 			firstTestResult = firstTestResult,
-			AcceptanceCriterias.TARGET_DISEASE
+			AcceptanceCriteriasConstants.TARGET_DISEASE
 		)
 
 		assertTrue(validCert.pastInfections!!.first().validFromDate() == validDateFrom)
@@ -522,13 +522,13 @@ class NationalRulesVerifierTest {
 			Duration.ofDays(-10),
 			Duration.ofDays(0),
 			Duration.ofDays(-179),
-			AcceptanceCriterias.TARGET_DISEASE
+			AcceptanceCriteriasConstants.TARGET_DISEASE
 		)
 		val invalidCert = TestDataGenerator.generateRecoveryCert(
 			Duration.ofDays(-10),
 			Duration.ofDays(0),
 			Duration.ofDays(-180),
-			AcceptanceCriterias.TARGET_DISEASE
+			AcceptanceCriteriasConstants.TARGET_DISEASE
 		)
 
 		val validResult = nationalRulesVerifier.verify(validCert, nationalRuleSet)
@@ -544,13 +544,13 @@ class NationalRulesVerifierTest {
 			Duration.ofDays(-10),
 			Duration.ofDays(0),
 			Duration.ofDays(-10),
-			AcceptanceCriterias.TARGET_DISEASE
+			AcceptanceCriteriasConstants.TARGET_DISEASE
 		)
 		val invalidCert = TestDataGenerator.generateRecoveryCert(
 			Duration.ofDays(-10),
 			Duration.ofDays(0),
 			Duration.ofDays(-9),
-			AcceptanceCriterias.TARGET_DISEASE
+			AcceptanceCriteriasConstants.TARGET_DISEASE
 		)
 
 		val validResult = nationalRulesVerifier.verify(validCert, nationalRuleSet)

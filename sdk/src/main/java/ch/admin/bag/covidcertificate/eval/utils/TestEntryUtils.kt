@@ -11,6 +11,7 @@
 package ch.admin.bag.covidcertificate.eval.utils
 
 import ch.admin.bag.covidcertificate.eval.euhealthcert.TestEntry
+import ch.admin.bag.covidcertificate.eval.models.AcceptanceCriterias
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -18,11 +19,11 @@ import java.util.*
 
 
 fun TestEntry.isNegative(): Boolean {
-	return this.result == AcceptanceCriterias.NEGATIVE_CODE
+	return this.result == AcceptanceCriteriasConstants.NEGATIVE_CODE
 }
 
 fun TestEntry.isTargetDiseaseCorrect(): Boolean {
-	return this.disease == AcceptanceCriterias.TARGET_DISEASE
+	return this.disease == AcceptanceCriteriasConstants.TARGET_DISEASE
 }
 
 fun TestEntry.getFormattedSampleDate(dateTimeFormatter: DateTimeFormatter): String? {
@@ -80,11 +81,11 @@ fun TestEntry.validFromDate(): LocalDateTime? {
 	}
 }
 
-fun TestEntry.validUntilDate(): LocalDateTime? {
+fun TestEntry.validUntilDate(acceptanceCriterias: AcceptanceCriterias): LocalDateTime? {
 	val startDate = this.validFromDate() ?: return null
 	return when (type) {
-		TestType.PCR.code -> startDate.plusHours(AcceptanceCriterias.PCR_TEST_VALIDITY_IN_HOURS)
-		TestType.RAT.code -> startDate.plusHours(AcceptanceCriterias.RAT_TEST_VALIDITY_IN_HOURS)
+		TestType.PCR.code -> startDate.plusHours(acceptanceCriterias.pcrTestValidity.toLong())
+		TestType.RAT.code -> startDate.plusHours(acceptanceCriterias.ratTestValidity.toLong())
 		else -> null
 	}
 }

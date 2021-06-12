@@ -10,16 +10,10 @@
 
 package ch.admin.bag.covidcertificate.eval.utils
 
-object AcceptanceCriterias {
+object AcceptanceCriteriasConstants {
 
 	const val NEGATIVE_CODE: String = "260415000"
 	const val TARGET_DISEASE = "840539006"
-	const val PCR_TEST_VALIDITY_IN_HOURS = 72L
-	const val RAT_TEST_VALIDITY_IN_HOURS = 24L
-	const val SINGLE_VACCINE_VALIDITY_OFFSET_IN_DAYS = 15L
-	const val VACCINE_IMMUNITY_DURATION_IN_DAYS = 179L
-	const val RECOVERY_OFFSET_VALID_UNTIL_DAYS = 179L
-	const val RECOVERY_OFFSET_VALID_FROM_DAYS = 10L
 }
 
 enum class TestType(val code: String) {

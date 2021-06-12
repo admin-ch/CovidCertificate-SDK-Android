@@ -11,8 +11,8 @@
 package ch.admin.bag.covidcertificate.eval.utils
 
 import ch.admin.bag.covidcertificate.eval.euhealthcert.VaccinationEntry
+import ch.admin.bag.covidcertificate.eval.models.AcceptanceCriterias
 import ch.admin.bag.covidcertificate.eval.products.Vaccine
-import ch.admin.bag.covidcertificate.eval.utils.AcceptanceCriterias.SINGLE_VACCINE_VALIDITY_OFFSET_IN_DAYS
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -33,15 +33,15 @@ fun VaccinationEntry.getNumberOverTotalDose(): String {
 }
 
 fun VaccinationEntry.isTargetDiseaseCorrect(): Boolean {
-	return this.disease == AcceptanceCriterias.TARGET_DISEASE
+	return this.disease == AcceptanceCriteriasConstants.TARGET_DISEASE
 }
 
-fun VaccinationEntry.validFromDate(vaccine: Vaccine): LocalDateTime? {
+fun VaccinationEntry.validFromDate(vaccine: Vaccine, acceptanceCriterias: AcceptanceCriterias): LocalDateTime? {
 	val vaccineDate = this.vaccineDate() ?: return null
 	val totalNumberOfDosis = vaccine.total_dosis_number
 	// if this is a vaccine, which only needs one shot, the vaccine is valid 15 days after the date of vaccination
 	return if (totalNumberOfDosis == 1) {
-		return vaccineDate.plusDays(SINGLE_VACCINE_VALIDITY_OFFSET_IN_DAYS)
+		return vaccineDate.plusDays(acceptanceCriterias.singleVaccineValidityOffset.toLong())
 	} else {
 		// In any other case the vaccine is valid from the date of vaccination
 		vaccineDate
@@ -49,9 +49,9 @@ fun VaccinationEntry.validFromDate(vaccine: Vaccine): LocalDateTime? {
 }
 
 /// Vaccines are valid for 179 days
-fun VaccinationEntry.validUntilDate(): LocalDateTime? {
+fun VaccinationEntry.validUntilDate(acceptanceCriterias: AcceptanceCriterias): LocalDateTime? {
 	val vaccinationImmunityEndDate = this.vaccineDate() ?: return null
-	return vaccinationImmunityEndDate.plusDays(AcceptanceCriterias.VACCINE_IMMUNITY_DURATION_IN_DAYS)
+	return vaccinationImmunityEndDate.plusDays(acceptanceCriterias.vaccineImmunity.toLong())
 }
 
 fun VaccinationEntry.vaccineDate(): LocalDateTime? {
