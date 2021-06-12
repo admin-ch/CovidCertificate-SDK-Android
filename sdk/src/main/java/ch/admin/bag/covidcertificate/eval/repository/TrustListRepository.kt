@@ -30,6 +30,7 @@ internal class TrustListRepository(
 ) {
 
 	companion object {
+		private const val HEADER_UP_TO_DATE = "up-to-date"
 		private const val HEADER_NEXT_SINCE = "X-Next-Since"
 	}
 
@@ -78,12 +79,12 @@ internal class TrustListRepository(
 				while (certificatesResponse.isSuccessful && certificatesResponse.body()?.certs?.isNullOrEmpty() == false) {
 					allCertificates.addAll(certificatesResponse.body()?.certs ?: emptyList())
 
-					// Get the next since and check that it changed, otherwise break the loop
-					val nextSince = certificatesResponse.headers()[HEADER_NEXT_SINCE]
-					if (count >= 20 || nextSince == since) break
+					// Check if the request returns an up to date header, the next since has changed or we reached a loop count threshold
+					val isUpToDate = certificatesResponse.headers()[HEADER_UP_TO_DATE].toBoolean()
+					since = certificatesResponse.headers()[HEADER_NEXT_SINCE]
+					if (isUpToDate || count >= 20) break
 
 					count++
-					since = nextSince
 					certificatesResponse = certificateService.getSignerCertificates(since)
 				}
 				store.certificatesSinceHeader = since
