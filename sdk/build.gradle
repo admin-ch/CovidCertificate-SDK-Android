@@ -29,12 +29,15 @@ android {
 	productFlavors {
 		dev {
 			buildConfigField "String", "BASE_URL_TRUST_LIST", '"https://www.cc-d.bit.admin.ch/trust/v1/"'
+			buildConfigField "String", "LEAF_CERT_CN", '"CH01-AppContentCertificate-ref"'
 		}
 		abn {
 			buildConfigField "String", "BASE_URL_TRUST_LIST", '"https://www.cc-a.bit.admin.ch/trust/v1/"'
+			buildConfigField "String", "LEAF_CERT_CN", '"CH01-AppContentCertificate-abn"'
 		}
 		prod {
 			buildConfigField "String", "BASE_URL_TRUST_LIST", '"https://www.cc.bit.admin.ch/trust/v1/"'
+			buildConfigField "String", "LEAF_CERT_CN", '"CH01-AppContentCertificate"'
 		}
 	}
 
@@ -74,12 +77,12 @@ dependencies {
 	api 'com.squareup.moshi:moshi-adapters:1.11.0'
 	kapt "com.squareup.moshi:moshi-kotlin-codegen:1.11.0"
 
-	//JWS Library
+	// JWS
 	implementation 'io.jsonwebtoken:jjwt-api:0.11.2'
-	api 'io.jsonwebtoken:jjwt-impl:0.11.2',
-			'io.jsonwebtoken:jjwt-jackson:0.11.2'
+	api 'io.jsonwebtoken:jjwt-impl:0.11.2'
+	api 'io.jsonwebtoken:jjwt-jackson:0.11.2'
 
-	//jackson for natinoal rules
+	// National rules
 	implementation 'com.fasterxml.jackson.core:jackson-databind:2.12.3'
 
 	testImplementation 'junit:junit:4.+'

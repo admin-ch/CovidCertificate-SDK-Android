@@ -21,23 +21,22 @@ import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.Response
 import okhttp3.ResponseBody.Companion.toResponseBody
 import java.io.IOException
-import java.security.SignatureException
 import java.security.cert.X509Certificate
 
 /**
- * This class can be used as an interceptor to verify a JWS and return a response with a plain JSON-Object.
- * Since we need a JWS with a JSON body (we explicitly ask for it), we can savely assume that the content-type
- * is `application/json`.
- * The signature of the JWS is verified with `publicKey`.
+ * Interceptor to verify a JSON Web Signature and return a response containing the JWS body as plain JSON.
  */
-class JwsInterceptor(rootCA: X509Certificate) : Interceptor {
+class JwsInterceptor(
+	rootCA: X509Certificate,
+	expectedCommonName: String,
+) : Interceptor {
 
 	companion object {
 		// application/json media type for the payload of a JWS
 		private val APPLICATION_JSON = "application/json".toMediaType()
 	}
 
-	private val keyResolver: JwsKeyResolver = JwsKeyResolver(rootCA)
+	private val keyResolver: JwsKeyResolver = JwsKeyResolver(rootCA, expectedCommonName)
 
 	@Throws(IOException::class)
 	override fun intercept(chain: Interceptor.Chain): Response {
@@ -46,7 +45,7 @@ class JwsInterceptor(rootCA: X509Certificate) : Interceptor {
 			return response
 		}
 
-		val jws = response.body?.string() ?: throw SignatureException("Body has no signature")
+		val jws = response.body?.string() ?: throw IOException("Body has no signature")
 		val body: String
 		try {
 			val claimsJws: Jws<Claims> = Jwts.parserBuilder()
@@ -58,17 +57,17 @@ class JwsInterceptor(rootCA: X509Certificate) : Interceptor {
 				.adapter<Claims>(Types.newParameterizedType(Map::class.java, String::class.java, Object::class.java))
 				.toJson(claimsJws.body)
 		} catch (e: io.jsonwebtoken.security.SignatureException) {
-			throw SignatureException("Invalid Signature")
+			throw IOException("Invalid Signature")
 		} catch (o: ExpiredJwtException) {
-			throw SignatureException("Expired JWT")
+			throw IOException("Expired JWT")
 		}
 
 		// SAFE ZONE
 		// from here on body contains a JSON-string of the payload of the JWS, whose signature we verified.
+		// the backend guarantees us that the body is JSON
 
 		return response.newBuilder()
-			.body(
-				body.toResponseBody(APPLICATION_JSON)
-			).build()
+			.body(body.toResponseBody(APPLICATION_JSON))
+			.build()
 	}
 }

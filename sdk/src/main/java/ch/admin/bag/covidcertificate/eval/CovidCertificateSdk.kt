@@ -96,6 +96,8 @@ object CovidCertificateSdk {
 		return certificateFactory.generateCertificate(inputStream) as X509Certificate
 	}
 
+	fun getExpectedCommonName() = BuildConfig.LEAF_CERT_CN
+
 	private fun requireInitialized() {
 		if (!isInitialized) {
 			throw IllegalStateException("CovidCertificateSdk must be initialized by calling init(context)")
@@ -104,9 +106,10 @@ object CovidCertificateSdk {
 
 	private fun createRetrofit(context: Context): Retrofit {
 		val rootCa = getRootCa(context)
+		val expectedCommonName = getExpectedCommonName()
 		val okHttpBuilder = OkHttpClient.Builder()
 			.certificatePinner(CertificatePinning.pinner)
-			.addInterceptor(JwsInterceptor(rootCa))
+			.addInterceptor(JwsInterceptor(rootCa, expectedCommonName))
 			.addInterceptor(ApiKeyInterceptor())
 			.addInterceptor(UserAgentInterceptor(Config.userAgent))
 
