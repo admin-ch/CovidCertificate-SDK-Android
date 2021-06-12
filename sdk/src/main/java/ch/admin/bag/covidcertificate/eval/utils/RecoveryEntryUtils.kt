@@ -11,6 +11,7 @@
 package ch.admin.bag.covidcertificate.eval.utils
 
 import ch.admin.bag.covidcertificate.eval.euhealthcert.RecoveryEntry
+import ch.admin.bag.covidcertificate.eval.models.AcceptanceCriterias
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter.ISO_DATE
@@ -18,7 +19,7 @@ import java.util.*
 
 
 fun RecoveryEntry.isTargetDiseaseCorrect(): Boolean {
-	return this.disease == AcceptanceCriterias.TARGET_DISEASE
+	return this.disease == ch.admin.bag.covidcertificate.eval.utils.AcceptanceCriterias.TARGET_DISEASE
 }
 
 fun RecoveryEntry.getRecoveryCountry(showEnglishVersionForLabels: Boolean): String {
@@ -42,14 +43,14 @@ fun RecoveryEntry.getCertificateIdentifier(): String {
 	return this.certificateIdentifier
 }
 
-fun RecoveryEntry.validFromDate(): LocalDateTime? {
+fun RecoveryEntry.validFromDate(acceptanceCriterias: AcceptanceCriterias): LocalDateTime? {
 	val firstPositiveResultDate = this.firstPositiveResult() ?: return null
-	return firstPositiveResultDate.plusDays(AcceptanceCriterias.RECOVERY_OFFSET_VALID_FROM_DAYS)
+	return firstPositiveResultDate.plusDays(acceptanceCriterias.recoveryOffsetValidFrom.toLong())
 }
 
-fun RecoveryEntry.validUntilDate(): LocalDateTime? {
+fun RecoveryEntry.validUntilDate(acceptanceCriterias: AcceptanceCriterias): LocalDateTime? {
 	val firstPositiveResultDate = this.firstPositiveResult() ?: return null
-	return firstPositiveResultDate.plusDays(AcceptanceCriterias.RECOVERY_OFFSET_VALID_UNTIL_DAYS)
+	return firstPositiveResultDate.plusDays(acceptanceCriterias.recoveryOffsetValidUntil.toLong())
 }
 
 fun RecoveryEntry.firstPositiveResult(): LocalDateTime? {
