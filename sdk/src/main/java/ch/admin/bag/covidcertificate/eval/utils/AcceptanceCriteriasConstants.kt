@@ -10,7 +10,7 @@
 
 package ch.admin.bag.covidcertificate.eval.utils
 
-object AcceptanceCriterias {
+object AcceptanceCriteriasConstants {
 
 	const val NEGATIVE_CODE: String = "260415000"
 	const val TARGET_DISEASE = "840539006"

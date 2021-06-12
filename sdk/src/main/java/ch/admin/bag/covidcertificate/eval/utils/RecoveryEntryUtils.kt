@@ -19,7 +19,7 @@ import java.util.*
 
 
 fun RecoveryEntry.isTargetDiseaseCorrect(): Boolean {
-	return this.disease == ch.admin.bag.covidcertificate.eval.utils.AcceptanceCriterias.TARGET_DISEASE
+	return this.disease == AcceptanceCriteriasConstants.TARGET_DISEASE
 }
 
 fun RecoveryEntry.getRecoveryCountry(showEnglishVersionForLabels: Boolean): String {

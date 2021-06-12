@@ -33,7 +33,7 @@ fun VaccinationEntry.getNumberOverTotalDose(): String {
 }
 
 fun VaccinationEntry.isTargetDiseaseCorrect(): Boolean {
-	return this.disease == ch.admin.bag.covidcertificate.eval.utils.AcceptanceCriterias.TARGET_DISEASE
+	return this.disease == AcceptanceCriteriasConstants.TARGET_DISEASE
 }
 
 fun VaccinationEntry.validFromDate(vaccine: Vaccine, acceptanceCriterias: AcceptanceCriterias): LocalDateTime? {

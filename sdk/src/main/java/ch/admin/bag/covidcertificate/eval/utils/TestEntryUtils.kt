@@ -19,11 +19,11 @@ import java.util.*
 
 
 fun TestEntry.isNegative(): Boolean {
-	return this.result == ch.admin.bag.covidcertificate.eval.utils.AcceptanceCriterias.NEGATIVE_CODE
+	return this.result == AcceptanceCriteriasConstants.NEGATIVE_CODE
 }
 
 fun TestEntry.isTargetDiseaseCorrect(): Boolean {
-	return this.disease == ch.admin.bag.covidcertificate.eval.utils.AcceptanceCriterias.TARGET_DISEASE
+	return this.disease == AcceptanceCriteriasConstants.TARGET_DISEASE
 }
 
 fun TestEntry.getFormattedSampleDate(dateTimeFormatter: DateTimeFormatter): String? {
