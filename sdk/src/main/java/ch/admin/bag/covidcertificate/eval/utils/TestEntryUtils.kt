@@ -46,7 +46,7 @@ fun TestEntry.getFormattedResultDate(dateTimeFormatter: DateTimeFormatter): Stri
 }
 
 fun TestEntry.getTestCenter(): String? {
-	if (this.testCenter.isNotEmpty()) {
+	if (!this.testCenter.isNullOrBlank()) {
 		return this.testCenter
 	}
 	return null
