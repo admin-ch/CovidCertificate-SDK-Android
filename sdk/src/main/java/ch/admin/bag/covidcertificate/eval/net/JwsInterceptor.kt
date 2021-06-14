@@ -13,7 +13,6 @@ package ch.admin.bag.covidcertificate.eval.net
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.Types
 import io.jsonwebtoken.Claims
-import io.jsonwebtoken.ExpiredJwtException
 import io.jsonwebtoken.Jws
 import io.jsonwebtoken.Jwts
 import okhttp3.Interceptor
@@ -56,10 +55,9 @@ class JwsInterceptor(
 			body = Moshi.Builder().build()
 				.adapter<Claims>(Types.newParameterizedType(Map::class.java, String::class.java, Object::class.java))
 				.toJson(claimsJws.body)
-		} catch (e: io.jsonwebtoken.security.SignatureException) {
-			throw IOException("Invalid Signature")
-		} catch (o: ExpiredJwtException) {
-			throw IOException("Expired JWT")
+		} catch (e: Throwable) {
+			e.printStackTrace()
+			throw IOException("Failed to parse/verify JWS")
 		}
 
 		// SAFE ZONE
