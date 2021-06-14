@@ -10,15 +10,17 @@
 
 package ch.admin.bag.covidcertificate.eval.verification
 
+import android.net.ConnectivityManager
 import ch.admin.bag.covidcertificate.eval.data.EvalErrorCodes
 import ch.admin.bag.covidcertificate.eval.data.state.Error
 import ch.admin.bag.covidcertificate.eval.data.state.VerificationState
 import ch.admin.bag.covidcertificate.eval.models.DccHolder
 import ch.admin.bag.covidcertificate.eval.models.TrustList
+import ch.admin.bag.covidcertificate.eval.utils.NetworkUtil
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
-class CertificateVerificationTask(val dccHolder: DccHolder) {
+class CertificateVerificationTask(val dccHolder: DccHolder, val connectivityManager: ConnectivityManager) {
 
 	private val mutableVerificationStateFlow = MutableStateFlow<VerificationState>(VerificationState.LOADING)
 	val verificationStateFlow = mutableVerificationStateFlow.asStateFlow()
@@ -31,14 +33,20 @@ class CertificateVerificationTask(val dccHolder: DccHolder) {
 			val state = verifier.verify(dccHolder, trustList)
 			mutableVerificationStateFlow.emit(state)
 		} else {
-			mutableVerificationStateFlow.emit(
-				VerificationState.ERROR(
-					Error(
-						EvalErrorCodes.TRUST_LIST_MISSING,
-						dccHolder = dccHolder
-					), null
+			val hasNetwork = NetworkUtil.isNetworkAvailable(connectivityManager)
+			if (hasNetwork) {
+				mutableVerificationStateFlow.emit(
+					VerificationState.ERROR(
+						Error(EvalErrorCodes.GENERAL_NETWORK_FAILURE, dccHolder = dccHolder), null
+					)
 				)
-			)
+			} else {
+				mutableVerificationStateFlow.emit(
+					VerificationState.ERROR(
+						Error(EvalErrorCodes.GENERAL_OFFLINE, dccHolder = dccHolder), null
+					)
+				)
+			}
 		}
 	}
 

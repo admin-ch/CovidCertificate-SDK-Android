@@ -9,5 +9,7 @@
   ~ SPDX-License-Identifier: MPL-2.0
   -->
 
-<manifest package="ch.admin.bag.covidcertificate.verifier.eval">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+	package="ch.admin.bag.covidcertificate.verifier.eval">
+	<uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 </manifest>
