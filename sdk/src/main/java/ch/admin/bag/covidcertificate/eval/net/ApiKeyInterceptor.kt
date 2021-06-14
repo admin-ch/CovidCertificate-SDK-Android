@@ -18,13 +18,13 @@ class ApiKeyInterceptor : Interceptor {
 
 	companion object {
 		private const val HEADER_AUTHORIZATION = "Authorization"
-		private const val API_KEY_PREFIX = "Bearer "
+		private const val APP_TOKEN_PREFIX = "Bearer "
 	}
 
 	override fun intercept(chain: Interceptor.Chain): Response {
 		val newRequest = chain.request()
 			.newBuilder()
-			.addHeader(HEADER_AUTHORIZATION, API_KEY_PREFIX + Config.apiKey)
+			.addHeader(HEADER_AUTHORIZATION, APP_TOKEN_PREFIX + Config.appToken)
 			.build()
 
 		return chain.proceed(newRequest)
