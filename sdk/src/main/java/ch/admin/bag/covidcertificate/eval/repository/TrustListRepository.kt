@@ -64,48 +64,49 @@ internal class TrustListRepository(
 		}
 	}
 
-	private suspend fun refreshCertificateSignatures(forceRefresh: Boolean): Unit = withContext(Dispatchers.IO) {
-		val shouldLoadSignatures = forceRefresh || !store.areSignaturesValid()
-		if (shouldLoadSignatures) {
-			// Load the active certificate key IDs
-			val activeCertificatesResponse = certificateService.getActiveSignerCertificateKeyIds()
-			val activeCertificatesBody = activeCertificatesResponse.body()
-			if (activeCertificatesResponse.isSuccessful && activeCertificatesBody != null) {
-				val allCertificates = store.certificateSignatures?.certs?.toMutableList() ?: mutableListOf()
-				var since = store.certificatesSinceHeader
+	private suspend fun refreshCertificateSignatures(forceRefresh: Boolean, isRecursive: Boolean = false): Unit =
+		withContext(Dispatchers.IO) {
+			val shouldLoadSignatures = forceRefresh || !store.areSignaturesValid()
+			if (shouldLoadSignatures) {
+				// Load the active certificate key IDs
+				val activeCertificatesResponse = certificateService.getActiveSignerCertificateKeyIds()
+				val activeCertificatesBody = activeCertificatesResponse.body()
+				if (activeCertificatesResponse.isSuccessful && activeCertificatesBody != null) {
+					val allCertificates = store.certificateSignatures?.certs?.toMutableList() ?: mutableListOf()
+					var since = store.certificatesSinceHeader
 
-				// Get the signer certificates as long as there are entries in the response list
-				var count = 0
-				var certificatesResponse = certificateService.getSignerCertificates(since)
-				while (certificatesResponse.isSuccessful && certificatesResponse.body()?.certs?.isNullOrEmpty() == false) {
-					allCertificates.addAll(certificatesResponse.body()?.certs ?: emptyList())
+					// Get the signer certificates as long as there are entries in the response list
+					var count = 0
+					var certificatesResponse = certificateService.getSignerCertificates(since)
+					while (certificatesResponse.isSuccessful && certificatesResponse.body()?.certs?.isNullOrEmpty() == false) {
+						allCertificates.addAll(certificatesResponse.body()?.certs ?: emptyList())
 
-					// Check if the request returns an up to date header, the next since has changed or we reached a loop count threshold
-					val isUpToDate = certificatesResponse.headers()[HEADER_UP_TO_DATE].toBoolean()
-					since = certificatesResponse.headers()[HEADER_NEXT_SINCE]
-					if (isUpToDate || count >= 20) break
+						// Check if the request returns an up to date header, the next since has changed or we reached a loop count threshold
+						val isUpToDate = certificatesResponse.headers()[HEADER_UP_TO_DATE].toBoolean()
+						since = certificatesResponse.headers()[HEADER_NEXT_SINCE]
+						if (isUpToDate || count >= 20) break
 
-					count++
-					certificatesResponse = certificateService.getSignerCertificates(since)
+						count++
+						certificatesResponse = certificateService.getSignerCertificates(since)
+					}
+					store.certificatesSinceHeader = since
+
+					// Filter only active certificates and store them
+					val activeCertificateKeyIds = activeCertificatesBody.activeKeyIds
+					val activeCertificates = allCertificates.filter { activeCertificateKeyIds.contains(it.keyId) }
+					store.certificateSignatures = Jwks(activeCertificates)
+
+					if (allCertificates.size != activeCertificateKeyIds.size && !isRecursive) {
+						store.certificatesSinceHeader = null
+						refreshCertificateSignatures(forceRefresh = true, isRecursive = true)
+					}
+
+					val validDuration = activeCertificatesBody.validDuration
+					val newValidUntil = Instant.now().plus(validDuration, ChronoUnit.MILLIS).toEpochMilli()
+					store.certificateSignaturesValidUntil = newValidUntil
 				}
-				store.certificatesSinceHeader = since
-
-				// Filter only active certificates and store them
-				val activeCertificateKeyIds = activeCertificatesBody.activeKeyIds
-				val activeCertificates = allCertificates.filter { activeCertificateKeyIds.contains(it.keyId) }
-				store.certificateSignatures = Jwks(activeCertificates)
-
-				if (allCertificates.size != activeCertificateKeyIds.size) {
-					store.certificatesSinceHeader = null
-					refreshCertificateSignatures(true)
-				}
-
-				val validDuration = activeCertificatesBody.validDuration
-				val newValidUntil = Instant.now().plus(validDuration, ChronoUnit.MILLIS).toEpochMilli()
-				store.certificateSignaturesValidUntil = newValidUntil
 			}
 		}
-	}
 
 	private suspend fun refreshRevokedCertificates(forceRefresh: Boolean) = withContext(Dispatchers.IO) {
 		val shouldLoadRevokedCertificates = forceRefresh || !store.areRevokedCertificatesValid()
