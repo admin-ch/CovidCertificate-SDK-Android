@@ -11,7 +11,8 @@
 package ch.admin.bag.covidcertificate.eval.repository
 
 import ch.admin.bag.covidcertificate.eval.data.TrustListStore
-import ch.admin.bag.covidcertificate.eval.models.*
+import ch.admin.bag.covidcertificate.eval.models.Jwks
+import ch.admin.bag.covidcertificate.eval.models.TrustList
 import ch.admin.bag.covidcertificate.eval.net.CertificateService
 import ch.admin.bag.covidcertificate.eval.net.RevocationService
 import ch.admin.bag.covidcertificate.eval.net.RuleSetService
@@ -26,7 +27,7 @@ internal class TrustListRepository(
 	private val certificateService: CertificateService,
 	private val revocationService: RevocationService,
 	private val ruleSetService: RuleSetService,
-	private val store: TrustListStore
+	private val store: TrustListStore,
 ) {
 
 	companion object {
@@ -63,7 +64,7 @@ internal class TrustListRepository(
 		}
 	}
 
-	private suspend fun refreshCertificateSignatures(forceRefresh: Boolean) = withContext(Dispatchers.IO) {
+	private suspend fun refreshCertificateSignatures(forceRefresh: Boolean): Unit = withContext(Dispatchers.IO) {
 		val shouldLoadSignatures = forceRefresh || !store.areSignaturesValid()
 		if (shouldLoadSignatures) {
 			// Load the active certificate key IDs
@@ -93,6 +94,11 @@ internal class TrustListRepository(
 				val activeCertificateKeyIds = activeCertificatesBody.activeKeyIds
 				val activeCertificates = allCertificates.filter { activeCertificateKeyIds.contains(it.keyId) }
 				store.certificateSignatures = Jwks(activeCertificates)
+
+				if (allCertificates.size != activeCertificateKeyIds.size) {
+					store.certificatesSinceHeader = null
+					refreshCertificateSignatures(true)
+				}
 
 				val validDuration = activeCertificatesBody.validDuration
 				val newValidUntil = Instant.now().plus(validDuration, ChronoUnit.MILLIS).toEpochMilli()
