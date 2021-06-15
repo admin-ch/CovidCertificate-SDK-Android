@@ -89,21 +89,28 @@ internal class TrustListRepository(
 						count++
 						certificatesResponse = certificateService.getSignerCertificates(since)
 					}
-					store.certificatesSinceHeader = since
 
 					// Filter only active certificates and store them
 					val activeCertificateKeyIds = activeCertificatesBody.activeKeyIds
 					val activeCertificates = allCertificates.filter { activeCertificateKeyIds.contains(it.keyId) }
-					store.certificateSignatures = Jwks(activeCertificates)
 
-					if (allCertificates.size != activeCertificateKeyIds.size && !isRecursive) {
-						store.certificatesSinceHeader = null
-						refreshCertificateSignatures(forceRefresh = true, isRecursive = true)
+					if (allCertificates.size != activeCertificateKeyIds.size) {
+						if (!isRecursive) {
+							// If the list sizes don't match, try once to refresh everything again
+							refreshCertificateSignatures(forceRefresh = true, isRecursive = true)
+						} else {
+							// If the list sizes still don't match after a full refresh, abort
+							return@withContext
+						}
+					} else {
+						// Only replace the stored certificates if the list sizes match
+						store.certificatesSinceHeader = since
+						store.certificateSignatures = Jwks(activeCertificates)
+
+						val validDuration = activeCertificatesBody.validDuration
+						val newValidUntil = Instant.now().plus(validDuration, ChronoUnit.MILLIS).toEpochMilli()
+						store.certificateSignaturesValidUntil = newValidUntil
 					}
-
-					val validDuration = activeCertificatesBody.validDuration
-					val newValidUntil = Instant.now().plus(validDuration, ChronoUnit.MILLIS).toEpochMilli()
-					store.certificateSignaturesValidUntil = newValidUntil
 				}
 			}
 		}
