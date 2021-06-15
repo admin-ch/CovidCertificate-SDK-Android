@@ -29,7 +29,7 @@ sealed class CheckSignatureState {
 
 sealed class CheckRevocationState {
 	object SUCCESS : CheckRevocationState()
-	object INVALID : CheckRevocationState()
+	data class INVALID(val revocationErrorCode: String) : CheckRevocationState()
 	object LOADING : CheckRevocationState()
 	data class ERROR(val error: Error) : CheckRevocationState()
 }

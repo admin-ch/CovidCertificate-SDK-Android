@@ -68,7 +68,7 @@ internal object Eval {
 		val containsRevokedCertificate = revokedCertificateService.isRevoked(dccHolder.euDGC)
 
 		return if (containsRevokedCertificate) {
-			CheckRevocationState.INVALID
+			CheckRevocationState.INVALID(EvalErrorCodes.REVOCATION_REVOKED)
 		} else {
 			CheckRevocationState.SUCCESS
 		}
