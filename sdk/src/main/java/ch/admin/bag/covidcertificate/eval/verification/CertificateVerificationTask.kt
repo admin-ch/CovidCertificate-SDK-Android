@@ -20,7 +20,18 @@ import ch.admin.bag.covidcertificate.eval.utils.NetworkUtil
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
-class CertificateVerificationTask(val dccHolder: DccHolder, val connectivityManager: ConnectivityManager) {
+/**
+ * A task to verify a specifc DCC holder.
+ *
+ * @param dccHolder The DCC holder (containing the EuDgc data) to verify
+ * @param connectivityManager The Android connectivity service used to check if the device is offline or not
+ * @param ignoreLocalTrustList True to ignore the local trust list during verification and force either an offline or network error
+ */
+class CertificateVerificationTask(
+	val dccHolder: DccHolder,
+	val connectivityManager: ConnectivityManager,
+	val ignoreLocalTrustList: Boolean = false
+) {
 
 	private val mutableVerificationStateFlow = MutableStateFlow<VerificationState>(VerificationState.LOADING)
 	val verificationStateFlow = mutableVerificationStateFlow.asStateFlow()
@@ -29,7 +40,7 @@ class CertificateVerificationTask(val dccHolder: DccHolder, val connectivityMana
 	 * Execute this verification task with the specified verifier and trust list
 	 */
 	internal suspend fun execute(verifier: CertificateVerifier, trustList: TrustList?) {
-		if (trustList != null) {
+		if (trustList != null && !ignoreLocalTrustList) {
 			val state = verifier.verify(dccHolder, trustList)
 			mutableVerificationStateFlow.emit(state)
 		} else {

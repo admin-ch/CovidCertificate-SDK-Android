@@ -33,7 +33,7 @@ class CertificateVerificationController internal constructor(
 	/**
 	 * Trigger a refresh of the trust list unless there is already a refresh running
 	 */
-	fun refreshTrustList(coroutineScope: CoroutineScope, onCompletionCallback: () -> Unit = {}) {
+	fun refreshTrustList(coroutineScope: CoroutineScope, onCompletionCallback: () -> Unit = {}, onErrorCallback: () -> Unit = {}) {
 		val job = trustListLoadingJob
 		if (job == null || job.isCompleted) {
 			trustListLoadingJob = coroutineScope.launch {
@@ -44,6 +44,7 @@ class CertificateVerificationController internal constructor(
 				} catch (e: Exception) {
 					// Loading trust list failed, keep using last stored version
 					Log.e(TAG, "Manually refreshing trust list failed", e)
+					onErrorCallback.invoke()
 				}
 			}
 		}
