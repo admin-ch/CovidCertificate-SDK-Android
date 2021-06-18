@@ -29,6 +29,7 @@ object EvalErrorCodes {
 	/* Errors during revocation verification */
 	const val REVOCATION_NETWORK = "R|NWN"
 	const val REVOCATION_UNKNOWN = "R|UNK"
+	const val REVOCATION_REVOKED = "R|REV"
 
 	/* Errors during national rules verification */
 	const val NO_VALID_DATE = "N|NVD"
