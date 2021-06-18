@@ -64,7 +64,7 @@ internal class TrustListRepository(
 		}
 	}
 
-	private suspend fun refreshCertificateSignatures(forceRefresh: Boolean, isRecursive: Boolean = false): Unit =
+	private suspend fun refreshCertificateSignatures(forceRefresh: Boolean): Unit =
 		withContext(Dispatchers.IO) {
 			val shouldLoadSignatures = forceRefresh || !store.areSignaturesValid()
 			if (shouldLoadSignatures) {
@@ -94,23 +94,13 @@ internal class TrustListRepository(
 					val activeCertificateKeyIds = activeCertificatesBody.activeKeyIds
 					val activeCertificates = allCertificates.filter { activeCertificateKeyIds.contains(it.keyId) }
 
-					if (allCertificates.size != activeCertificateKeyIds.size) {
-						if (!isRecursive) {
-							// If the list sizes don't match, try once to refresh everything again
-							refreshCertificateSignatures(forceRefresh = true, isRecursive = true)
-						} else {
-							// If the list sizes still don't match after a full refresh, abort
-							return@withContext
-						}
-					} else {
-						// Only replace the stored certificates if the list sizes match
-						store.certificatesSinceHeader = since
-						store.certificateSignatures = Jwks(activeCertificates)
+					// Only replace the stored certificates if the list sizes match
+					store.certificatesSinceHeader = since
+					store.certificateSignatures = Jwks(activeCertificates)
 
-						val validDuration = activeCertificatesBody.validDuration
-						val newValidUntil = Instant.now().plus(validDuration, ChronoUnit.MILLIS).toEpochMilli()
-						store.certificateSignaturesValidUntil = newValidUntil
-					}
+					val validDuration = activeCertificatesBody.validDuration
+					val newValidUntil = Instant.now().plus(validDuration, ChronoUnit.MILLIS).toEpochMilli()
+					store.certificateSignaturesValidUntil = newValidUntil
 				}
 			}
 		}
