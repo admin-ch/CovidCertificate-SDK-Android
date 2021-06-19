@@ -16,8 +16,8 @@ import ch.admin.bag.covidcertificate.eval.chain.PrefixIdentifierService
 import ch.admin.bag.covidcertificate.eval.chain.RevokedHealthCertService
 import ch.admin.bag.covidcertificate.eval.chain.TimestampService
 import ch.admin.bag.covidcertificate.eval.chain.VerificationCoseService
-import ch.admin.bag.covidcertificate.eval.data.EvalErrorCodes
-import ch.admin.bag.covidcertificate.eval.data.EvalErrorCodes.SIGNATURE_COSE_INVALID
+import ch.admin.bag.covidcertificate.eval.data.ErrorCodes
+import ch.admin.bag.covidcertificate.eval.data.ErrorCodes.SIGNATURE_COSE_INVALID
 import ch.admin.bag.covidcertificate.eval.data.state.CheckNationalRulesState
 import ch.admin.bag.covidcertificate.eval.data.state.CheckRevocationState
 import ch.admin.bag.covidcertificate.eval.data.state.CheckSignatureState
@@ -40,7 +40,7 @@ internal object Eval {
 
 		/* Check that certificate type and signature timestamps are valid */
 
-		val type = dccHolder.certType ?: return CheckSignatureState.INVALID(EvalErrorCodes.SIGNATURE_TYPE_INVALID)
+		val type = dccHolder.certType ?: return CheckSignatureState.INVALID(ErrorCodes.SIGNATURE_TYPE_INVALID)
 
 		val timestampError = TimestampService.decode(dccHolder)
 		if (timestampError != null) {
@@ -50,9 +50,9 @@ internal object Eval {
 		/* Repeat decode chain to get and verify COSE signature */
 
 		val encoded = PrefixIdentifierService.decode(dccHolder.qrCodeData)
-			?: return CheckSignatureState.INVALID(EvalErrorCodes.DECODE_PREFIX)
-		val compressed = Base45Service.decode(encoded) ?: return CheckSignatureState.INVALID(EvalErrorCodes.DECODE_BASE_45)
-		val cose = DecompressionService.decode(compressed) ?: return CheckSignatureState.INVALID(EvalErrorCodes.DECODE_Z_LIB)
+			?: return CheckSignatureState.INVALID(ErrorCodes.DECODE_PREFIX)
+		val compressed = Base45Service.decode(encoded) ?: return CheckSignatureState.INVALID(ErrorCodes.DECODE_BASE_45)
+		val cose = DecompressionService.decode(compressed) ?: return CheckSignatureState.INVALID(ErrorCodes.DECODE_Z_LIB)
 
 		val valid = VerificationCoseService.decode(signatures.certs, cose, type)
 
@@ -68,7 +68,7 @@ internal object Eval {
 		val containsRevokedCertificate = revokedCertificateService.isRevoked(dccHolder.euDGC)
 
 		return if (containsRevokedCertificate) {
-			CheckRevocationState.INVALID(EvalErrorCodes.REVOCATION_REVOKED)
+			CheckRevocationState.INVALID(ErrorCodes.REVOCATION_REVOKED)
 		} else {
 			CheckRevocationState.SUCCESS
 		}

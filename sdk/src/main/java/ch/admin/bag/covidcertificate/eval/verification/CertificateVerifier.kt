@@ -11,7 +11,7 @@
 package ch.admin.bag.covidcertificate.eval.verification
 
 import ch.admin.bag.covidcertificate.eval.Eval
-import ch.admin.bag.covidcertificate.eval.data.EvalErrorCodes
+import ch.admin.bag.covidcertificate.eval.data.ErrorCodes
 import ch.admin.bag.covidcertificate.eval.data.state.CheckNationalRulesState
 import ch.admin.bag.covidcertificate.eval.data.state.CheckRevocationState
 import ch.admin.bag.covidcertificate.eval.data.state.CheckSignatureState
@@ -72,7 +72,7 @@ internal class CertificateVerifier(private val nationalRulesVerifier: NationalRu
 		try {
 			Eval.checkSignature(dccHolder, signatures)
 		} catch (e: Exception) {
-			CheckSignatureState.ERROR(Error(EvalErrorCodes.SIGNATURE_UNKNOWN, e.message.toString(), dccHolder))
+			CheckSignatureState.ERROR(Error(ErrorCodes.SIGNATURE_UNKNOWN, e.message.toString(), dccHolder))
 		}
 	}
 
@@ -83,7 +83,7 @@ internal class CertificateVerifier(private val nationalRulesVerifier: NationalRu
 		try {
 			Eval.checkRevocationStatus(dccHolder, revokedCertificates)
 		} catch (e: Exception) {
-			CheckRevocationState.ERROR(Error(EvalErrorCodes.REVOCATION_UNKNOWN, e.message.toString(), dccHolder))
+			CheckRevocationState.ERROR(Error(ErrorCodes.REVOCATION_UNKNOWN, e.message.toString(), dccHolder))
 		}
 	}
 
@@ -95,7 +95,7 @@ internal class CertificateVerifier(private val nationalRulesVerifier: NationalRu
 		try {
 			Eval.checkNationalRules(dccHolder, nationalRulesVerifier, ruleSet)
 		} catch (e: Exception) {
-			CheckNationalRulesState.ERROR(Error(EvalErrorCodes.RULESET_UNKNOWN, e.message.toString(), dccHolder))
+			CheckNationalRulesState.ERROR(Error(ErrorCodes.RULESET_UNKNOWN, e.message.toString(), dccHolder))
 		}
 	}
 
