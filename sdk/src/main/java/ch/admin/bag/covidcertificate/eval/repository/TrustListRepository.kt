@@ -72,11 +72,6 @@ internal class TrustListRepository(
 		withContext(Dispatchers.IO) {
 			val shouldLoadSignatures = forceRefresh || !store.areSignaturesValid()
 			if (shouldLoadSignatures) {
-				// If there are no stored certificates but there is a valid until flag, reset the since header
-				if (store.certificateSignatures == null && store.certificateSignaturesValidUntil > 0) {
-					store.certificatesSinceHeader = null
-				}
-
 				// Load the active certificate key IDs
 				val activeCertificatesResponse = certificateService.getActiveSignerCertificateKeyIds()
 				val activeCertificatesBody = activeCertificatesResponse.body()
