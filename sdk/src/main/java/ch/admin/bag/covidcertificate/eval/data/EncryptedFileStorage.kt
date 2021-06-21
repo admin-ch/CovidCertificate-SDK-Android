@@ -13,16 +13,21 @@ package ch.admin.bag.covidcertificate.eval.data
 import android.content.Context
 import android.util.Log
 import androidx.security.crypto.EncryptedFile
-import androidx.security.crypto.MasterKeys
+import androidx.security.crypto.MasterKey
 import java.io.ByteArrayOutputStream
 import java.io.File
+import java.util.concurrent.locks.ReentrantReadWriteLock
 
 internal class EncryptedFileStorage(private val path: String) {
 
 	private val TAG = EncryptedFileStorage::class.java.simpleName
 
+	private val rwl = ReentrantReadWriteLock()
+
 	fun write(context: Context, content: String) {
-		val masterKeyAlias: String = MasterKeys.getOrCreate(MasterKeys.AES256_GCM_SPEC)
+		val masterKey = MasterKey.Builder(context)
+			.setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
+			.build()
 
 		val file = File(context.filesDir, path)
 		if (file.exists()) {
@@ -30,35 +35,42 @@ internal class EncryptedFileStorage(private val path: String) {
 		}
 
 		val encryptedFile = EncryptedFile.Builder(
-			file,
 			context,
-			masterKeyAlias,
+			file,
+			masterKey,
 			EncryptedFile.FileEncryptionScheme.AES256_GCM_HKDF_4KB
 		).build()
 
+		rwl.writeLock().lock()
 		val encryptedOutputStream = encryptedFile.openFileOutput()
 		try {
-			encryptedOutputStream.write(content.encodeToByteArray())
+			encryptedOutputStream.use {
+				it.write(content.encodeToByteArray())
+				it.flush()
+			}
+			rwl.writeLock().unlock()
 		} catch (e: Exception) {
 			Log.e(TAG, e.toString())
-		} finally {
-			encryptedOutputStream.close()
+			rwl.writeLock().unlock()
 		}
 	}
 
 	fun read(context: Context): String? {
-		val masterKeyAlias: String = MasterKeys.getOrCreate(MasterKeys.AES256_GCM_SPEC)
+		val masterKey = MasterKey.Builder(context)
+			.setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
+			.build()
 
 		val file = File(context.filesDir, path)
 		if (!file.exists()) return null
 
-		val encryptedFile: EncryptedFile = EncryptedFile.Builder(
-			file,
+		val encryptedFile = EncryptedFile.Builder(
 			context,
-			masterKeyAlias,
+			file,
+			masterKey,
 			EncryptedFile.FileEncryptionScheme.AES256_GCM_HKDF_4KB
 		).build()
 
+		rwl.readLock().lock()
 		val encryptedInputStream = encryptedFile.openFileInput()
 		val byteArrayOutputStream = ByteArrayOutputStream()
 		var nextByte: Int = encryptedInputStream.read()
@@ -67,6 +79,7 @@ internal class EncryptedFileStorage(private val path: String) {
 			nextByte = encryptedInputStream.read()
 		}
 		val bytes: ByteArray = byteArrayOutputStream.toByteArray()
+		rwl.readLock().unlock()
 		return bytes.decodeToString()
 	}
 
