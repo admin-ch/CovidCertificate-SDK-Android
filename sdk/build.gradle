@@ -71,7 +71,7 @@ dependencies {
 
 	// Crypto
 	implementation "com.augustcellars.cose:cose-java:1.1.0"
-	implementation 'androidx.security:security-crypto:1.1.0-alpha03'
+	implementation 'androidx.security:security-crypto:1.0.0'
 
 	// Networking
 	api 'com.squareup.retrofit2:retrofit:2.9.0'

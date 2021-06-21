@@ -11,18 +11,13 @@
 package ch.admin.bag.covidcertificate.eval.data
 
 import android.content.Context
-import android.content.SharedPreferences
-import androidx.security.crypto.EncryptedSharedPreferences
-import androidx.security.crypto.MasterKey
-import androidx.security.crypto.MasterKeys
 import ch.admin.bag.covidcertificate.eval.data.moshi.RawJsonStringAdapter
 import ch.admin.bag.covidcertificate.eval.models.Jwks
 import ch.admin.bag.covidcertificate.eval.models.RevokedCertificates
 import ch.admin.bag.covidcertificate.eval.models.RuleSet
+import ch.admin.bag.covidcertificate.eval.utils.EncryptedSharedPreferencesUtil
 import ch.admin.bag.covidcertificate.eval.utils.SingletonHolder
 import com.squareup.moshi.Moshi
-import java.io.IOException
-import java.security.GeneralSecurityException
 import java.time.Instant
 
 internal class CertificateSecureStorage private constructor(private val context: Context) : TrustListStore {
@@ -48,38 +43,7 @@ internal class CertificateSecureStorage private constructor(private val context:
 	private val revocationFileStorage = EncryptedFileStorage(FILE_PATH_REVOKED_CERTIFICATES)
 	private val ruleSetFileStorage = EncryptedFileStorage(FILE_PATH_RULESET)
 
-	private val preferences = initializeSharedPreferences(context)
-
-	@Synchronized
-	private fun initializeSharedPreferences(context: Context): SharedPreferences {
-		return try {
-			createEncryptedSharedPreferences(context)
-		} catch (e: GeneralSecurityException) {
-			throw RuntimeException(e)
-		} catch (e: IOException) {
-			throw RuntimeException(e)
-		}
-	}
-
-	/**
-	 * Create or obtain an encrypted SharedPreferences instance. Note that this method is synchronized because the AndroidX
-	 * Security library is not thread-safe.
-	 * @see [https://developer.android.com/topic/security/data](https://developer.android.com/topic/security/data)
-	 */
-	@Synchronized
-	@Throws(GeneralSecurityException::class, IOException::class)
-	private fun createEncryptedSharedPreferences(context: Context): SharedPreferences {
-		val masterKey = MasterKey.Builder(context)
-			.setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
-			.build()
-		return EncryptedSharedPreferences.create(
-			context,
-			PREFERENCES_NAME,
-			masterKey,
-			EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
-			EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
-		)
-	}
+	private val preferences = EncryptedSharedPreferencesUtil.initializeSharedPreferences(context, PREFERENCES_NAME)
 
 	override var certificateSignaturesValidUntil: Long
 		get() = preferences.getLong(KEY_CERTIFICATE_SIGNATURES_VALID_UNTIL, 0L)
