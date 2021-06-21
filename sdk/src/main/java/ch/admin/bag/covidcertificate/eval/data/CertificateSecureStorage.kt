@@ -24,9 +24,9 @@ internal class CertificateSecureStorage private constructor(private val context:
 
 	companion object : SingletonHolder<CertificateSecureStorage, Context>(::CertificateSecureStorage) {
 		private const val PREFERENCES_NAME = "CertificateSecureStorage"
-		private const val FILE_PATH_CERTIFICATE_SIGNATURES = "jwks.json"
-		private const val FILE_PATH_REVOKED_CERTIFICATES = "revokedList.json"
-		private const val FILE_PATH_RULESET = "ruleset.json"
+		private const val FILE_PATH_CERTIFICATE_SIGNATURES = "certificate_signatures.json"
+		private const val FILE_PATH_REVOKED_CERTIFICATES = "revoked_certificates.json"
+		private const val FILE_PATH_RULESET = "national_ruleset.json"
 
 		private const val KEY_CERTIFICATE_SIGNATURES_VALID_UNTIL = "KEY_CERTIFICATE_SIGNATURES_VALID_UNTIL"
 		private const val KEY_CERTIFICATE_SIGNATURES_SINCE_HEADER = "KEY_CERTIFICATE_SIGNATURES_SINCE_HEADER"
@@ -39,9 +39,9 @@ internal class CertificateSecureStorage private constructor(private val context:
 		private val rulesetAdapter = moshi.adapter(RuleSet::class.java)
 	}
 
-	private val certificateFileStorage = EncryptedFileStorage(FILE_PATH_CERTIFICATE_SIGNATURES)
-	private val revocationFileStorage = EncryptedFileStorage(FILE_PATH_REVOKED_CERTIFICATES)
-	private val ruleSetFileStorage = EncryptedFileStorage(FILE_PATH_RULESET)
+	private val certificateFileStorage = FileStorage(FILE_PATH_CERTIFICATE_SIGNATURES)
+	private val revocationFileStorage = FileStorage(FILE_PATH_REVOKED_CERTIFICATES)
+	private val ruleSetFileStorage = FileStorage(FILE_PATH_RULESET)
 
 	private val preferences = EncryptedSharedPreferencesUtil.initializeSharedPreferences(context, PREFERENCES_NAME)
 
