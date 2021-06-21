@@ -23,7 +23,7 @@ import java.time.Instant
 internal class CertificateSecureStorage private constructor(private val context: Context) : TrustListStore {
 
 	companion object : SingletonHolder<CertificateSecureStorage, Context>(::CertificateSecureStorage) {
-		private const val PREFERENCES_NAME = "CertificateSecureStorage"
+		private const val PREFERENCES_NAME = "TrustListSecureStorage"
 		private const val FILE_PATH_CERTIFICATE_SIGNATURES = "certificate_signatures.json"
 		private const val FILE_PATH_REVOKED_CERTIFICATES = "revoked_certificates.json"
 		private const val FILE_PATH_RULESET = "national_ruleset.json"
