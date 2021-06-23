@@ -146,7 +146,7 @@ class NationalRulesVerifierTest {
 	}
 
 	@Test
-	fun testVaccine1of1IsValidAfter15Days() {
+	fun testVaccine1of1IsValidAfter21Days() {
 		val clock = Clock.fixed(Instant.parse("2021-05-25T12:00:00Z"), ZoneId.systemDefault())
 		val nowDate = LocalDate.now(clock).atStartOfDay()
 
@@ -157,7 +157,7 @@ class NationalRulesVerifierTest {
 			"EU/1/20/1525",
 			AcceptanceCriteriasConstants.TARGET_DISEASE,
 			"J07BX03",
-			nowDate.minusDays(15),
+			nowDate.minusDays(21),
 		)
 
 		var result = nationalRulesVerifier.verify(validCert, nationalRuleSet, clock)
@@ -170,7 +170,7 @@ class NationalRulesVerifierTest {
 			"EU/1/20/1525",
 			AcceptanceCriteriasConstants.TARGET_DISEASE,
 			"J07BX03",
-			nowDate.minusDays(14),
+			nowDate.minusDays(20),
 		)
 		val expectedValidFrom = LocalDate.now(clock).plusDays(1).atStartOfDay()
 
@@ -184,7 +184,7 @@ class NationalRulesVerifierTest {
 	@Test
 	fun testVaccineUntilDatesSuccess() {
 		val validDateFrom = LocalDate.of(2021, 1, 3).atStartOfDay()
-		val validDateUntil = LocalDate.of(2021, 7, 1).atStartOfDay()
+		val validDateUntil = LocalDate.of(2022, 1, 2).atStartOfDay()
 
 		val validCert = TestDataGenerator.generateVaccineCert(
 			2,
@@ -196,7 +196,7 @@ class NationalRulesVerifierTest {
 			validDateFrom,
 		)
 		val vaccinationEntry = validCert.vaccinations!!.first()
-		assertTrue(vaccinationEntry.validUntilDate() == validDateUntil)
+		assertTrue(vaccinationEntry.validUntilDate(nationalRuleSet.valueSets.acceptanceCriteria) == validDateUntil)
 		val validResultTodayBeforeUntilDate = nationalRulesVerifier.verify(
 			validCert,
 			nationalRuleSet,
@@ -214,7 +214,7 @@ class NationalRulesVerifierTest {
 		val invalidResultTodayAfterUntilDate = nationalRulesVerifier.verify(
 			validCert,
 			nationalRuleSet,
-			Clock.fixed(Instant.parse("2021-07-02T12:00:00Z"), ZoneId.systemDefault())
+			Clock.fixed(Instant.parse("2022-01-03T12:00:00Z"), ZoneId.systemDefault())
 		)
 		assertTrue(invalidResultTodayAfterUntilDate is CheckNationalRulesState.NOT_VALID_ANYMORE)
 
@@ -394,7 +394,7 @@ class NationalRulesVerifierTest {
 			AcceptanceCriteriasConstants.NEGATIVE_CODE,
 			"1232",
 			AcceptanceCriteriasConstants.TARGET_DISEASE,
-			Duration.ofHours(-23)
+			Duration.ofHours(-47)
 		)
 		var result = nationalRulesVerifier.verify(validRat, nationalRuleSet)
 		assertTrue(result is CheckNationalRulesState.SUCCESS)
@@ -404,7 +404,7 @@ class NationalRulesVerifierTest {
 			AcceptanceCriteriasConstants.NEGATIVE_CODE,
 			"1232",
 			AcceptanceCriteriasConstants.TARGET_DISEASE,
-			Duration.ofHours(-24)
+			Duration.ofHours(-48)
 		)
 		var invalid = nationalRulesVerifier.verify(invalidPcr, nationalRuleSet)
 		if (invalid is CheckNationalRulesState.NOT_VALID_ANYMORE) {
@@ -482,7 +482,7 @@ class NationalRulesVerifierTest {
 			AcceptanceCriteriasConstants.TARGET_DISEASE
 		)
 
-		assertTrue(validCert.pastInfections!!.first().validFromDate() == validDateFrom)
+		assertTrue(validCert.pastInfections!!.first().validFromDate(nationalRuleSet.valueSets.acceptanceCriteria) == validDateFrom)
 		val todayBeforeUtil = Clock.fixed(Instant.parse("2021-11-02T12:00:00Z"), ZoneId.systemDefault())
 		val validResultBefore = nationalRulesVerifier.verify(validCert, nationalRuleSet, todayBeforeUtil)
 		assertTrue(validResultBefore is CheckNationalRulesState.SUCCESS)

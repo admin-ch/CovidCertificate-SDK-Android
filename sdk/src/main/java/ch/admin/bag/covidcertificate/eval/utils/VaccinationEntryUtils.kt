@@ -48,7 +48,6 @@ fun VaccinationEntry.validFromDate(vaccine: Vaccine, acceptanceCriterias: Accept
 	}
 }
 
-/// Vaccines are valid for 179 days
 fun VaccinationEntry.validUntilDate(acceptanceCriterias: AcceptanceCriterias): LocalDateTime? {
 	val vaccinationImmunityEndDate = this.vaccineDate() ?: return null
 	return vaccinationImmunityEndDate.plusDays(acceptanceCriterias.vaccineImmunity.toLong())

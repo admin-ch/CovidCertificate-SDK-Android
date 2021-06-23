@@ -14,10 +14,12 @@ import android.content.Context
 import android.content.res.AssetManager
 import android.util.Log
 import androidx.test.platform.app.InstrumentationRegistry
-import ch.admin.bag.covidcertificate.eval.EvalErrorCodes.DECODE_BASE_45
-import ch.admin.bag.covidcertificate.eval.EvalErrorCodes.DECODE_CBOR
-import ch.admin.bag.covidcertificate.eval.EvalErrorCodes.DECODE_PREFIX
-import ch.admin.bag.covidcertificate.eval.EvalErrorCodes.DECODE_Z_LIB
+import ch.admin.bag.covidcertificate.eval.data.EvalErrorCodes.DECODE_BASE_45
+import ch.admin.bag.covidcertificate.eval.data.EvalErrorCodes.DECODE_CBOR
+import ch.admin.bag.covidcertificate.eval.data.EvalErrorCodes.DECODE_PREFIX
+import ch.admin.bag.covidcertificate.eval.data.EvalErrorCodes.DECODE_Z_LIB
+import ch.admin.bag.covidcertificate.eval.data.state.DecodeState
+import ch.admin.bag.covidcertificate.eval.decoder.CertificateDecoder
 import ch.admin.bag.covidcertificate.eval.euhealthcert.Eudgc
 import com.google.gson.Gson
 import com.squareup.moshi.JsonClass
@@ -132,7 +134,7 @@ class EuCompatTest(
 
 	@Test
 	fun testCanDecodePrefix() {
-		val decodeState = Eval.decode(testCase.PREFIX)
+		val decodeState =  CertificateDecoder.decode(testCase.PREFIX)
 
 		if (testCase.EXPECTEDRESULTS.EXPECTEDUNPREFIX == false) {
 			assertTrue(
