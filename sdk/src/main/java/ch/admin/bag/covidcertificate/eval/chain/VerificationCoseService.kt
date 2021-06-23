@@ -7,11 +7,22 @@ package ch.admin.bag.covidcertificate.eval.chain
 import COSE.MessageTag
 import COSE.OneKey
 import COSE.Sign1Message
+import android.os.Build
 import ch.admin.bag.covidcertificate.eval.models.CertType
 import ch.admin.bag.covidcertificate.eval.models.Jwk
+import org.bouncycastle.jce.provider.BouncyCastleProvider
+import java.security.Security
 
 internal object VerificationCoseService {
 	private val TAG = VerificationCoseService::class.java.simpleName
+
+	init {
+		if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N) {
+			// Remove platform provided bouncy castle provider and add updated one from library on Android 23 and lower
+			Security.removeProvider("BC")
+			Security.addProvider(BouncyCastleProvider())
+		}
+	}
 
 	fun decode(
 		keys: List<Jwk>,
