@@ -12,11 +12,7 @@ package ch.admin.bag.covidcertificate.eval.utils
 
 import android.util.Base64
 import java.math.BigInteger
-import java.security.AlgorithmParameters
-import java.security.KeyFactory
-import java.security.KeyPairGenerator
-import java.security.PublicKey
-import java.security.SecureRandom
+import java.security.*
 import java.security.interfaces.ECPublicKey
 import java.security.spec.*
 
@@ -44,6 +40,7 @@ object CryptoUtil {
 
 					algorithmParameters.getParameterSpec(ECParameterSpec::class.java)
 				} catch (e: Exception) {
+					// This is a work-around for getting the ECParameterSpec since EC is only available in AlgorithmParameters on API 26+
 					val kpg = KeyPairGenerator.getInstance("EC")
 					kpg.initialize(ecParameters, SecureRandom())
 					val keyPair = kpg.generateKeyPair()
