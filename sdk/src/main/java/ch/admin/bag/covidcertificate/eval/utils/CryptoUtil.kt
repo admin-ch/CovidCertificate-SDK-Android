@@ -12,9 +12,8 @@ package ch.admin.bag.covidcertificate.eval.utils
 
 import android.util.Base64
 import java.math.BigInteger
-import java.security.AlgorithmParameters
-import java.security.KeyFactory
-import java.security.PublicKey
+import java.security.*
+import java.security.interfaces.ECPublicKey
 import java.security.spec.*
 
 fun ByteArray.toBase64(): String = Base64.encodeToString(this, Base64.NO_WRAP).trim()
@@ -30,6 +29,27 @@ fun String.fromBase64NoPaddingToString(): String = String(bytes = this.fromBase6
 
 
 object CryptoUtil {
+
+	private var ecParameterSpec: ECParameterSpec? = null
+		get() {
+			if (field == null) {
+				val ecParameters = ECGenParameterSpec("prime256v1")
+				field = try {
+					val algorithmParameters = AlgorithmParameters.getInstance("EC")
+					algorithmParameters.init(ecParameters)
+
+					algorithmParameters.getParameterSpec(ECParameterSpec::class.java)
+				} catch (e: Exception) {
+					// This is a work-around for getting the ECParameterSpec since EC is only available in AlgorithmParameters on API 26+
+					val kpg = KeyPairGenerator.getInstance("EC")
+					kpg.initialize(ecParameters, SecureRandom())
+					val keyPair = kpg.generateKeyPair()
+					(keyPair.public as ECPublicKey).params
+				}
+			}
+			return field
+		}
+
 	/**
 	 * Creates a {@link java.security.PublicKey} from a coordinate point (x, y).
 	 * Assumes curve P-256.
@@ -39,11 +59,6 @@ object CryptoUtil {
 		val x = BigInteger(1, x)
 		val y = BigInteger(1, y)
 
-		val ecParameters = ECGenParameterSpec("prime256v1")
-		val algorithmParameters = AlgorithmParameters.getInstance("EC")
-		algorithmParameters.init(ecParameters)
-
-		val ecParameterSpec: ECParameterSpec = algorithmParameters.getParameterSpec(ECParameterSpec::class.java)
 		val ecPoint = ECPoint(x, y)
 		val ecKeySpec = ECPublicKeySpec(ecPoint, ecParameterSpec)
 
