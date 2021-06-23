@@ -17,11 +17,11 @@ import java.security.KeyFactory
 import java.security.PublicKey
 import java.security.spec.*
 
-fun ByteArray.toBase64(): String = Base64.encodeToString(this, Base64.DEFAULT).trim()
+fun ByteArray.toBase64(): String = Base64.encodeToString(this, Base64.NO_WRAP).trim()
 fun ByteArray.toBase64NoPadding(): String = Base64.encodeToString(this, Base64.NO_PADDING).trim()
 fun String.toBase64NoPadding(): String = Base64.encodeToString(this.toByteArray(), Base64.NO_PADDING).trim()
 
-fun String.fromBase64(): ByteArray = Base64.decode(this, Base64.DEFAULT)
+fun String.fromBase64(): ByteArray = Base64.decode(this, Base64.NO_WRAP)
 fun String.fromBase64NoPadding(): ByteArray = Base64.decode(this, Base64.NO_PADDING)
 
 // NB: toString() does not work!

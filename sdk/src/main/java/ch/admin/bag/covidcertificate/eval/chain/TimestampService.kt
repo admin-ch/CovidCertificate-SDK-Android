@@ -10,7 +10,7 @@
 
 package ch.admin.bag.covidcertificate.eval.chain
 
-import ch.admin.bag.covidcertificate.eval.data.EvalErrorCodes
+import ch.admin.bag.covidcertificate.eval.data.ErrorCodes
 import ch.admin.bag.covidcertificate.eval.models.DccHolder
 import java.time.Instant
 
@@ -24,13 +24,13 @@ internal object TimestampService {
 	): String? {
 		dccHolder.expirationTime?.also { et ->
 			if (et.isBefore(now)) {
-				return EvalErrorCodes.SIGNATURE_TIMESTAMP_EXPIRED
+				return ErrorCodes.SIGNATURE_TIMESTAMP_EXPIRED
 			}
 		}
 
 		dccHolder.issuedAt?.also { ia ->
 			if (ia.isAfter(now)) {
-				return EvalErrorCodes.SIGNATURE_TIMESTAMP_NOT_YET_VALID
+				return ErrorCodes.SIGNATURE_TIMESTAMP_NOT_YET_VALID
 			}
 		}
 

@@ -11,7 +11,7 @@
 package ch.admin.bag.covidcertificate.eval.verification
 
 import android.net.ConnectivityManager
-import ch.admin.bag.covidcertificate.eval.data.EvalErrorCodes
+import ch.admin.bag.covidcertificate.eval.data.ErrorCodes
 import ch.admin.bag.covidcertificate.eval.data.state.Error
 import ch.admin.bag.covidcertificate.eval.data.state.VerificationState
 import ch.admin.bag.covidcertificate.eval.models.DccHolder
@@ -48,13 +48,13 @@ class CertificateVerificationTask(
 			if (hasNetwork) {
 				mutableVerificationStateFlow.emit(
 					VerificationState.ERROR(
-						Error(EvalErrorCodes.GENERAL_NETWORK_FAILURE, dccHolder = dccHolder), null
+						Error(ErrorCodes.GENERAL_NETWORK_FAILURE, dccHolder = dccHolder), null
 					)
 				)
 			} else {
 				mutableVerificationStateFlow.emit(
 					VerificationState.ERROR(
-						Error(EvalErrorCodes.GENERAL_OFFLINE, dccHolder = dccHolder), null
+						Error(ErrorCodes.GENERAL_OFFLINE, dccHolder = dccHolder), null
 					)
 				)
 			}

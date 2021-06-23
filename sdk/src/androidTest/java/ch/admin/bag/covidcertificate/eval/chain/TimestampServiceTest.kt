@@ -11,7 +11,7 @@
 package ch.admin.bag.covidcertificate.eval.chain
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import ch.admin.bag.covidcertificate.eval.data.EvalErrorCodes
+import ch.admin.bag.covidcertificate.eval.data.ErrorCodes
 import ch.admin.bag.covidcertificate.eval.euhealthcert.Eudgc
 import ch.admin.bag.covidcertificate.eval.euhealthcert.PersonName
 import ch.admin.bag.covidcertificate.eval.models.DccHolder
@@ -38,7 +38,7 @@ class TimestampServiceTest {
 	@Test
 	fun past_expiration() {
 		val dccHolder = DccHolder(emptyEuDgc, "", expirationTime = Instant.now().minusSeconds(60))
-		assertEquals(TimestampService.decode(dccHolder), EvalErrorCodes.SIGNATURE_TIMESTAMP_EXPIRED)
+		assertEquals(TimestampService.decode(dccHolder), ErrorCodes.SIGNATURE_TIMESTAMP_EXPIRED)
 	}
 
 	@Test
@@ -50,7 +50,7 @@ class TimestampServiceTest {
 	@Test
 	fun future_issuedAt() {
 		val dccHolder = DccHolder(emptyEuDgc, "", issuedAt = Instant.now().plusSeconds(60))
-		assertEquals(TimestampService.decode(dccHolder), EvalErrorCodes.SIGNATURE_TIMESTAMP_NOT_YET_VALID)
+		assertEquals(TimestampService.decode(dccHolder), ErrorCodes.SIGNATURE_TIMESTAMP_NOT_YET_VALID)
 	}
 
 	@Test
@@ -72,7 +72,7 @@ class TimestampServiceTest {
 			expirationTime = Instant.now().minusSeconds(120),
 			issuedAt = Instant.now().plusSeconds(60)
 		)
-		assertEquals(TimestampService.decode(dccHolder), EvalErrorCodes.SIGNATURE_TIMESTAMP_EXPIRED)
+		assertEquals(TimestampService.decode(dccHolder), ErrorCodes.SIGNATURE_TIMESTAMP_EXPIRED)
 	}
 
 	@Test

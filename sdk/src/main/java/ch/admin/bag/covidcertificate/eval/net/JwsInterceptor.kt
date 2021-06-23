@@ -39,8 +39,11 @@ class JwsInterceptor(
 
 	@Throws(IOException::class)
 	override fun intercept(chain: Interceptor.Chain): Response {
-		val response: Response = chain.proceed(chain.request())
-		if (!response.isSuccessful) {
+		val request = chain.request()
+		val response: Response = chain.proceed(request)
+
+		val requestAcceptsJws = request.header("Accept")?.contains("+jws") ?: false
+		if (!response.isSuccessful || !requestAcceptsJws) {
 			return response
 		}
 

@@ -10,7 +10,7 @@
 
 package ch.admin.bag.covidcertificate.eval.decoder
 
-import ch.admin.bag.covidcertificate.eval.data.EvalErrorCodes
+import ch.admin.bag.covidcertificate.eval.data.ErrorCodes
 import ch.admin.bag.covidcertificate.eval.chain.Base45Service
 import ch.admin.bag.covidcertificate.eval.chain.CborService
 import ch.admin.bag.covidcertificate.eval.chain.CertTypeService
@@ -31,15 +31,15 @@ object CertificateDecoder {
 	 */
 	fun decode(qrCodeData: String): DecodeState {
 
-		val encoded = PrefixIdentifierService.decode(qrCodeData) ?: return DecodeState.ERROR(Error(EvalErrorCodes.DECODE_PREFIX))
+		val encoded = PrefixIdentifierService.decode(qrCodeData) ?: return DecodeState.ERROR(Error(ErrorCodes.DECODE_PREFIX))
 
-		val compressed = Base45Service.decode(encoded) ?: return DecodeState.ERROR(Error(EvalErrorCodes.DECODE_BASE_45))
+		val compressed = Base45Service.decode(encoded) ?: return DecodeState.ERROR(Error(ErrorCodes.DECODE_BASE_45))
 
-		val cose = DecompressionService.decode(compressed) ?: return DecodeState.ERROR(Error(EvalErrorCodes.DECODE_Z_LIB))
+		val cose = DecompressionService.decode(compressed) ?: return DecodeState.ERROR(Error(ErrorCodes.DECODE_Z_LIB))
 
-		val cbor = NoopVerificationCoseService.decode(cose) ?: return DecodeState.ERROR(Error(EvalErrorCodes.DECODE_COSE))
+		val cbor = NoopVerificationCoseService.decode(cose) ?: return DecodeState.ERROR(Error(ErrorCodes.DECODE_COSE))
 
-		val bagdgc = CborService.decode(cbor, qrCodeData) ?: return DecodeState.ERROR(Error(EvalErrorCodes.DECODE_CBOR))
+		val bagdgc = CborService.decode(cbor, qrCodeData) ?: return DecodeState.ERROR(Error(ErrorCodes.DECODE_CBOR))
 
 		bagdgc.certType = CertTypeService.decode(bagdgc.euDGC)
 
