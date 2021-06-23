@@ -34,7 +34,7 @@ internal object VerificationCoseService {
 					return true
 				}
 			} catch (e: Throwable) {
-				e.printStackTrace()
+				// Key failed to verify the signature, try the next key
 			}
 		}
 

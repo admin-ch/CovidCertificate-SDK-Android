@@ -54,12 +54,16 @@ internal class TrustListRepository(
 	 * Get the trust list from the provider or null if at least one of the values is not set
 	 */
 	fun getTrustList(): TrustList? {
-		return if (store.areSignaturesValid() && store.areRevokedCertificatesValid() && store.areRuleSetsValid()) {
-			val signatures = store.certificateSignatures!!
-			val revokedCertificates = store.revokedCertificates!!
-			val ruleSet = store.ruleset!!
-			TrustList(signatures, revokedCertificates, ruleSet)
-		} else {
+		return try {
+			if (store.areSignaturesValid() && store.areRevokedCertificatesValid() && store.areRuleSetsValid()) {
+				val signatures = store.certificateSignatures!!
+				val revokedCertificates = store.revokedCertificates!!
+				val ruleSet = store.ruleset!!
+				TrustList(signatures, revokedCertificates, ruleSet)
+			} else {
+				null
+			}
+		} catch (e: Exception) {
 			null
 		}
 	}
