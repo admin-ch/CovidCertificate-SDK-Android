@@ -32,6 +32,10 @@ fun VaccinationEntry.getNumberOverTotalDose(): String {
 	return " ${this.doseNumber()}/${this.totalDoses()}"
 }
 
+fun VaccinationEntry.isNotFullyProtected(): Boolean {
+	return this.doseNumber < this.totalDoses
+}
+
 fun VaccinationEntry.isTargetDiseaseCorrect(): Boolean {
 	return this.disease == AcceptanceCriteriasConstants.TARGET_DISEASE
 }
