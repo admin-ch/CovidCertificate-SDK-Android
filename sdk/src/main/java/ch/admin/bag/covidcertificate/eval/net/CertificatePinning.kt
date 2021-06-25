@@ -20,6 +20,9 @@ object CertificatePinning {
 		.add("www.cc-a.bit.admin.ch", "sha256/++MBgDH5WGvL9Bcn5Be30cRcL0f5O+NyoXuWtQdX1aI=") // root
 		.add("www.cc-d.bit.admin.ch", "sha256/++MBgDH5WGvL9Bcn5Be30cRcL0f5O+NyoXuWtQdX1aI=") // root
 		.add("www.cc.bit.admin.ch", "sha256/++MBgDH5WGvL9Bcn5Be30cRcL0f5O+NyoXuWtQdX1aI=") // root
+		.add("covidcertificate-app-d.bit.admin.ch", "sha256/SkntvS+PgjC9VZKzE1c/4cFypF+pgBHMHt27Nq3j/OU=") // root
+		.add("covidcertificate-app-a.bit.admin.ch", "sha256/SkntvS+PgjC9VZKzE1c/4cFypF+pgBHMHt27Nq3j/OU=") // root
+		.add("covidcertificate-app.bit.admin.ch", "sha256/SkntvS+PgjC9VZKzE1c/4cFypF+pgBHMHt27Nq3j/OU=") // root
 		.build()
 
 	val pinner: CertificatePinner
