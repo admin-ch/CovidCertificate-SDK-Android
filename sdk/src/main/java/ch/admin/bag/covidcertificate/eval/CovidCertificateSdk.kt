@@ -16,28 +16,15 @@ import androidx.lifecycle.LifecycleObserver
 import androidx.lifecycle.OnLifecycleEvent
 import androidx.lifecycle.coroutineScope
 import ch.admin.bag.covidcertificate.eval.data.CertificateSecureStorage
-import ch.admin.bag.covidcertificate.eval.data.Config
-import ch.admin.bag.covidcertificate.eval.data.moshi.RawJsonStringAdapter
 import ch.admin.bag.covidcertificate.eval.nationalrules.NationalRulesVerifier
-import ch.admin.bag.covidcertificate.eval.net.ApiKeyInterceptor
-import ch.admin.bag.covidcertificate.eval.net.CertificatePinning
 import ch.admin.bag.covidcertificate.eval.net.CertificateService
-import ch.admin.bag.covidcertificate.eval.net.JwsInterceptor
+import ch.admin.bag.covidcertificate.eval.net.RetrofitFactory
 import ch.admin.bag.covidcertificate.eval.net.RevocationService
 import ch.admin.bag.covidcertificate.eval.net.RuleSetService
-import ch.admin.bag.covidcertificate.eval.net.UserAgentInterceptor
 import ch.admin.bag.covidcertificate.eval.repository.TrustListRepository
 import ch.admin.bag.covidcertificate.eval.verification.CertificateVerificationController
 import ch.admin.bag.covidcertificate.eval.verification.CertificateVerifier
 import ch.admin.bag.covidcertificate.verifier.eval.BuildConfig
-import com.squareup.moshi.Moshi
-import okhttp3.Cache
-import okhttp3.OkHttpClient
-import okhttp3.logging.HttpLoggingInterceptor
-import retrofit2.Retrofit
-import retrofit2.converter.moshi.MoshiConverterFactory
-import retrofit2.converter.scalars.ScalarsConverterFactory
-import java.security.cert.Certificate
 import java.security.cert.CertificateFactory
 import java.security.cert.X509Certificate
 import java.util.*
@@ -57,7 +44,7 @@ object CovidCertificateSdk {
 	private var trustListLifecycleObserver: TrustListLifecycleObserver? = null
 
 	fun init(context: Context) {
-		val retrofit = createRetrofit(context)
+		val retrofit = RetrofitFactory().create(context)
 		val certificateService = retrofit.create(CertificateService::class.java)
 		val revocationService = retrofit.create(RevocationService::class.java)
 		val ruleSetService = retrofit.create(RuleSetService::class.java)
@@ -102,32 +89,6 @@ object CovidCertificateSdk {
 		if (!isInitialized) {
 			throw IllegalStateException("CovidCertificateSdk must be initialized by calling init(context)")
 		}
-	}
-
-	private fun createRetrofit(context: Context): Retrofit {
-		val rootCa = getRootCa(context)
-		val expectedCommonName = getExpectedCommonName()
-		val okHttpBuilder = OkHttpClient.Builder()
-			.certificatePinner(CertificatePinning.pinner)
-			.addInterceptor(JwsInterceptor(rootCa, expectedCommonName))
-			.addInterceptor(ApiKeyInterceptor())
-			.addInterceptor(UserAgentInterceptor(Config.userAgent))
-
-		val cacheSize = 5 * 1024 * 1024 // 5 MB
-		val cache = Cache(context.cacheDir, cacheSize.toLong())
-		okHttpBuilder.cache(cache)
-
-		if (BuildConfig.DEBUG) {
-			val httpInterceptor = HttpLoggingInterceptor().setLevel(HttpLoggingInterceptor.Level.BODY)
-			okHttpBuilder.addInterceptor(httpInterceptor)
-		}
-
-		return Retrofit.Builder()
-			.baseUrl(BuildConfig.BASE_URL_TRUST_LIST)
-			.client(okHttpBuilder.build())
-			.addConverterFactory(ScalarsConverterFactory.create())
-			.addConverterFactory(MoshiConverterFactory.create(Moshi.Builder().add(RawJsonStringAdapter()).build()))
-			.build()
 	}
 
 	internal class TrustListLifecycleObserver(private val lifecycle: Lifecycle) : LifecycleObserver {
