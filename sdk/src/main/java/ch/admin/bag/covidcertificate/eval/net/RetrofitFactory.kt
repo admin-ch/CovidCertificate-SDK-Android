@@ -23,7 +23,7 @@ import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
 import retrofit2.converter.scalars.ScalarsConverterFactory
 
-class RetrofitFactory {
+internal class RetrofitFactory {
 
 	companion object {
 		private const val CACHE_SIZE = 5 * 1024 * 1024 // 5 MB
