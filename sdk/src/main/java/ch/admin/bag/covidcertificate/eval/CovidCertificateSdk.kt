@@ -16,11 +16,11 @@ import androidx.lifecycle.LifecycleObserver
 import androidx.lifecycle.OnLifecycleEvent
 import androidx.lifecycle.coroutineScope
 import ch.admin.bag.covidcertificate.eval.data.CertificateSecureStorage
+import ch.admin.bag.covidcertificate.eval.data.MetadataStorage
 import ch.admin.bag.covidcertificate.eval.nationalrules.NationalRulesVerifier
-import ch.admin.bag.covidcertificate.eval.net.CertificateService
+import ch.admin.bag.covidcertificate.eval.net.*
 import ch.admin.bag.covidcertificate.eval.net.RetrofitFactory
-import ch.admin.bag.covidcertificate.eval.net.RevocationService
-import ch.admin.bag.covidcertificate.eval.net.RuleSetService
+import ch.admin.bag.covidcertificate.eval.repository.MetadataRepository
 import ch.admin.bag.covidcertificate.eval.repository.TrustListRepository
 import ch.admin.bag.covidcertificate.eval.verification.CertificateVerificationController
 import ch.admin.bag.covidcertificate.eval.verification.CertificateVerifier
@@ -51,9 +51,15 @@ object CovidCertificateSdk {
 
 		val certificateStorage = CertificateSecureStorage.getInstance(context)
 		val trustListRepository = TrustListRepository(certificateService, revocationService, ruleSetService, certificateStorage)
+
+		val metadataService = retrofit.create(MetadataService::class.java)
+		val metadataStorage = MetadataStorage.getInstance(context)
+		val metadataRepository = MetadataRepository(metadataService, metadataStorage)
+
 		val nationalRulesVerifier = NationalRulesVerifier(context)
 		val certificateVerifier = CertificateVerifier(nationalRulesVerifier)
-		certificateVerificationController = CertificateVerificationController(trustListRepository, certificateVerifier)
+		certificateVerificationController =
+			CertificateVerificationController(trustListRepository, metadataRepository, certificateVerifier)
 
 		isInitialized = true
 	}
@@ -106,6 +112,7 @@ object CovidCertificateSdk {
 			trustListRefreshTimer = timer(initialDelay = TRUST_LIST_REFRESH_INTERVAL, period = TRUST_LIST_REFRESH_INTERVAL) {
 				certificateVerificationController.refreshTrustList(lifecycle.coroutineScope)
 			}
+			certificateVerificationController.refreshProductsMetadata(lifecycle.coroutineScope)
 		}
 
 		@OnLifecycleEvent(Lifecycle.Event.ON_STOP)

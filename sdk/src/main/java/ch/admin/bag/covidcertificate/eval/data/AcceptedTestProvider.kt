@@ -23,26 +23,17 @@ import java.io.IOException
 
 class AcceptedTestProvider private constructor(context: Context) {
 
-	companion object : SingletonHolder<AcceptedTestProvider, Context>(::AcceptedTestProvider) {
-		private const val ACCEPTED_TEST_MANUFACTURE_FILE_NAME = "test_manf_eu.json"
-		private const val ACCEPTED_TEST_TYPE_FILE_NAME = "test_type_eu.json"
-	}
+	companion object : SingletonHolder<AcceptedTestProvider, Context>(::AcceptedTestProvider)
 
-	private val manufactures: ValueSet
-	private val acceptedEuTest: ValueSet
+	private val metadataStorage = MetadataStorage.getInstance(context)
 
 	init {
 		val manufactureAdapter: JsonAdapter<ValueSet> = Moshi.Builder().build().adapter(ValueSet::class.java)
-		manufactures =
-			manufactureAdapter.fromJson(context.assets.open(ACCEPTED_TEST_MANUFACTURE_FILE_NAME).source().buffer())
-				?: throw IOException()
-		acceptedEuTest =
-			manufactureAdapter.fromJson(context.assets.open(ACCEPTED_TEST_TYPE_FILE_NAME).source().buffer())
-				?: throw IOException()
 	}
 
 	fun getTestType(testEntry: TestEntry): String {
-		return acceptedEuTest.valueSetValues[testEntry.type]?.display ?: testEntry.type
+		metadataStorage.productsMetadata.test.type
+		return metadataStorage.productsMetadata.test.type.valueSetValues[testEntry.type]?.display ?: testEntry.type
 	}
 
 	fun testIsPCRorRAT(testEntry: TestEntry): Boolean {
@@ -53,7 +44,8 @@ class AcceptedTestProvider private constructor(context: Context) {
 		if (testEntry.type.equals(TestType.PCR.code)) {
 			return true
 		} else if (testEntry.type.equals(TestType.RAT.code)) {
-			return manufactures.valueSetValues[testEntry.ratTestNameAndManufacturer]?.let { return true } ?: return false
+			return metadataStorage.productsMetadata.test.manf.valueSetValues[testEntry.ratTestNameAndManufacturer]?.let { return true }
+				?: return false
 		}
 		return false
 	}
@@ -68,7 +60,7 @@ class AcceptedTestProvider private constructor(context: Context) {
 	}
 
 	fun getManufacturesIfExists(testEntry: TestEntry): String? {
-		var ma = manufactures.valueSetValues[testEntry.ratTestNameAndManufacturer]?.display
+		var ma = metadataStorage.productsMetadata.test.manf.valueSetValues[testEntry.ratTestNameAndManufacturer]?.display
 		testEntry.naaTestName?.let { nm ->
 			ma = ma?.replace(nm, "")?.trim()?.removeSuffix(",")
 		}
