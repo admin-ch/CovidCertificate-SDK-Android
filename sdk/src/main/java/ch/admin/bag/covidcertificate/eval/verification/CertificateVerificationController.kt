@@ -11,7 +11,6 @@
 package ch.admin.bag.covidcertificate.eval.verification
 
 import android.util.Log
-import ch.admin.bag.covidcertificate.eval.repository.MetadataRepository
 import ch.admin.bag.covidcertificate.eval.repository.TrustListRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
@@ -20,7 +19,6 @@ import java.util.*
 
 class CertificateVerificationController internal constructor(
 	private val trustListRepository: TrustListRepository,
-	private val metadataRepository: MetadataRepository,
 	private val verifier: CertificateVerifier
 ) {
 
@@ -31,7 +29,6 @@ class CertificateVerificationController internal constructor(
 	private val taskQueue: Queue<CertificateVerificationTask> = LinkedList()
 	private var trustListLoadingJob: Job? = null
 	private var taskProcessingJob: Job? = null
-	private var metadataLoadingJob: Job? = null
 
 	/**
 	 * Trigger a refresh of the trust list unless there is already a refresh running
@@ -47,27 +44,6 @@ class CertificateVerificationController internal constructor(
 				} catch (e: Exception) {
 					// Loading trust list failed, keep using last stored version
 					Log.e(TAG, "Manually refreshing trust list failed", e)
-					onErrorCallback.invoke()
-				}
-			}
-		}
-	}
-
-	fun refreshProductsMetadata(
-		coroutineScope: CoroutineScope,
-		onCompletionCallback: () -> Unit = {},
-		onErrorCallback: () -> Unit = {}
-	) {
-		val job = metadataLoadingJob
-		if (job == null || job.isCompleted) {
-			metadataLoadingJob = coroutineScope.launch {
-				try {
-					metadataRepository.refreshMetadata()
-					metadataLoadingJob = null
-					onCompletionCallback.invoke()
-				} catch (e: Exception) {
-					// Loading trust list failed, keep using last stored version
-					Log.e(TAG, "Manually refreshing products metadata failed", e)
 					onErrorCallback.invoke()
 				}
 			}

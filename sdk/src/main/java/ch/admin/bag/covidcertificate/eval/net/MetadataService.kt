@@ -8,7 +8,6 @@
  * SPDX-License-Identifier: MPL-2.0
  */
 
-
 package ch.admin.bag.covidcertificate.eval.net
 
 import ch.admin.bag.covidcertificate.eval.models.ProductsMetadata
@@ -21,6 +20,5 @@ interface MetadataService {
 	@Headers("Accept: application/json+jws")
 	@GET("metadata")
 	suspend fun getMetadata(): Response<ProductsMetadata>
-
 
 }

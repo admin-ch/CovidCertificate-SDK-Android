@@ -14,7 +14,6 @@ import android.content.Context
 import ch.admin.bag.covidcertificate.eval.euhealthcert.VaccinationEntry
 import ch.admin.bag.covidcertificate.eval.products.AcceptedVaccine
 import ch.admin.bag.covidcertificate.eval.products.Vaccine
-import ch.admin.bag.covidcertificate.eval.products.ValueSet
 import ch.admin.bag.covidcertificate.eval.utils.SingletonHolder
 import com.squareup.moshi.JsonAdapter
 import com.squareup.moshi.Moshi
@@ -36,7 +35,6 @@ class AcceptedVaccineProvider private constructor(context: Context) {
 		val acceptedVaccineAdapter: JsonAdapter<AcceptedVaccine> = Moshi.Builder().build().adapter(AcceptedVaccine::class.java)
 		acceptedVaccine = acceptedVaccineAdapter.fromJson(context.assets.open(ACCEPTED_VACCINE_FILE_NAME).source().buffer())
 			?: throw IOException()
-
 	}
 
 	fun getVaccineName(vaccinationEntry: VaccinationEntry): String {

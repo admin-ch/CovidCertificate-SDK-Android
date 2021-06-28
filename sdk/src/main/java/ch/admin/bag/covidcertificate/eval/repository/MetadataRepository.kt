@@ -15,17 +15,12 @@ import ch.admin.bag.covidcertificate.eval.net.MetadataService
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
-internal class MetadataRepository(
-	private val metadataService: MetadataService,
-	private val store: MetadataStorage
-) {
-	suspend fun refreshMetadata() {
-		withContext(Dispatchers.IO) {
-			val metadataResponse = metadataService.getMetadata()
-			val metadataBody = metadataResponse.body()
-			if (metadataResponse.isSuccessful && metadataBody != null) {
-				store.productsMetadata = metadataBody
-			}
+internal class MetadataRepository(private val metadataService: MetadataService, private val store: MetadataStorage) {
+	suspend fun refreshMetadata() = withContext(Dispatchers.IO) {
+		val metadataResponse = metadataService.getMetadata()
+		val metadataBody = metadataResponse.body()
+		if (metadataResponse.isSuccessful && metadataBody != null) {
+			store.productsMetadata = metadataBody
 		}
 	}
 }

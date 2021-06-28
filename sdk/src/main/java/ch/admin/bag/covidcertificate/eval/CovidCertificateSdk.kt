@@ -17,9 +17,13 @@ import androidx.lifecycle.OnLifecycleEvent
 import androidx.lifecycle.coroutineScope
 import ch.admin.bag.covidcertificate.eval.data.CertificateSecureStorage
 import ch.admin.bag.covidcertificate.eval.data.MetadataStorage
+import ch.admin.bag.covidcertificate.eval.metadata.ProductMetadataController
 import ch.admin.bag.covidcertificate.eval.nationalrules.NationalRulesVerifier
-import ch.admin.bag.covidcertificate.eval.net.*
+import ch.admin.bag.covidcertificate.eval.net.CertificateService
+import ch.admin.bag.covidcertificate.eval.net.MetadataService
 import ch.admin.bag.covidcertificate.eval.net.RetrofitFactory
+import ch.admin.bag.covidcertificate.eval.net.RevocationService
+import ch.admin.bag.covidcertificate.eval.net.RuleSetService
 import ch.admin.bag.covidcertificate.eval.repository.MetadataRepository
 import ch.admin.bag.covidcertificate.eval.repository.TrustListRepository
 import ch.admin.bag.covidcertificate.eval.verification.CertificateVerificationController
@@ -39,9 +43,10 @@ object CovidCertificateSdk {
 	private val TRUST_LIST_REFRESH_INTERVAL = TimeUnit.HOURS.toMillis(1L)
 
 	private lateinit var certificateVerificationController: CertificateVerificationController
+	private lateinit var productMetadataController: ProductMetadataController
 	private var isInitialized = false
 	private var trustListRefreshTimer: Timer? = null
-	private var trustListLifecycleObserver: TrustListLifecycleObserver? = null
+	private var sdkLifecycleObserver: SdkLifecycleObserver? = null
 
 	fun init(context: Context) {
 		val retrofit = RetrofitFactory().create(context)
@@ -52,14 +57,14 @@ object CovidCertificateSdk {
 		val certificateStorage = CertificateSecureStorage.getInstance(context)
 		val trustListRepository = TrustListRepository(certificateService, revocationService, ruleSetService, certificateStorage)
 
+		val nationalRulesVerifier = NationalRulesVerifier(context)
+		val certificateVerifier = CertificateVerifier(nationalRulesVerifier)
+		certificateVerificationController = CertificateVerificationController(trustListRepository, certificateVerifier)
+
 		val metadataService = retrofit.create(MetadataService::class.java)
 		val metadataStorage = MetadataStorage.getInstance(context)
 		val metadataRepository = MetadataRepository(metadataService, metadataStorage)
-
-		val nationalRulesVerifier = NationalRulesVerifier(context)
-		val certificateVerifier = CertificateVerifier(nationalRulesVerifier)
-		certificateVerificationController =
-			CertificateVerificationController(trustListRepository, metadataRepository, certificateVerifier)
+		productMetadataController = ProductMetadataController(metadataRepository)
 
 		isInitialized = true
 	}
@@ -67,20 +72,25 @@ object CovidCertificateSdk {
 	fun registerWithLifecycle(lifecycle: Lifecycle) {
 		requireInitialized()
 
-		trustListLifecycleObserver = TrustListLifecycleObserver(lifecycle)
-		trustListLifecycleObserver?.register(lifecycle)
+		sdkLifecycleObserver = SdkLifecycleObserver(lifecycle)
+		sdkLifecycleObserver?.register(lifecycle)
 	}
 
 	fun unregisterWithLifecycle(lifecycle: Lifecycle) {
 		requireInitialized()
 
-		trustListLifecycleObserver?.unregister(lifecycle)
-		trustListLifecycleObserver = null
+		sdkLifecycleObserver?.unregister(lifecycle)
+		sdkLifecycleObserver = null
 	}
 
 	fun getCertificateVerificationController(): CertificateVerificationController {
 		requireInitialized()
 		return certificateVerificationController
+	}
+
+	fun getProductMetadataController(): ProductMetadataController {
+		requireInitialized()
+		return productMetadataController
 	}
 
 	fun getRootCa(context: Context): X509Certificate {
@@ -97,7 +107,7 @@ object CovidCertificateSdk {
 		}
 	}
 
-	internal class TrustListLifecycleObserver(private val lifecycle: Lifecycle) : LifecycleObserver {
+	internal class SdkLifecycleObserver(private val lifecycle: Lifecycle) : LifecycleObserver {
 		fun register(lifecycle: Lifecycle) {
 			lifecycle.addObserver(this)
 		}
@@ -108,11 +118,14 @@ object CovidCertificateSdk {
 
 		@OnLifecycleEvent(Lifecycle.Event.ON_START)
 		fun onStart() {
+			// Schedule a timer on app start to periodicaly refresh the trust list while the app is in the foreground
 			trustListRefreshTimer?.cancel()
 			trustListRefreshTimer = timer(initialDelay = TRUST_LIST_REFRESH_INTERVAL, period = TRUST_LIST_REFRESH_INTERVAL) {
 				certificateVerificationController.refreshTrustList(lifecycle.coroutineScope)
 			}
-			certificateVerificationController.refreshProductsMetadata(lifecycle.coroutineScope)
+
+			// Refresh the products metadata once on app start
+			productMetadataController.refreshProductsMetadata(lifecycle.coroutineScope)
 		}
 
 		@OnLifecycleEvent(Lifecycle.Event.ON_STOP)
