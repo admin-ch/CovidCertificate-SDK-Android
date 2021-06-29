@@ -18,7 +18,7 @@ import java.util.*
 
 data class DccHolder internal constructor(
 	val qrCodeData: String,
-	val euDGC: Eudgc,
+	val euDGC: Eudgc? = null,
 	val dccLight: DccLight? = null,
 	val expirationTime: Instant? = null,
 	val issuedAt: Instant? = null,
@@ -27,6 +27,10 @@ data class DccHolder internal constructor(
 
 	var certType: CertType? = null
 		internal set
+
+	fun isFullCertificate() = euDGC != null
+
+	fun isLightCertificate() = dccLight != null
 
 	override fun equals(other: Any?): Boolean {
 		if (this === other) return true

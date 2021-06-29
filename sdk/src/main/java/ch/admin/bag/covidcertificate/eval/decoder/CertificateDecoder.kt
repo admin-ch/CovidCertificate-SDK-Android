@@ -41,7 +41,7 @@ object CertificateDecoder {
 
 		val bagdgc = CborService.decode(cbor, qrCodeData) ?: return DecodeState.ERROR(Error(ErrorCodes.DECODE_CBOR))
 
-		bagdgc.certType = CertTypeService.decode(bagdgc.euDGC)
+		bagdgc.certType = CertTypeService.decode(bagdgc.euDGC!!)
 
 		return DecodeState.SUCCESS(bagdgc)
 	}

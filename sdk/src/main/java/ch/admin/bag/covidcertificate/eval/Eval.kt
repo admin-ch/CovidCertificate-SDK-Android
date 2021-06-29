@@ -21,11 +21,15 @@ import ch.admin.bag.covidcertificate.eval.data.ErrorCodes.SIGNATURE_COSE_INVALID
 import ch.admin.bag.covidcertificate.eval.data.state.CheckNationalRulesState
 import ch.admin.bag.covidcertificate.eval.data.state.CheckRevocationState
 import ch.admin.bag.covidcertificate.eval.data.state.CheckSignatureState
+import ch.admin.bag.covidcertificate.eval.data.state.Error
 import ch.admin.bag.covidcertificate.eval.models.DccHolder
 import ch.admin.bag.covidcertificate.eval.models.Jwks
 import ch.admin.bag.covidcertificate.eval.models.RevokedCertificates
 import ch.admin.bag.covidcertificate.eval.models.RuleSet
 import ch.admin.bag.covidcertificate.eval.nationalrules.NationalRulesVerifier
+import ch.admin.bag.covidcertificate.eval.nationalrules.ValidityRange
+import java.time.LocalDateTime
+import java.time.ZoneId
 
 internal object Eval {
 	private val TAG = Eval::class.java.simpleName
@@ -64,8 +68,10 @@ internal object Eval {
 	 * @return State for the revocation check
 	 */
 	fun checkRevocationStatus(dccHolder: DccHolder, revokedCertificates: RevokedCertificates): CheckRevocationState {
+		if (dccHolder.isLightCertificate()) return CheckRevocationState.SUCCESS
+
 		val revokedCertificateService = RevokedHealthCertService(revokedCertificates)
-		val containsRevokedCertificate = revokedCertificateService.isRevoked(dccHolder.euDGC)
+		val containsRevokedCertificate = revokedCertificateService.isRevoked(dccHolder.euDGC!!)
 
 		return if (containsRevokedCertificate) {
 			CheckRevocationState.INVALID(ErrorCodes.REVOCATION_REVOKED)
@@ -83,6 +89,12 @@ internal object Eval {
 		nationalRulesVerifier: NationalRulesVerifier,
 		ruleSet: RuleSet
 	): CheckNationalRulesState {
-		return nationalRulesVerifier.verify(dccHolder.euDGC, ruleSet)
+		return if (dccHolder.isLightCertificate()) {
+			val issued = dccHolder.issuedAt?.let { LocalDateTime.ofInstant(it, ZoneId.systemDefault()) }
+			val expiration = dccHolder.expirationTime?.let { LocalDateTime.ofInstant(it, ZoneId.systemDefault()) }
+			CheckNationalRulesState.SUCCESS(ValidityRange(issued, expiration))
+		} else {
+			nationalRulesVerifier.verify(dccHolder.euDGC!!, ruleSet)
+		}
 	}
 }
