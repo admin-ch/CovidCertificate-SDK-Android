@@ -8,7 +8,7 @@
  * SPDX-License-Identifier: MPL-2.0
  */
 
-package ch.admin.bag.covidcertificate.eval.models
+package ch.admin.bag.covidcertificate.eval.models.trustlist
 
 import ch.admin.bag.covidcertificate.eval.data.moshi.RawJsonString
 import ch.admin.bag.covidcertificate.eval.models.healthcert.eu.RecoveryEntry
@@ -82,18 +82,18 @@ data class AcceptanceCriterias(
 )
 
 
-data class CertLogicData(
+internal data class CertLogicData(
 	val payload: CertLogicPayload,
 	val external: CertLogicExternalInfo,
 )
 
-data class CertLogicPayload(
+internal data class CertLogicPayload(
 	val r: List<RecoveryEntry>? = null,
 	val t: List<TestEntry>? = null,
 	val v: List<VaccinationEntry>? = null,
 )
 
-data class CertLogicExternalInfo(
+internal data class CertLogicExternalInfo(
 	val valueSets: RuleValueSets,
 	val validationClock: String, // ISO-8601 extended offset date-time format
 	val validationClockAtStartOfDay: String, // ISO-8601 date format

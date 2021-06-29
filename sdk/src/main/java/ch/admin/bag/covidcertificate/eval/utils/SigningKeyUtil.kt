@@ -10,7 +10,7 @@
 
 package ch.admin.bag.covidcertificate.eval.utils
 
-import ch.admin.bag.covidcertificate.eval.models.Jwk
+import ch.admin.bag.covidcertificate.eval.models.trustlist.Jwk
 import ch.admin.bag.covidcertificate.verifier.eval.BuildConfig
 
 

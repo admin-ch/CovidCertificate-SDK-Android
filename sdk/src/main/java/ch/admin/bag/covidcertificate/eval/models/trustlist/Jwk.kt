@@ -8,9 +8,10 @@
  * SPDX-License-Identifier: MPL-2.0
  */
 
-package ch.admin.bag.covidcertificate.eval.models
+package ch.admin.bag.covidcertificate.eval.models.trustlist
 
 import android.util.Log
+import ch.admin.bag.covidcertificate.eval.models.CertType
 import ch.admin.bag.covidcertificate.eval.utils.CryptoUtil
 import ch.admin.bag.covidcertificate.eval.utils.fromBase64
 import com.squareup.moshi.JsonClass
@@ -22,7 +23,7 @@ private const val TAG = "Jwk"
 
 @Serializable
 @JsonClass(generateAdapter = true)
-data class Jwks(
+internal data class Jwks(
 	val certs: List<Jwk>
 )
 
@@ -31,7 +32,7 @@ data class Jwks(
  */
 @Serializable
 @JsonClass(generateAdapter = true)
-data class Jwk(
+internal data class Jwk(
 	val keyId: String,
 	val alg: String,
 	val use: String, // For which type of health cert the signing key is valid. One of: r,v,t.
@@ -110,7 +111,7 @@ data class Jwk(
 
 @Serializable
 @JsonClass(generateAdapter = true)
-data class X5A(
+internal data class X5A(
 	val issuer: String,
 	val serial: Long,
 	var subject: String

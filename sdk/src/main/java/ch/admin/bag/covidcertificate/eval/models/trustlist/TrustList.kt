@@ -8,12 +8,10 @@
  * SPDX-License-Identifier: MPL-2.0
  */
 
-package ch.admin.bag.covidcertificate.eval.models
+package ch.admin.bag.covidcertificate.eval.models.trustlist
 
-import com.squareup.moshi.JsonClass
-
-@JsonClass(generateAdapter = true)
-data class ActiveSignerCertificates(
-	val activeKeyIds: List<String>,
-	val validDuration: Long
+internal data class TrustList(
+	val signatures: Jwks,
+	val revokedCertificates: RevokedCertificates,
+	val ruleSet: RuleSet
 )

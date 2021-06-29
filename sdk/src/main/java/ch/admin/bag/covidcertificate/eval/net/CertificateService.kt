@@ -10,14 +10,14 @@
 
 package ch.admin.bag.covidcertificate.eval.net
 
-import ch.admin.bag.covidcertificate.eval.models.ActiveSignerCertificates
-import ch.admin.bag.covidcertificate.eval.models.Jwks
+import ch.admin.bag.covidcertificate.eval.models.trustlist.ActiveSignerCertificates
+import ch.admin.bag.covidcertificate.eval.models.trustlist.Jwks
 import retrofit2.Response
 import retrofit2.http.GET
 import retrofit2.http.Headers
 import retrofit2.http.Query
 
-interface CertificateService {
+internal interface CertificateService {
 
 	@Headers("Accept: application/json+jws")
 	@GET("keys/list")

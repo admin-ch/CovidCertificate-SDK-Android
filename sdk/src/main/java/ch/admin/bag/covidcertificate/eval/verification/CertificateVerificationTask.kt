@@ -15,7 +15,7 @@ import ch.admin.bag.covidcertificate.eval.data.ErrorCodes
 import ch.admin.bag.covidcertificate.eval.data.state.Error
 import ch.admin.bag.covidcertificate.eval.data.state.VerificationState
 import ch.admin.bag.covidcertificate.eval.models.DccHolder
-import ch.admin.bag.covidcertificate.eval.models.TrustList
+import ch.admin.bag.covidcertificate.eval.models.trustlist.TrustList
 import ch.admin.bag.covidcertificate.eval.utils.NetworkUtil
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow

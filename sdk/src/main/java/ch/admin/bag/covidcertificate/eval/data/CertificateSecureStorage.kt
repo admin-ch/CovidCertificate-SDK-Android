@@ -12,9 +12,9 @@ package ch.admin.bag.covidcertificate.eval.data
 
 import android.content.Context
 import ch.admin.bag.covidcertificate.eval.data.moshi.RawJsonStringAdapter
-import ch.admin.bag.covidcertificate.eval.models.Jwks
-import ch.admin.bag.covidcertificate.eval.models.RevokedCertificates
-import ch.admin.bag.covidcertificate.eval.models.RuleSet
+import ch.admin.bag.covidcertificate.eval.models.trustlist.Jwks
+import ch.admin.bag.covidcertificate.eval.models.trustlist.RevokedCertificates
+import ch.admin.bag.covidcertificate.eval.models.trustlist.RuleSet
 import ch.admin.bag.covidcertificate.eval.utils.EncryptedSharedPreferencesUtil
 import ch.admin.bag.covidcertificate.eval.utils.SingletonHolder
 import com.squareup.moshi.Moshi

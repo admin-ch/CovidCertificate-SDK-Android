@@ -11,7 +11,7 @@ import java.security.Key
 import java.security.cert.CertificateFactory
 import java.security.cert.X509Certificate
 
-class JwsKeyResolver(
+internal class JwsKeyResolver(
 	private val rootCA: X509Certificate,
 	private val expectedCommonName: String,
 ) : SigningKeyResolverAdapter() {

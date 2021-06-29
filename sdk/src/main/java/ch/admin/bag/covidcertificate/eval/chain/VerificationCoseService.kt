@@ -8,8 +8,7 @@ import COSE.MessageTag
 import COSE.OneKey
 import COSE.Sign1Message
 import android.os.Build
-import ch.admin.bag.covidcertificate.eval.models.CertType
-import ch.admin.bag.covidcertificate.eval.models.Jwk
+import ch.admin.bag.covidcertificate.eval.models.trustlist.Jwk
 import org.bouncycastle.jce.provider.BouncyCastleProvider
 import java.security.Security
 

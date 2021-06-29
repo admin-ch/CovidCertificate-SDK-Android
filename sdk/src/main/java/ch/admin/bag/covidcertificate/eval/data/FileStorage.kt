@@ -17,7 +17,9 @@ import java.util.concurrent.locks.ReentrantReadWriteLock
 
 internal class FileStorage(private val path: String) {
 
-	private val TAG = FileStorage::class.java.simpleName
+	companion object {
+		private val TAG = FileStorage::class.java.simpleName
+	}
 
 	private val rwl = ReentrantReadWriteLock()
 

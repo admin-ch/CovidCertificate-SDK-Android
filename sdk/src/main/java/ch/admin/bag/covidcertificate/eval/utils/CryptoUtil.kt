@@ -28,7 +28,7 @@ fun String.fromBase64ToString(): String = String(bytes = this.fromBase64())
 fun String.fromBase64NoPaddingToString(): String = String(bytes = this.fromBase64NoPadding())
 
 
-object CryptoUtil {
+internal object CryptoUtil {
 
 	private var ecParameterSpec: ECParameterSpec? = null
 		get() {

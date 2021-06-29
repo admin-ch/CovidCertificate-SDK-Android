@@ -94,11 +94,6 @@ object CovidCertificateSdk {
 		return certificateVerificationController
 	}
 
-	fun getProductMetadataController(): ProductMetadataController {
-		requireInitialized()
-		return productMetadataController
-	}
-
 	fun getRootCa(context: Context): X509Certificate {
 		val certificateFactory = CertificateFactory.getInstance(ROOT_CA_TYPE)
 		val inputStream = context.assets.open(ASSET_PATH_ROOT_CA)

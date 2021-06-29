@@ -8,19 +8,12 @@
  * SPDX-License-Identifier: MPL-2.0
  */
 
-package ch.admin.bag.covidcertificate.eval.models
+package ch.admin.bag.covidcertificate.eval.models.trustlist
 
 import com.squareup.moshi.JsonClass
-import kotlinx.serialization.Serializable
 
-/**
- * Unique Vaccination Certificate Identifier UVCI
- *
- * See https://ec.europa.eu/health/sites/default/files/ehealth/docs/vaccination-proof_interoperability-guidelines_en.pdf#page=11
- */
-@Serializable
 @JsonClass(generateAdapter = true)
-data class RevokedCertificates(
-	val revokedCerts: List<String> = emptyList(),
+internal data class ActiveSignerCertificates(
+	val activeKeyIds: List<String>,
 	val validDuration: Long
 )

@@ -11,7 +11,7 @@
 package ch.admin.bag.covidcertificate.eval.chain
 
 import ch.admin.bag.covidcertificate.eval.models.healthcert.eu.Eudgc
-import ch.admin.bag.covidcertificate.eval.models.RevokedCertificates
+import ch.admin.bag.covidcertificate.eval.models.trustlist.RevokedCertificates
 
 internal class RevokedHealthCertService(private val revokedList: RevokedCertificates) {
 

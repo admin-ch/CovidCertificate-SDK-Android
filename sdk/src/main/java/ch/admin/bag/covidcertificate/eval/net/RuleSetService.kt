@@ -10,12 +10,12 @@
 
 package ch.admin.bag.covidcertificate.eval.net
 
-import ch.admin.bag.covidcertificate.eval.models.RuleSet
+import ch.admin.bag.covidcertificate.eval.models.trustlist.RuleSet
 import retrofit2.Response
 import retrofit2.http.GET
 import retrofit2.http.Headers
 
-interface RuleSetService {
+internal interface RuleSetService {
 
 	@Headers("Accept: application/json+jws")
 	@GET("verificationRules")

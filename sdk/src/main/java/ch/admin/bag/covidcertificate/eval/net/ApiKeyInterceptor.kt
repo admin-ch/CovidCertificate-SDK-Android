@@ -14,7 +14,7 @@ import ch.admin.bag.covidcertificate.eval.data.Config
 import okhttp3.Interceptor
 import okhttp3.Response
 
-class ApiKeyInterceptor : Interceptor {
+internal class ApiKeyInterceptor : Interceptor {
 
 	companion object {
 		private const val HEADER_AUTHORIZATION = "Authorization"

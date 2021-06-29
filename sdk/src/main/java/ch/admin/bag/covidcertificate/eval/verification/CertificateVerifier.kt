@@ -23,10 +23,10 @@ import ch.admin.bag.covidcertificate.eval.data.state.CheckSignatureState
 import ch.admin.bag.covidcertificate.eval.data.state.Error
 import ch.admin.bag.covidcertificate.eval.data.state.VerificationState
 import ch.admin.bag.covidcertificate.eval.models.DccHolder
-import ch.admin.bag.covidcertificate.eval.models.Jwks
-import ch.admin.bag.covidcertificate.eval.models.RevokedCertificates
-import ch.admin.bag.covidcertificate.eval.models.RuleSet
-import ch.admin.bag.covidcertificate.eval.models.TrustList
+import ch.admin.bag.covidcertificate.eval.models.trustlist.Jwks
+import ch.admin.bag.covidcertificate.eval.models.trustlist.RevokedCertificates
+import ch.admin.bag.covidcertificate.eval.models.trustlist.RuleSet
+import ch.admin.bag.covidcertificate.eval.models.trustlist.TrustList
 import ch.admin.bag.covidcertificate.eval.nationalrules.NationalRulesVerifier
 import ch.admin.bag.covidcertificate.eval.nationalrules.ValidityRange
 import kotlinx.coroutines.Dispatchers

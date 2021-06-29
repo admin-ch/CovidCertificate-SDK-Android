@@ -11,7 +11,7 @@
 package ch.admin.bag.covidcertificate.eval.utils
 
 import ch.admin.bag.covidcertificate.eval.models.healthcert.eu.TestEntry
-import ch.admin.bag.covidcertificate.eval.models.AcceptanceCriterias
+import ch.admin.bag.covidcertificate.eval.models.trustlist.AcceptanceCriterias
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter

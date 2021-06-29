@@ -11,7 +11,7 @@
 package ch.admin.bag.covidcertificate.eval.utils
 
 import ch.admin.bag.covidcertificate.eval.models.healthcert.eu.VaccinationEntry
-import ch.admin.bag.covidcertificate.eval.models.AcceptanceCriterias
+import ch.admin.bag.covidcertificate.eval.models.trustlist.AcceptanceCriterias
 import ch.admin.bag.covidcertificate.eval.products.Vaccine
 import java.time.LocalDate
 import java.time.LocalDateTime

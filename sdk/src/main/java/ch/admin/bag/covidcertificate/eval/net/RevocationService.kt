@@ -10,12 +10,12 @@
 
 package ch.admin.bag.covidcertificate.eval.net
 
-import ch.admin.bag.covidcertificate.eval.models.RevokedCertificates
+import ch.admin.bag.covidcertificate.eval.models.trustlist.RevokedCertificates
 import retrofit2.Response
 import retrofit2.http.GET
 import retrofit2.http.Headers
 
-interface RevocationService {
+internal interface RevocationService {
 
 	@Headers("Accept: application/json+jws")
 	@GET("revocationList")

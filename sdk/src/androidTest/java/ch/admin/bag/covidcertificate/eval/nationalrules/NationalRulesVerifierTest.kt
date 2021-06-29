@@ -17,7 +17,7 @@ import ch.admin.bag.covidcertificate.eval.TestDataGenerator
 import ch.admin.bag.covidcertificate.eval.data.AcceptedVaccineProvider
 import ch.admin.bag.covidcertificate.eval.data.moshi.RawJsonStringAdapter
 import ch.admin.bag.covidcertificate.eval.data.state.CheckNationalRulesState
-import ch.admin.bag.covidcertificate.eval.models.RuleSet
+import ch.admin.bag.covidcertificate.eval.models.trustlist.RuleSet
 import ch.admin.bag.covidcertificate.eval.utils.AcceptanceCriteriasConstants
 import ch.admin.bag.covidcertificate.eval.utils.TestType
 import ch.admin.bag.covidcertificate.eval.utils.isTargetDiseaseCorrect
