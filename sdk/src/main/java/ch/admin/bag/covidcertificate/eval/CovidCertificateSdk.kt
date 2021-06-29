@@ -17,6 +17,8 @@ import androidx.lifecycle.OnLifecycleEvent
 import androidx.lifecycle.coroutineScope
 import ch.admin.bag.covidcertificate.eval.data.CertificateSecureStorage
 import ch.admin.bag.covidcertificate.eval.data.MetadataStorage
+import ch.admin.bag.covidcertificate.eval.data.state.DecodeState
+import ch.admin.bag.covidcertificate.eval.decoder.CertificateDecoder
 import ch.admin.bag.covidcertificate.eval.metadata.ProductMetadataController
 import ch.admin.bag.covidcertificate.eval.nationalrules.NationalRulesVerifier
 import ch.admin.bag.covidcertificate.eval.net.CertificateService
@@ -81,6 +83,10 @@ object CovidCertificateSdk {
 
 		sdkLifecycleObserver?.unregister(lifecycle)
 		sdkLifecycleObserver = null
+	}
+
+	fun decode(qrCodeData: String): DecodeState {
+		return CertificateDecoder.decode(qrCodeData)
 	}
 
 	fun getCertificateVerificationController(): CertificateVerificationController {

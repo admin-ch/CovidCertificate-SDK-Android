@@ -20,7 +20,7 @@ import ch.admin.bag.covidcertificate.eval.chain.PrefixIdentifierService
 import ch.admin.bag.covidcertificate.eval.data.state.DecodeState
 import ch.admin.bag.covidcertificate.eval.data.state.Error
 
-object CertificateDecoder {
+internal object CertificateDecoder {
 
 	/**
 	 * Decodes the string from a QR code into a DCC.
