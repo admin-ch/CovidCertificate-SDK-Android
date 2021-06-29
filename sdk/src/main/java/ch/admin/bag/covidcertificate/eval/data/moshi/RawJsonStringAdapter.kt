@@ -25,12 +25,12 @@ import java.nio.charset.Charset
 
 @Retention(AnnotationRetention.RUNTIME)
 @JsonQualifier
-annotation class RawJsonString
+internal annotation class RawJsonString
 
 /**
  * A Moshi json adapter that parses a JSON object as a string.
  */
-class RawJsonStringAdapter {
+internal class RawJsonStringAdapter {
 
 	@ToJson
 	fun toJson(writer: JsonWriter, @RawJsonString value: String?) {
