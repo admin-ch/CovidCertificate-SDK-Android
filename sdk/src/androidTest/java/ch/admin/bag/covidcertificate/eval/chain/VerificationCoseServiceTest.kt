@@ -21,7 +21,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
-class VerificationCoseServiceTest {
+internal class VerificationCoseServiceTest {
 
 	@Test
 	fun decode_success() {
@@ -30,7 +30,7 @@ class VerificationCoseServiceTest {
 		val encoded = PrefixIdentifierService.decode(HC1_A)
 		val compressed = Base45Service.decode(encoded!!)
 		val cose = DecompressionService.decode(compressed!!)
-		val valid = VerificationCoseService.decode(bagKeys, cose!!, CertType.VACCINATION)
+		val valid = VerificationCoseService.decode(bagKeys, cose!!)
 
 		assertTrue(valid)
 	}
@@ -42,7 +42,7 @@ class VerificationCoseServiceTest {
 		val encoded = PrefixIdentifierService.decode(HC1_A)
 		val compressed = Base45Service.decode(encoded!!)
 		val cose = DecompressionService.decode(compressed!!)
-		val valid = VerificationCoseService.decode(invalidKeys, cose!!, CertType.VACCINATION)
+		val valid = VerificationCoseService.decode(invalidKeys, cose!!)
 
 		assertFalse(valid)
 	}
@@ -54,7 +54,7 @@ class VerificationCoseServiceTest {
 		val encoded = PrefixIdentifierService.decode(HC1_A)
 		val compressed = Base45Service.decode(encoded!!)
 		val cose = DecompressionService.decode(compressed!!)
-		val valid = VerificationCoseService.decode(invalidKeys, cose!!, CertType.VACCINATION)
+		val valid = VerificationCoseService.decode(invalidKeys, cose!!)
 
 		assertFalse(valid)
 	}

@@ -13,15 +13,14 @@
  */
 package ch.admin.bag.covidcertificate.eval.chain
 
-import ch.admin.bag.covidcertificate.eval.models.healthcert.eu.Eudgc
 import ch.admin.bag.covidcertificate.eval.models.DccHolder
+import ch.admin.bag.covidcertificate.eval.models.healthcert.eu.Eudgc
 import com.squareup.moshi.JsonAdapter
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.adapters.Rfc3339DateJsonAdapter
 import com.upokecenter.cbor.CBORObject
 import java.time.Instant
 import java.util.*
-
 
 internal object CborService {
 
@@ -36,11 +35,11 @@ internal object CborService {
 		try {
 			val map = CBORObject.DecodeFromBytes(input)
 
-			val expirationTime: Instant? = map[CwtHeaderKeys.EXPIRATION.AsCBOR()]?.let { Instant.ofEpochSecond(it.AsInt64()) }
-			val issuedAt: Instant? = map[CwtHeaderKeys.ISSUED_AT.AsCBOR()]?.let { Instant.ofEpochSecond(it.AsInt64()) }
-			val issuer: String? = map[CwtHeaderKeys.ISSUER.AsCBOR()]?.AsString()
+			val expirationTime: Instant? = map[CwtHeaderKeys.EXPIRATION.asCBOR()]?.let { Instant.ofEpochSecond(it.AsInt64()) }
+			val issuedAt: Instant? = map[CwtHeaderKeys.ISSUED_AT.asCBOR()]?.let { Instant.ofEpochSecond(it.AsInt64()) }
+			val issuer: String? = map[CwtHeaderKeys.ISSUER.asCBOR()]?.AsString()
 
-			map[CwtHeaderKeys.HCERT.AsCBOR()]?.let { hcert ->
+			map[CwtHeaderKeys.HCERT.asCBOR()]?.let { hcert ->
 				hcert[keyEuDgcV1]?.let {
 					val eudgc = adapter.fromJson(it.ToJSONString()) ?: return null
 					return DccHolder(qrCodeData, eudgc, null, expirationTime, issuedAt, issuer)
@@ -50,12 +49,6 @@ internal object CborService {
 		} catch (e: Throwable) {
 			return null
 		}
-	}
-
-	private fun getContents(it: CBORObject) = try {
-		it.GetByteString()
-	} catch (e: Throwable) {
-		it.EncodeToBytes()
 	}
 
 }

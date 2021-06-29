@@ -14,14 +14,9 @@ import ch.admin.bag.covidcertificate.eval.data.ErrorCodes
 import ch.admin.bag.covidcertificate.eval.models.DccHolder
 import java.time.Instant
 
-
 internal object TimestampService {
-	private val TAG = TimestampService::class.java.simpleName
 
-	fun decode(
-		dccHolder: DccHolder,
-		now: Instant = Instant.now()
-	): String? {
+	fun decode(dccHolder: DccHolder, now: Instant = Instant.now()): String? {
 		dccHolder.expirationTime?.also { et ->
 			if (et.isBefore(now)) {
 				return ErrorCodes.SIGNATURE_TIMESTAMP_EXPIRED

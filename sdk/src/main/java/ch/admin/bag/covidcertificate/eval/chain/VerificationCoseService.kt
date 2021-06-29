@@ -14,7 +14,6 @@ import org.bouncycastle.jce.provider.BouncyCastleProvider
 import java.security.Security
 
 internal object VerificationCoseService {
-	private val TAG = VerificationCoseService::class.java.simpleName
 
 	init {
 		if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N) {
@@ -24,12 +23,7 @@ internal object VerificationCoseService {
 		}
 	}
 
-	fun decode(
-		keys: List<Jwk>,
-		input: ByteArray,
-		type: CertType
-	): Boolean {
-
+	fun decode(keys: List<Jwk>, input: ByteArray): Boolean {
 		val signature: Sign1Message = try {
 			(Sign1Message.DecodeFromBytes(input, MessageTag.Sign1) as Sign1Message)
 		} catch (e: Throwable) {

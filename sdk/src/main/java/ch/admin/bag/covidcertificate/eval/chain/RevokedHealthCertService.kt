@@ -13,8 +13,7 @@ package ch.admin.bag.covidcertificate.eval.chain
 import ch.admin.bag.covidcertificate.eval.models.healthcert.eu.Eudgc
 import ch.admin.bag.covidcertificate.eval.models.RevokedCertificates
 
-class RevokedHealthCertService(private val revokedList: RevokedCertificates) {
-	private val TAG = RevokedHealthCertService::class.java.simpleName
+internal class RevokedHealthCertService(private val revokedList: RevokedCertificates) {
 
 	/**
 	 * Returns true if at least one of the test, vaccination or recovery entries in the certificate is revoked.
@@ -27,17 +26,18 @@ class RevokedHealthCertService(private val revokedList: RevokedCertificates) {
 	 */
 	fun isRevoked(dgc: Eudgc): Boolean {
 		for (entry in revokedList.revokedCerts) {
-
 			if (!dgc.tests.isNullOrEmpty()) {
 				for (test in dgc.tests) {
 					if (entry == test.certificateIdentifier) return true
 				}
 			}
+
 			if (!dgc.vaccinations.isNullOrEmpty()) {
 				for (vaccination in dgc.vaccinations) {
 					if (entry == vaccination.certificateIdentifier) return true
 				}
 			}
+
 			if (!dgc.pastInfections.isNullOrEmpty()) {
 				for (recovery in dgc.pastInfections) {
 					if (entry == recovery.certificateIdentifier) return true

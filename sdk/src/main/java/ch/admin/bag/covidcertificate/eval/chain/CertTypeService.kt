@@ -10,33 +10,31 @@
 
 package ch.admin.bag.covidcertificate.eval.chain
 
-import ch.admin.bag.covidcertificate.eval.models.healthcert.eu.Eudgc
 import ch.admin.bag.covidcertificate.eval.models.CertType
-
+import ch.admin.bag.covidcertificate.eval.models.healthcert.eu.Eudgc
 
 internal object CertTypeService {
-	private val TAG = CertTypeService::class.java.simpleName
 
-	fun decode(
-		dcc: Eudgc
-	): CertType? {
+	fun decode(dcc: Eudgc): CertType? {
 		// Certificate must not have two types => if it has more then it is invalid
 		var type: CertType? = null
 		var numContainedContent = 0
 
-		dcc.tests?.filterNotNull()?.size?.also { numTests ->
+		dcc.tests?.size?.also { numTests ->
 			if (numTests > 0) {
 				numContainedContent += numTests
 				type = CertType.TEST
 			}
 		}
-		dcc.pastInfections?.filterNotNull()?.size?.also { numRecoveries ->
+
+		dcc.pastInfections?.size?.also { numRecoveries ->
 			if (numRecoveries > 0) {
 				numContainedContent += numRecoveries
 				type = CertType.RECOVERY
 			}
 		}
-		dcc.vaccinations?.filterNotNull()?.size?.also { numVaccinations ->
+
+		dcc.vaccinations?.size?.also { numVaccinations ->
 			if (numVaccinations > 0) {
 				numContainedContent += numVaccinations
 				type = CertType.VACCINATION

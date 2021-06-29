@@ -112,7 +112,7 @@ internal class CertificateVerifier(private val nationalRulesVerifier: NationalRu
 			val cose = DecompressionService.decode(compressed)
 				?: return@withContext CheckSignatureState.INVALID(ErrorCodes.DECODE_Z_LIB)
 
-			val valid = VerificationCoseService.decode(signatures.certs, cose, type)
+			val valid = VerificationCoseService.decode(signatures.certs, cose)
 			if (valid) {
 				CheckSignatureState.SUCCESS
 			} else {

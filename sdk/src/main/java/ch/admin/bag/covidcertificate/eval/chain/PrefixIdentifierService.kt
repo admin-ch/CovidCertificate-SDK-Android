@@ -13,10 +13,9 @@
  */
 package ch.admin.bag.covidcertificate.eval.chain
 
-
-private const val PREFIX = "HC1:"
-
 internal object PrefixIdentifierService {
+
+	private const val PREFIX = "HC1:"
 
 	fun decode(input: String): String? = when {
 		// Spec: https://ec.europa.eu/health/sites/default/files/ehealth/docs/digital-green-certificates_v1_en.pdf#page=7
