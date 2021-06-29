@@ -13,7 +13,7 @@
  */
 package ch.admin.bag.covidcertificate.eval.chain
 
-import ch.admin.bag.covidcertificate.eval.euhealthcert.Eudgc
+import ch.admin.bag.covidcertificate.eval.models.healthcert.eu.Eudgc
 import ch.admin.bag.covidcertificate.eval.models.DccHolder
 import com.squareup.moshi.JsonAdapter
 import com.squareup.moshi.Moshi
@@ -43,7 +43,7 @@ internal object CborService {
 			map[CwtHeaderKeys.HCERT.AsCBOR()]?.let { hcert ->
 				hcert[keyEuDgcV1]?.let {
 					val eudgc = adapter.fromJson(it.ToJSONString()) ?: return null
-					return DccHolder(eudgc, qrCodeData, expirationTime, issuedAt, issuer)
+					return DccHolder(qrCodeData, eudgc, null, expirationTime, issuedAt, issuer)
 				}
 			}
 			return null

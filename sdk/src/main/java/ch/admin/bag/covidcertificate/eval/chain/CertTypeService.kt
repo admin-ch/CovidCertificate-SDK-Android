@@ -10,7 +10,7 @@
 
 package ch.admin.bag.covidcertificate.eval.chain
 
-import ch.admin.bag.covidcertificate.eval.euhealthcert.Eudgc
+import ch.admin.bag.covidcertificate.eval.models.healthcert.eu.Eudgc
 import ch.admin.bag.covidcertificate.eval.models.CertType
 
 

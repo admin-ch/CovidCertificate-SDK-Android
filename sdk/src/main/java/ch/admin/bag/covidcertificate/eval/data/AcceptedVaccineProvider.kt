@@ -11,7 +11,7 @@
 package ch.admin.bag.covidcertificate.eval.data
 
 import android.content.Context
-import ch.admin.bag.covidcertificate.eval.euhealthcert.VaccinationEntry
+import ch.admin.bag.covidcertificate.eval.models.healthcert.eu.VaccinationEntry
 import ch.admin.bag.covidcertificate.eval.products.AcceptedVaccine
 import ch.admin.bag.covidcertificate.eval.products.Vaccine
 import ch.admin.bag.covidcertificate.eval.utils.SingletonHolder

@@ -8,7 +8,7 @@
  * SPDX-License-Identifier: MPL-2.0
  */
 
-package ch.admin.bag.covidcertificate.eval.euhealthcert
+package ch.admin.bag.covidcertificate.eval.models.healthcert
 
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass

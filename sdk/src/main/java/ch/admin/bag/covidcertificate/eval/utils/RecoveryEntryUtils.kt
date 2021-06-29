@@ -10,7 +10,7 @@
 
 package ch.admin.bag.covidcertificate.eval.utils
 
-import ch.admin.bag.covidcertificate.eval.euhealthcert.RecoveryEntry
+import ch.admin.bag.covidcertificate.eval.models.healthcert.eu.RecoveryEntry
 import ch.admin.bag.covidcertificate.eval.models.AcceptanceCriterias
 import java.time.LocalDate
 import java.time.LocalDateTime

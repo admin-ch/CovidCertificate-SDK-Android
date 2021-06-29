@@ -13,7 +13,7 @@ package ch.admin.bag.covidcertificate.eval.nationalrules
 import android.content.Context
 import ch.admin.bag.covidcertificate.eval.data.AcceptedVaccineProvider
 import ch.admin.bag.covidcertificate.eval.data.state.CheckNationalRulesState
-import ch.admin.bag.covidcertificate.eval.euhealthcert.Eudgc
+import ch.admin.bag.covidcertificate.eval.models.healthcert.eu.Eudgc
 import ch.admin.bag.covidcertificate.eval.models.*
 import ch.admin.bag.covidcertificate.eval.nationalrules.certlogic.evaluate
 import ch.admin.bag.covidcertificate.eval.nationalrules.certlogic.isTruthy

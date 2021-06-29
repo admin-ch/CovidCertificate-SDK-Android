@@ -11,9 +11,9 @@
 package ch.admin.bag.covidcertificate.eval.models
 
 import ch.admin.bag.covidcertificate.eval.data.moshi.RawJsonString
-import ch.admin.bag.covidcertificate.eval.euhealthcert.RecoveryEntry
-import ch.admin.bag.covidcertificate.eval.euhealthcert.TestEntry
-import ch.admin.bag.covidcertificate.eval.euhealthcert.VaccinationEntry
+import ch.admin.bag.covidcertificate.eval.models.healthcert.eu.RecoveryEntry
+import ch.admin.bag.covidcertificate.eval.models.healthcert.eu.TestEntry
+import ch.admin.bag.covidcertificate.eval.models.healthcert.eu.VaccinationEntry
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
