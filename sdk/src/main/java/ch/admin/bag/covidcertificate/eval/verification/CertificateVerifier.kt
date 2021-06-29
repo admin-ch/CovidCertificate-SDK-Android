@@ -10,12 +10,12 @@
 
 package ch.admin.bag.covidcertificate.eval.verification
 
-import ch.admin.bag.covidcertificate.eval.chain.Base45Service
-import ch.admin.bag.covidcertificate.eval.chain.DecompressionService
-import ch.admin.bag.covidcertificate.eval.chain.PrefixIdentifierService
-import ch.admin.bag.covidcertificate.eval.chain.RevokedHealthCertService
-import ch.admin.bag.covidcertificate.eval.chain.TimestampService
-import ch.admin.bag.covidcertificate.eval.chain.VerificationCoseService
+import ch.admin.bag.covidcertificate.eval.decoder.chain.Base45Service
+import ch.admin.bag.covidcertificate.eval.decoder.chain.DecompressionService
+import ch.admin.bag.covidcertificate.eval.decoder.chain.PrefixIdentifierService
+import ch.admin.bag.covidcertificate.eval.decoder.chain.RevokedHealthCertService
+import ch.admin.bag.covidcertificate.eval.decoder.chain.TimestampService
+import ch.admin.bag.covidcertificate.eval.decoder.chain.VerificationCoseService
 import ch.admin.bag.covidcertificate.eval.data.ErrorCodes
 import ch.admin.bag.covidcertificate.eval.data.state.CheckNationalRulesState
 import ch.admin.bag.covidcertificate.eval.data.state.CheckRevocationState

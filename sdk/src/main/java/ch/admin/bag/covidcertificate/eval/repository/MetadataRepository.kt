@@ -11,7 +11,7 @@
 package ch.admin.bag.covidcertificate.eval.repository
 
 import ch.admin.bag.covidcertificate.eval.data.MetadataStorage
-import ch.admin.bag.covidcertificate.eval.net.MetadataService
+import ch.admin.bag.covidcertificate.eval.net.service.MetadataService
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 

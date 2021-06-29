@@ -21,11 +21,11 @@ import ch.admin.bag.covidcertificate.eval.data.state.DecodeState
 import ch.admin.bag.covidcertificate.eval.decoder.CertificateDecoder
 import ch.admin.bag.covidcertificate.eval.metadata.ProductMetadataController
 import ch.admin.bag.covidcertificate.eval.nationalrules.NationalRulesVerifier
-import ch.admin.bag.covidcertificate.eval.net.CertificateService
-import ch.admin.bag.covidcertificate.eval.net.MetadataService
+import ch.admin.bag.covidcertificate.eval.net.service.CertificateService
+import ch.admin.bag.covidcertificate.eval.net.service.MetadataService
 import ch.admin.bag.covidcertificate.eval.net.RetrofitFactory
-import ch.admin.bag.covidcertificate.eval.net.RevocationService
-import ch.admin.bag.covidcertificate.eval.net.RuleSetService
+import ch.admin.bag.covidcertificate.eval.net.service.RevocationService
+import ch.admin.bag.covidcertificate.eval.net.service.RuleSetService
 import ch.admin.bag.covidcertificate.eval.repository.MetadataRepository
 import ch.admin.bag.covidcertificate.eval.repository.TrustListRepository
 import ch.admin.bag.covidcertificate.eval.verification.CertificateVerificationController

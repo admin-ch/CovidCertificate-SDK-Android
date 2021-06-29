@@ -13,7 +13,7 @@ package ch.admin.bag.covidcertificate.eval.models.trustlist
 import android.util.Log
 import ch.admin.bag.covidcertificate.eval.models.CertType
 import ch.admin.bag.covidcertificate.eval.utils.CryptoUtil
-import ch.admin.bag.covidcertificate.eval.utils.fromBase64
+import ch.admin.bag.covidcertificate.eval.extensions.fromBase64
 import com.squareup.moshi.JsonClass
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable

@@ -11,12 +11,12 @@
 package ch.admin.bag.covidcertificate.eval.decoder
 
 import ch.admin.bag.covidcertificate.eval.data.ErrorCodes
-import ch.admin.bag.covidcertificate.eval.chain.Base45Service
-import ch.admin.bag.covidcertificate.eval.chain.CborService
-import ch.admin.bag.covidcertificate.eval.chain.CertTypeService
-import ch.admin.bag.covidcertificate.eval.chain.DecompressionService
-import ch.admin.bag.covidcertificate.eval.chain.NoopVerificationCoseService
-import ch.admin.bag.covidcertificate.eval.chain.PrefixIdentifierService
+import ch.admin.bag.covidcertificate.eval.decoder.chain.Base45Service
+import ch.admin.bag.covidcertificate.eval.decoder.chain.CborService
+import ch.admin.bag.covidcertificate.eval.decoder.chain.CertTypeService
+import ch.admin.bag.covidcertificate.eval.decoder.chain.DecompressionService
+import ch.admin.bag.covidcertificate.eval.decoder.chain.NoopVerificationCoseService
+import ch.admin.bag.covidcertificate.eval.decoder.chain.PrefixIdentifierService
 import ch.admin.bag.covidcertificate.eval.data.state.DecodeState
 import ch.admin.bag.covidcertificate.eval.data.state.Error
 

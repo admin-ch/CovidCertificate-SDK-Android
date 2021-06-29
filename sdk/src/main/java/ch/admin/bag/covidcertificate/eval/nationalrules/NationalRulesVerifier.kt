@@ -22,8 +22,8 @@ import ch.admin.bag.covidcertificate.eval.models.trustlist.Rule
 import ch.admin.bag.covidcertificate.eval.models.trustlist.RuleSet
 import ch.admin.bag.covidcertificate.eval.nationalrules.certlogic.evaluate
 import ch.admin.bag.covidcertificate.eval.nationalrules.certlogic.isTruthy
-import ch.admin.bag.covidcertificate.eval.utils.validFromDate
-import ch.admin.bag.covidcertificate.eval.utils.validUntilDate
+import ch.admin.bag.covidcertificate.eval.extensions.validFromDate
+import ch.admin.bag.covidcertificate.eval.extensions.validUntilDate
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import java.time.Clock
