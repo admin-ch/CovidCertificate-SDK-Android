@@ -21,16 +21,18 @@ import ch.admin.bag.covidcertificate.eval.data.state.DecodeState
 import ch.admin.bag.covidcertificate.eval.decoder.CertificateDecoder
 import ch.admin.bag.covidcertificate.eval.metadata.ProductMetadataController
 import ch.admin.bag.covidcertificate.eval.nationalrules.NationalRulesVerifier
+import ch.admin.bag.covidcertificate.eval.net.RetrofitFactory
 import ch.admin.bag.covidcertificate.eval.net.service.CertificateService
 import ch.admin.bag.covidcertificate.eval.net.service.MetadataService
-import ch.admin.bag.covidcertificate.eval.net.RetrofitFactory
 import ch.admin.bag.covidcertificate.eval.net.service.RevocationService
 import ch.admin.bag.covidcertificate.eval.net.service.RuleSetService
 import ch.admin.bag.covidcertificate.eval.repository.MetadataRepository
 import ch.admin.bag.covidcertificate.eval.repository.TrustListRepository
 import ch.admin.bag.covidcertificate.eval.verification.CertificateVerificationController
+import ch.admin.bag.covidcertificate.eval.verification.CertificateVerificationTask
 import ch.admin.bag.covidcertificate.eval.verification.CertificateVerifier
 import ch.admin.bag.covidcertificate.verifier.eval.BuildConfig
+import kotlinx.coroutines.CoroutineScope
 import java.security.cert.CertificateFactory
 import java.security.cert.X509Certificate
 import java.util.*
@@ -85,13 +87,18 @@ object CovidCertificateSdk {
 		sdkLifecycleObserver = null
 	}
 
+	fun refreshTrustList(coroutineScope: CoroutineScope, onCompletionCallback: () -> Unit = {}, onErrorCallback: () -> Unit = {}) {
+		requireInitialized()
+		certificateVerificationController.refreshTrustList(coroutineScope, onCompletionCallback, onErrorCallback)
+	}
+
 	fun decode(qrCodeData: String): DecodeState {
 		return CertificateDecoder.decode(qrCodeData)
 	}
 
-	fun getCertificateVerificationController(): CertificateVerificationController {
+	fun verify(task: CertificateVerificationTask, coroutineScope: CoroutineScope) {
 		requireInitialized()
-		return certificateVerificationController
+		certificateVerificationController.enqueue(task, coroutineScope)
 	}
 
 	fun getRootCa(context: Context): X509Certificate {
