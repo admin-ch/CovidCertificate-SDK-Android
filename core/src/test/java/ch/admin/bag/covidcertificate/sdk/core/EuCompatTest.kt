@@ -35,13 +35,13 @@ import java.util.stream.Stream
 
 @JsonClass(generateAdapter = true)
 data class EuTestCase(
-	val JSON: Eudgc,
-	val CBOR: String, // hex encoded
-	val COSE: String, // hex encoded
-	val COMPRESSED: String, // hex encoded
-	val BASE45: String, // base45 encoded compressed COSE
+	val JSON: Eudgc?,
+	val CBOR: String?, // hex encoded
+	val COSE: String?, // hex encoded
+	val COMPRESSED: String?, // hex encoded
+	val BASE45: String?, // base45 encoded compressed COSE
 	val PREFIX: String, // base45 encoded compressed COSE with prefix HC:x
-	val `2DCODE`: String, // base64 encoded PNG
+	val `2DCODE`: String?, // base64 encoded PNG
 	val TESTCTX: EuTestContext,
 	val EXPECTEDRESULTS: EuTestExpectedResult,
 	val filePath: String? = null,
@@ -53,7 +53,7 @@ data class EuTestContext(
 	val SCHEMA: String,
 	val CERTIFICATE: String, // base64
 	val VALIDATIONCLOCK: String, // ISO-8601 timestamp
-	val DESCRIPTION: String,
+	val DESCRIPTION: String?,
 	val `GATEWAY-ENV`: List<String>?,
 )
 
@@ -74,29 +74,19 @@ data class EuTestExpectedResult(
 )
 
 class EuTestDataProvider : ArgumentsProvider {
-	private val testDataDirectory = this::class.java.classLoader.getResource("dgc-testdata")!!
+	private val testDataDirectory = File(this::class.java.classLoader.getResource("dgc-testdata")!!.path)
 
 	override fun provideArguments(context: ExtensionContext?): Stream<out Arguments> {
-		// Traverse the assets directory to find all input file paths
-		val accumulatedPaths = mutableListOf<String>()
-		findAllJsons(File(testDataDirectory.path), accumulatedPaths)
-
-		return accumulatedPaths.stream().map(Arguments::of)
-	}
-
-	// Helper to traverse the assets directory
-	private fun findAllJsons(directory: File, accumulatedPaths: MutableList<String>) {
-		directory.walk().forEach { file ->
-			val path = file.path
-
-			if (directory.path != path) {
-				if (path.endsWith("json")) {
-					accumulatedPaths.add(path)
-				} else {
-					findAllJsons(file, accumulatedPaths)
-				}
+		// Get all EU test case json files in the test data directory
+		val testCaseJsonFiles = testDataDirectory.walk().mapNotNull { file ->
+			if (file.path.endsWith("json")) {
+				file.path
+			} else {
+				null
 			}
-		}
+		}.toSet()
+
+		return testCaseJsonFiles.stream().map(Arguments::of)
 	}
 }
 
@@ -111,7 +101,7 @@ class EuTestCaseConverter : ArgumentConverter {
 			val testCase = adapter.fromJson(content) ?: throw ArgumentConversionException("Could not parse json for $path")
 			return testCase.copy(filePath = path)
 		} catch (t: Throwable) {
-			throw ArgumentConversionException("Could not parse json for $path")
+			throw ArgumentConversionException("Could not parse json for $path", t)
 		}
 	}
 }
@@ -123,33 +113,33 @@ class EuCompatTest {
 	fun testCanDecodePrefix(@ConvertWith(EuTestCaseConverter::class) testCase: EuTestCase) {
 		val decodeState =  CertificateDecoder.decode(testCase.PREFIX)
 
-		if (testCase.EXPECTEDRESULTS.EXPECTEDUNPREFIX == false) {
-			assertTrue(
-				decodeState is DecodeState.ERROR && decodeState.error.code == ErrorCodes.DECODE_PREFIX,
-				"${testCase.filePath} (${testCase.TESTCTX.DESCRIPTION}) failed test EXPECTEDUNPREFIX with decodeState=$decodeState"
-			)
-		}
-
-		if (testCase.EXPECTEDRESULTS.EXPECTEDB45DECODE == false) {
-			assertTrue(
-				decodeState is DecodeState.ERROR && decodeState.error.code == ErrorCodes.DECODE_BASE_45,
-				"${testCase.filePath} (${testCase.TESTCTX.DESCRIPTION}) failed test EXPECTEDB45DECODE with decodeState=$decodeState"
-			)
-		}
-
-		if (testCase.EXPECTEDRESULTS.EXPECTEDCOMPRESSION == false) {
-			assertTrue(
-				decodeState is DecodeState.ERROR && decodeState.error.code == ErrorCodes.DECODE_Z_LIB,
-				"${testCase.filePath} (${testCase.TESTCTX.DESCRIPTION}) failed test EXPECTEDCOMPRESSION with decodeState=$decodeState"
-			)
-		}
-
+		testCaseStep(testCase, "EXPECTEDUNPREFIX", testCase.EXPECTEDRESULTS.EXPECTEDUNPREFIX, decodeState, ErrorCodes.DECODE_PREFIX)
+		testCaseStep(testCase, "EXPECTEDB45DECODE", testCase.EXPECTEDRESULTS.EXPECTEDB45DECODE, decodeState, ErrorCodes.DECODE_BASE_45)
+		testCaseStep(testCase, "EXPECTEDCOMPRESSION", testCase.EXPECTEDRESULTS.EXPECTEDCOMPRESSION, decodeState, ErrorCodes.DECODE_Z_LIB)
 		// Skip checking EXPECTEDVERIFY (since this is a noop in our decode)
+		testCaseStep(testCase, "EXPECTEDDECODE", testCase.EXPECTEDRESULTS.EXPECTEDDECODE, decodeState, ErrorCodes.DECODE_CBOR)
+	}
 
-		if (testCase.EXPECTEDRESULTS.EXPECTEDDECODE == false) {
-			assertTrue(
-				decodeState is DecodeState.ERROR && decodeState.error.code == ErrorCodes.DECODE_CBOR,
-				"${testCase.filePath} (${testCase.TESTCTX.DESCRIPTION}) failed test EXPECTEDDECODE with decodeState=$decodeState"
+	private fun testCaseStep(
+		testCase: EuTestCase,
+		name: String,
+		expected: Boolean?,
+		decodeState: DecodeState,
+		errorCodeIfExpectedToFail: String
+	) {
+		when (expected) {
+			null -> {
+				// Skip test case step if the expected flag was not set
+			}
+			true -> assertTrue(
+				decodeState is DecodeState.SUCCESS
+						|| (decodeState is DecodeState.ERROR && decodeState.error.code != errorCodeIfExpectedToFail),
+				"${testCase.filePath} (${testCase.TESTCTX.DESCRIPTION}) failed test $name with decodeState=$decodeState"
+			)
+			false -> assertTrue(
+				decodeState is DecodeState.ERROR
+						&& decodeState.error.code == errorCodeIfExpectedToFail,
+				"${testCase.filePath} (${testCase.TESTCTX.DESCRIPTION}) failed test $name with decodeState=$decodeState"
 			)
 		}
 	}
