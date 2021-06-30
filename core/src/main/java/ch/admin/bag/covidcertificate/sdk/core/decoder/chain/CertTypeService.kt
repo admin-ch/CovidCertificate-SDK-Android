@@ -10,34 +10,39 @@
 
 package ch.admin.bag.covidcertificate.sdk.core.decoder.chain
 
-import ch.admin.bag.covidcertificate.sdk.core.models.healthcert.eu.Eudgc
 import ch.admin.bag.covidcertificate.sdk.core.models.healthcert.CertType
+import ch.admin.bag.covidcertificate.sdk.core.models.healthcert.DccHolder
 
 internal object CertTypeService {
 
-	fun decode(dcc: Eudgc): CertType? {
+	fun decode(dccHolder: DccHolder): CertType? {
 		// Certificate must not have two types => if it has more then it is invalid
 		var type: CertType? = null
 		var numContainedContent = 0
 
-		dcc.tests?.size?.also { numTests ->
-			if (numTests > 0) {
-				numContainedContent += numTests
-				type = CertType.TEST
+		if (dccHolder.isLightCertificate()) {
+			numContainedContent = 1
+			type = CertType.LIGHT
+		} else {
+			dccHolder.euDGC?.tests?.size?.also { numTests ->
+				if (numTests > 0) {
+					numContainedContent += numTests
+					type = CertType.TEST
+				}
 			}
-		}
 
-		dcc.pastInfections?.size?.also { numRecoveries ->
-			if (numRecoveries > 0) {
-				numContainedContent += numRecoveries
-				type = CertType.RECOVERY
+			dccHolder.euDGC?.pastInfections?.size?.also { numRecoveries ->
+				if (numRecoveries > 0) {
+					numContainedContent += numRecoveries
+					type = CertType.RECOVERY
+				}
 			}
-		}
 
-		dcc.vaccinations?.size?.also { numVaccinations ->
-			if (numVaccinations > 0) {
-				numContainedContent += numVaccinations
-				type = CertType.VACCINATION
+			dccHolder.euDGC?.vaccinations?.size?.also { numVaccinations ->
+				if (numVaccinations > 0) {
+					numContainedContent += numVaccinations
+					type = CertType.VACCINATION
+				}
 			}
 		}
 

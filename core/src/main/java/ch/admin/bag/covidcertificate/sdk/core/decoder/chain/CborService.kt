@@ -15,7 +15,7 @@ package ch.admin.bag.covidcertificate.sdk.core.decoder.chain
 
 import ch.admin.bag.covidcertificate.sdk.core.models.healthcert.eu.Eudgc
 import ch.admin.bag.covidcertificate.sdk.core.models.healthcert.DccHolder
-import com.squareup.moshi.JsonAdapter
+import ch.admin.bag.covidcertificate.sdk.core.models.healthcert.light.DccLight
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.adapters.Rfc3339DateJsonAdapter
 import com.upokecenter.cbor.CBORObject
@@ -29,8 +29,9 @@ internal object CborService {
 	// Takes qrCodeData to directly construct a Bagdgc AND keep the field in the DCC a val
 	fun decode(input: ByteArray, qrCodeData: String): DccHolder? {
 
-		val adapter: JsonAdapter<Eudgc> =
-			Moshi.Builder().add(Date::class.java, Rfc3339DateJsonAdapter()).build().adapter(Eudgc::class.java)
+		val moshi = Moshi.Builder().add(Date::class.java, Rfc3339DateJsonAdapter()).build()
+		val euDgcAdapter = moshi.adapter(Eudgc::class.java)
+		val dccLightAdapter = moshi.adapter(DccLight::class.java)
 
 		try {
 			val map = CBORObject.DecodeFromBytes(input)
@@ -39,13 +40,23 @@ internal object CborService {
 			val issuedAt: Instant? = map[CwtHeaderKeys.ISSUED_AT.asCBOR()]?.let { Instant.ofEpochSecond(it.AsInt64()) }
 			val issuer: String? = map[CwtHeaderKeys.ISSUER.asCBOR()]?.AsString()
 
-			map[CwtHeaderKeys.HCERT.asCBOR()]?.let { hcert ->
-				hcert[keyEuDgcV1]?.let {
-					val eudgc = adapter.fromJson(it.ToJSONString()) ?: return null
-					return DccHolder(qrCodeData, eudgc, null, expirationTime, issuedAt, issuer)
+			val hcert = map[CwtHeaderKeys.HCERT.asCBOR()]
+			val light = map[CwtHeaderKeys.LIGHT.asCBOR()]
+
+			when {
+				hcert != null -> {
+					hcert[keyEuDgcV1]?.let {
+						val eudgc = euDgcAdapter.fromJson(it.ToJSONString()) ?: return null
+						return DccHolder(qrCodeData, eudgc, null, expirationTime, issuedAt, issuer)
+					} ?: return null
 				}
+				light != null -> {
+					val dccLight = dccLightAdapter.fromJson(light.ToJSONString()) ?: return null
+					return DccHolder(qrCodeData, null, dccLight, expirationTime, issuedAt, issuer)
+				}
+				else -> return null
 			}
-			return null
+
 		} catch (e: Throwable) {
 			return null
 		}
