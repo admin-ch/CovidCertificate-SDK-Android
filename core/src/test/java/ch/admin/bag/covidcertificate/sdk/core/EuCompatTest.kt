@@ -74,28 +74,12 @@ data class EuTestExpectedResult(
 )
 
 class EuTestDataProvider : ArgumentsProvider {
-	private val moshi = Moshi.Builder().add(Date::class.java, Rfc3339DateJsonAdapter()).build()
-	private val adapter = moshi.adapter(EuTestCase::class.java)
 	private val testDataDirectory = this::class.java.classLoader.getResource("dgc-testdata")!!
 
 	override fun provideArguments(context: ExtensionContext?): Stream<out Arguments> {
 		// Traverse the assets directory to find all input file paths
 		val accumulatedPaths = mutableListOf<String>()
 		findAllJsons(File(testDataDirectory.path), accumulatedPaths)
-
-		// Read all files into data classes
-//		val testCases = mutableListOf<Pair<String, EuTestCase>>()
-//		accumulatedPaths.forEach { path ->
-//			try {
-//				val string = File(path).readText()
-//
-//				adapter.fromJson(string)?.let { testCase ->
-//					testCases.add(Pair(path, testCase))
-//				}
-//			} catch (e: Exception) {
-//				e.printStackTrace()
-//			}
-//		}
 
 		return accumulatedPaths.stream().map(Arguments::of)
 	}
