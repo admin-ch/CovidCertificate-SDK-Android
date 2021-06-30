@@ -10,6 +10,6 @@
   -->
 
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-	package="ch.admin.bag.covidcertificate.verifier.eval">
+	package="ch.admin.bag.covidcertificate.verifier.sdk.android">
 	<uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 </manifest>
