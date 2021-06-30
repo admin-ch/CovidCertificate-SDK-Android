@@ -10,23 +10,23 @@
 
 package ch.admin.bag.covidcertificate.eval.models
 
-import ch.admin.bag.covidcertificate.eval.products.ValueSet
+import ch.admin.bag.covidcertificate.eval.models.products.ValueSet
 import com.squareup.moshi.JsonClass
 
 @JsonClass(generateAdapter = true)
-data class ProductsMetadata(
+internal data class ProductsMetadata(
 	val test: TestProductsMetadata,
 	val vaccine: VaccineProductsMetadata
 )
 
 @JsonClass(generateAdapter = true)
-data class TestProductsMetadata(
+internal data class TestProductsMetadata(
 	val type: ValueSet,
 	val manf: ValueSet
 )
 
 @JsonClass(generateAdapter = true)
-data class VaccineProductsMetadata(
+internal data class VaccineProductsMetadata(
 	val mahManf: ValueSet,
 	val medicinalProduct: ValueSet,
 	val prophylaxis: ValueSet

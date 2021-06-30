@@ -11,16 +11,16 @@
 package ch.admin.bag.covidcertificate.eval.decoder
 
 import ch.admin.bag.covidcertificate.eval.data.ErrorCodes
-import ch.admin.bag.covidcertificate.eval.chain.Base45Service
-import ch.admin.bag.covidcertificate.eval.chain.CborService
-import ch.admin.bag.covidcertificate.eval.chain.CertTypeService
-import ch.admin.bag.covidcertificate.eval.chain.DecompressionService
-import ch.admin.bag.covidcertificate.eval.chain.NoopVerificationCoseService
-import ch.admin.bag.covidcertificate.eval.chain.PrefixIdentifierService
+import ch.admin.bag.covidcertificate.eval.decoder.chain.Base45Service
+import ch.admin.bag.covidcertificate.eval.decoder.chain.CborService
+import ch.admin.bag.covidcertificate.eval.decoder.chain.CertTypeService
+import ch.admin.bag.covidcertificate.eval.decoder.chain.DecompressionService
+import ch.admin.bag.covidcertificate.eval.decoder.chain.NoopVerificationCoseService
+import ch.admin.bag.covidcertificate.eval.decoder.chain.PrefixIdentifierService
 import ch.admin.bag.covidcertificate.eval.data.state.DecodeState
 import ch.admin.bag.covidcertificate.eval.data.state.Error
 
-object CertificateDecoder {
+internal object CertificateDecoder {
 
 	/**
 	 * Decodes the string from a QR code into a DCC.
@@ -41,7 +41,7 @@ object CertificateDecoder {
 
 		val bagdgc = CborService.decode(cbor, qrCodeData) ?: return DecodeState.ERROR(Error(ErrorCodes.DECODE_CBOR))
 
-		bagdgc.certType = CertTypeService.decode(bagdgc.euDGC)
+		bagdgc.certType = CertTypeService.decode(bagdgc.euDGC!!)
 
 		return DecodeState.SUCCESS(bagdgc)
 	}

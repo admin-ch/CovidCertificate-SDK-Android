@@ -17,7 +17,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import java.util.*
 
-class CertificateVerificationController internal constructor(
+internal class CertificateVerificationController internal constructor(
 	private val trustListRepository: TrustListRepository,
 	private val verifier: CertificateVerifier
 ) {

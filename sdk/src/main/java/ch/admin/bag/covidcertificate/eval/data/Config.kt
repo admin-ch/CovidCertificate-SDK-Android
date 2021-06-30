@@ -10,7 +10,7 @@
 
 package ch.admin.bag.covidcertificate.eval.data
 
-import ch.admin.bag.covidcertificate.eval.net.UserAgentInterceptor
+import ch.admin.bag.covidcertificate.eval.net.interceptor.UserAgentInterceptor
 
 object Config {
 	var appToken: String = ""

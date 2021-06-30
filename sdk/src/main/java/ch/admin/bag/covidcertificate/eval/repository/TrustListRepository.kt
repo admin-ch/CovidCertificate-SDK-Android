@@ -11,11 +11,11 @@
 package ch.admin.bag.covidcertificate.eval.repository
 
 import ch.admin.bag.covidcertificate.eval.data.TrustListStore
-import ch.admin.bag.covidcertificate.eval.models.Jwks
-import ch.admin.bag.covidcertificate.eval.models.TrustList
-import ch.admin.bag.covidcertificate.eval.net.CertificateService
-import ch.admin.bag.covidcertificate.eval.net.RevocationService
-import ch.admin.bag.covidcertificate.eval.net.RuleSetService
+import ch.admin.bag.covidcertificate.eval.models.trustlist.Jwks
+import ch.admin.bag.covidcertificate.eval.models.trustlist.TrustList
+import ch.admin.bag.covidcertificate.eval.net.service.CertificateService
+import ch.admin.bag.covidcertificate.eval.net.service.RevocationService
+import ch.admin.bag.covidcertificate.eval.net.service.RuleSetService
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch

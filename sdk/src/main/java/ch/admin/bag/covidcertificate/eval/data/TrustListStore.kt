@@ -10,11 +10,11 @@
 
 package ch.admin.bag.covidcertificate.eval.data
 
-import ch.admin.bag.covidcertificate.eval.models.Jwks
-import ch.admin.bag.covidcertificate.eval.models.RevokedCertificates
-import ch.admin.bag.covidcertificate.eval.models.RuleSet
+import ch.admin.bag.covidcertificate.eval.models.trustlist.Jwks
+import ch.admin.bag.covidcertificate.eval.models.trustlist.RevokedCertificates
+import ch.admin.bag.covidcertificate.eval.models.trustlist.RuleSet
 
-interface TrustListStore {
+internal interface TrustListStore {
 
 	var certificateSignaturesValidUntil: Long
 	var certificateSignatures: Jwks?

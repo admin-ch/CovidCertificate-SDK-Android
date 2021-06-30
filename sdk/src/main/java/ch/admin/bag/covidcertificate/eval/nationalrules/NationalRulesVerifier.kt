@@ -13,12 +13,17 @@ package ch.admin.bag.covidcertificate.eval.nationalrules
 import android.content.Context
 import ch.admin.bag.covidcertificate.eval.data.AcceptedVaccineProvider
 import ch.admin.bag.covidcertificate.eval.data.state.CheckNationalRulesState
-import ch.admin.bag.covidcertificate.eval.euhealthcert.Eudgc
-import ch.admin.bag.covidcertificate.eval.models.*
+import ch.admin.bag.covidcertificate.eval.models.healthcert.eu.Eudgc
+import ch.admin.bag.covidcertificate.eval.models.trustlist.AcceptanceCriterias
+import ch.admin.bag.covidcertificate.eval.models.trustlist.CertLogicData
+import ch.admin.bag.covidcertificate.eval.models.trustlist.CertLogicExternalInfo
+import ch.admin.bag.covidcertificate.eval.models.trustlist.CertLogicPayload
+import ch.admin.bag.covidcertificate.eval.models.trustlist.Rule
+import ch.admin.bag.covidcertificate.eval.models.trustlist.RuleSet
 import ch.admin.bag.covidcertificate.eval.nationalrules.certlogic.evaluate
 import ch.admin.bag.covidcertificate.eval.nationalrules.certlogic.isTruthy
-import ch.admin.bag.covidcertificate.eval.utils.validFromDate
-import ch.admin.bag.covidcertificate.eval.utils.validUntilDate
+import ch.admin.bag.covidcertificate.eval.extensions.validFromDate
+import ch.admin.bag.covidcertificate.eval.extensions.validUntilDate
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import java.time.Clock
@@ -27,7 +32,7 @@ import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 
-class NationalRulesVerifier(context: Context) {
+internal class NationalRulesVerifier(context: Context) {
 
 	private val acceptedVaccineProvider = AcceptedVaccineProvider.getInstance(context)
 

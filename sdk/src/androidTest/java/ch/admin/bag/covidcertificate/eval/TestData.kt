@@ -10,7 +10,7 @@
 
 package ch.admin.bag.covidcertificate.eval
 
-import ch.admin.bag.covidcertificate.eval.models.Jwk
+import ch.admin.bag.covidcertificate.eval.models.trustlist.Jwk
 
 // Note that this String (taken directly from a QR code) has some \ that escape $
 // This HC is signed by the hardcoded BAG DEV key

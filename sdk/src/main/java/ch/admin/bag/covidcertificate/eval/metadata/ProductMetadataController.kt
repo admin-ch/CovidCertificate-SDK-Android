@@ -17,7 +17,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 
-class ProductMetadataController internal constructor(
+internal class ProductMetadataController internal constructor(
 	private val metadataRepository: MetadataRepository
 ) {
 

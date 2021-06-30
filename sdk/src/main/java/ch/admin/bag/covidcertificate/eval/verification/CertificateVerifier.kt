@@ -10,7 +10,12 @@
 
 package ch.admin.bag.covidcertificate.eval.verification
 
-import ch.admin.bag.covidcertificate.eval.Eval
+import ch.admin.bag.covidcertificate.eval.decoder.chain.Base45Service
+import ch.admin.bag.covidcertificate.eval.decoder.chain.DecompressionService
+import ch.admin.bag.covidcertificate.eval.decoder.chain.PrefixIdentifierService
+import ch.admin.bag.covidcertificate.eval.decoder.chain.RevokedHealthCertService
+import ch.admin.bag.covidcertificate.eval.decoder.chain.TimestampService
+import ch.admin.bag.covidcertificate.eval.decoder.chain.VerificationCoseService
 import ch.admin.bag.covidcertificate.eval.data.ErrorCodes
 import ch.admin.bag.covidcertificate.eval.data.state.CheckNationalRulesState
 import ch.admin.bag.covidcertificate.eval.data.state.CheckRevocationState
@@ -18,17 +23,28 @@ import ch.admin.bag.covidcertificate.eval.data.state.CheckSignatureState
 import ch.admin.bag.covidcertificate.eval.data.state.Error
 import ch.admin.bag.covidcertificate.eval.data.state.VerificationState
 import ch.admin.bag.covidcertificate.eval.models.DccHolder
-import ch.admin.bag.covidcertificate.eval.models.Jwks
-import ch.admin.bag.covidcertificate.eval.models.RevokedCertificates
-import ch.admin.bag.covidcertificate.eval.models.RuleSet
-import ch.admin.bag.covidcertificate.eval.models.TrustList
+import ch.admin.bag.covidcertificate.eval.models.trustlist.Jwks
+import ch.admin.bag.covidcertificate.eval.models.trustlist.RevokedCertificates
+import ch.admin.bag.covidcertificate.eval.models.trustlist.RuleSet
+import ch.admin.bag.covidcertificate.eval.models.trustlist.TrustList
 import ch.admin.bag.covidcertificate.eval.nationalrules.NationalRulesVerifier
+import ch.admin.bag.covidcertificate.eval.nationalrules.ValidityRange
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.withContext
+import java.time.LocalDateTime
+import java.time.ZoneId
 
 internal class CertificateVerifier(private val nationalRulesVerifier: NationalRulesVerifier) {
 
+	/**
+	 * Verify the validity of a certificate. This checks the certificate signature, its revocation status as well as the conformity
+	 * with national rules.
+	 *
+	 * @param dccHolder The object returned from the decoder
+	 * @param trustList The current applicable trust list, containing active public keys for signing, revoked certificate identifiers and the national rule set
+	 * @return Outcome state of the verification
+	 */
 	suspend fun verify(dccHolder: DccHolder, trustList: TrustList): VerificationState = withContext(Dispatchers.Default) {
 		// Execute all three checks in parallel...
 		val checkSignatureStateDeferred = async { checkSignature(dccHolder, trustList.signatures) }
@@ -68,32 +84,96 @@ internal class CertificateVerifier(private val nationalRulesVerifier: NationalRu
 		}
 	}
 
+	/**
+	 * Checks whether a certificate has a valid signature.
+	 *
+	 * A signature is only valid if it is signed by a trusted key, but also only if other attributes are valid
+	 * (e.g. the signature is not expired - which may be different from the legal national rules).
+	 *
+	 * @param dccHolder The object returned from the decoder
+	 * @param signatures A list of active public keys used for signing certificates
+	 * @return Outcome state of the signature check
+	 */
 	private suspend fun checkSignature(dccHolder: DccHolder, signatures: Jwks) = withContext(Dispatchers.Default) {
 		try {
-			Eval.checkSignature(dccHolder, signatures)
+			// Check that certificate type and signature timestamps are valid
+			val type = dccHolder.certType ?: return@withContext CheckSignatureState.INVALID(ErrorCodes.SIGNATURE_TYPE_INVALID)
+
+			val timestampError = TimestampService.decode(dccHolder)
+			if (timestampError != null) {
+				return@withContext CheckSignatureState.INVALID(timestampError)
+			}
+
+			// Repeat decode chain to get and verify COSE signature
+			val encoded = PrefixIdentifierService.decode(dccHolder.qrCodeData)
+				?: return@withContext CheckSignatureState.INVALID(ErrorCodes.DECODE_PREFIX)
+			val compressed = Base45Service.decode(encoded)
+				?: return@withContext CheckSignatureState.INVALID(ErrorCodes.DECODE_BASE_45)
+			val cose = DecompressionService.decode(compressed)
+				?: return@withContext CheckSignatureState.INVALID(ErrorCodes.DECODE_Z_LIB)
+
+			val valid = VerificationCoseService.decode(signatures.certs, cose)
+			if (valid) {
+				CheckSignatureState.SUCCESS
+			} else {
+				CheckSignatureState.INVALID(ErrorCodes.SIGNATURE_COSE_INVALID)
+			}
 		} catch (e: Exception) {
 			CheckSignatureState.ERROR(Error(ErrorCodes.SIGNATURE_UNKNOWN, e.message.toString(), dccHolder))
 		}
 	}
 
+	/**
+	 * Checks whether a certificate has been revoked
+	 *
+	 * @param dccHolder The object returned from the decoder
+	 * @param revokedCertificates The list of revoked certificate identifiers from the trust list
+	 * @return Outcome state of the revocation check
+	 */
 	private suspend fun checkRevocationStatus(
 		dccHolder: DccHolder,
 		revokedCertificates: RevokedCertificates
 	) = withContext(Dispatchers.Default) {
+		// Revocation is not possible for light certificates, so this check always returns SUCCESS for them
+		if (dccHolder.isLightCertificate()) return@withContext CheckRevocationState.SUCCESS
+
 		try {
-			Eval.checkRevocationStatus(dccHolder, revokedCertificates)
+			val revokedCertificateService = RevokedHealthCertService(revokedCertificates)
+			val containsRevokedCertificate = revokedCertificateService.isRevoked(dccHolder.euDGC!!)
+
+			if (containsRevokedCertificate) {
+				CheckRevocationState.INVALID(ErrorCodes.REVOCATION_REVOKED)
+			} else {
+				CheckRevocationState.SUCCESS
+			}
 		} catch (e: Exception) {
 			CheckRevocationState.ERROR(Error(ErrorCodes.REVOCATION_UNKNOWN, e.message.toString(), dccHolder))
 		}
 	}
 
+	/**
+	 * Checks whether a certificate conforms to a set of national rules
+	 *
+	 * @param dccHolder The object returned from the decoder
+	 * @param nationalRulesVerifier The verifier responsible to verify a certificate against a national rule set
+	 * @param ruleSet The national rule set from the trust list
+	 * @return Outcome state of the national rules check
+	 */
 	private suspend fun checkNationalRules(
 		dccHolder: DccHolder,
 		nationalRulesVerifier: NationalRulesVerifier,
 		ruleSet: RuleSet
 	) = withContext(Dispatchers.Default) {
 		try {
-			Eval.checkNationalRules(dccHolder, nationalRulesVerifier, ruleSet)
+			if (dccHolder.isLightCertificate()) {
+				// If the DccHolder contains a light certificate, the national rules don't have to be verified
+				// In that case, the validity range is from the issuedAt date until the expiration date from the CWT headers
+				val issued = dccHolder.issuedAt?.let { LocalDateTime.ofInstant(it, ZoneId.systemDefault()) }
+				val expiration = dccHolder.expirationTime?.let { LocalDateTime.ofInstant(it, ZoneId.systemDefault()) }
+				CheckNationalRulesState.SUCCESS(ValidityRange(issued, expiration))
+			} else {
+				nationalRulesVerifier.verify(dccHolder.euDGC!!, ruleSet)
+			}
 		} catch (e: Exception) {
 			CheckNationalRulesState.ERROR(Error(ErrorCodes.RULESET_UNKNOWN, e.message.toString(), dccHolder))
 		}
