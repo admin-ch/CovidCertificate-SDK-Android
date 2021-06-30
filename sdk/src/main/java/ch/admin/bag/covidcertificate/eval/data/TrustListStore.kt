@@ -10,9 +10,9 @@
 
 package ch.admin.bag.covidcertificate.eval.data
 
-import ch.admin.bag.covidcertificate.eval.models.trustlist.Jwks
-import ch.admin.bag.covidcertificate.eval.models.trustlist.RevokedCertificates
-import ch.admin.bag.covidcertificate.eval.models.trustlist.RuleSet
+import ch.admin.bag.covidcertificate.sdk.core.models.trustlist.Jwks
+import ch.admin.bag.covidcertificate.sdk.core.models.trustlist.RevokedCertificates
+import ch.admin.bag.covidcertificate.sdk.core.models.trustlist.RuleSet
 
 internal interface TrustListStore {
 

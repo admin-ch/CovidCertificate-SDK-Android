@@ -15,12 +15,10 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleObserver
 import androidx.lifecycle.OnLifecycleEvent
 import androidx.lifecycle.coroutineScope
+import ch.admin.bag.covidcertificate.eval.data.AcceptedVaccineProvider
 import ch.admin.bag.covidcertificate.eval.data.CertificateSecureStorage
 import ch.admin.bag.covidcertificate.eval.data.MetadataStorage
-import ch.admin.bag.covidcertificate.eval.data.state.DecodeState
-import ch.admin.bag.covidcertificate.eval.decoder.CertificateDecoder
 import ch.admin.bag.covidcertificate.eval.metadata.ProductMetadataController
-import ch.admin.bag.covidcertificate.eval.nationalrules.NationalRulesVerifier
 import ch.admin.bag.covidcertificate.eval.net.RetrofitFactory
 import ch.admin.bag.covidcertificate.eval.net.service.CertificateService
 import ch.admin.bag.covidcertificate.eval.net.service.MetadataService
@@ -30,7 +28,10 @@ import ch.admin.bag.covidcertificate.eval.repository.MetadataRepository
 import ch.admin.bag.covidcertificate.eval.repository.TrustListRepository
 import ch.admin.bag.covidcertificate.eval.verification.CertificateVerificationController
 import ch.admin.bag.covidcertificate.eval.verification.CertificateVerificationTask
-import ch.admin.bag.covidcertificate.eval.verification.CertificateVerifier
+import ch.admin.bag.covidcertificate.sdk.core.decoder.CertificateDecoder
+import ch.admin.bag.covidcertificate.sdk.core.models.state.DecodeState
+import ch.admin.bag.covidcertificate.sdk.core.verifier.CertificateVerifier
+import ch.admin.bag.covidcertificate.sdk.core.verifier.nationalrules.NationalRulesVerifier
 import ch.admin.bag.covidcertificate.verifier.eval.BuildConfig
 import kotlinx.coroutines.CoroutineScope
 import java.security.cert.CertificateFactory
@@ -61,7 +62,8 @@ object CovidCertificateSdk {
 		val certificateStorage = CertificateSecureStorage.getInstance(context)
 		val trustListRepository = TrustListRepository(certificateService, revocationService, ruleSetService, certificateStorage)
 
-		val nationalRulesVerifier = NationalRulesVerifier(context)
+		val acceptedVaccineProvider = AcceptedVaccineProvider.getInstance(context)
+		val nationalRulesVerifier = NationalRulesVerifier(acceptedVaccineProvider)
 		val certificateVerifier = CertificateVerifier(nationalRulesVerifier)
 		certificateVerificationController = CertificateVerificationController(trustListRepository, certificateVerifier)
 

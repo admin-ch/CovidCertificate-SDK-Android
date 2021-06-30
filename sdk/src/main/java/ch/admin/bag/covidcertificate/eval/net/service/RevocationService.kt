@@ -10,7 +10,7 @@
 
 package ch.admin.bag.covidcertificate.eval.net.service
 
-import ch.admin.bag.covidcertificate.eval.models.trustlist.RevokedCertificates
+import ch.admin.bag.covidcertificate.sdk.core.models.trustlist.RevokedCertificates
 import retrofit2.Response
 import retrofit2.http.GET
 import retrofit2.http.Headers

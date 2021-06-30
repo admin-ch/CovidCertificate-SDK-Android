@@ -11,12 +11,13 @@
 package ch.admin.bag.covidcertificate.eval.verification
 
 import android.net.ConnectivityManager
-import ch.admin.bag.covidcertificate.eval.data.ErrorCodes
-import ch.admin.bag.covidcertificate.eval.data.state.Error
-import ch.admin.bag.covidcertificate.eval.data.state.VerificationState
-import ch.admin.bag.covidcertificate.eval.models.DccHolder
-import ch.admin.bag.covidcertificate.eval.models.trustlist.TrustList
 import ch.admin.bag.covidcertificate.eval.utils.NetworkUtil
+import ch.admin.bag.covidcertificate.sdk.core.data.ErrorCodes
+import ch.admin.bag.covidcertificate.sdk.core.models.healthcert.DccHolder
+import ch.admin.bag.covidcertificate.sdk.core.models.state.StateError
+import ch.admin.bag.covidcertificate.sdk.core.models.state.VerificationState
+import ch.admin.bag.covidcertificate.sdk.core.models.trustlist.TrustList
+import ch.admin.bag.covidcertificate.sdk.core.verifier.CertificateVerifier
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
@@ -48,13 +49,13 @@ class CertificateVerificationTask(
 			if (hasNetwork) {
 				mutableVerificationStateFlow.emit(
 					VerificationState.ERROR(
-						Error(ErrorCodes.GENERAL_NETWORK_FAILURE, dccHolder = dccHolder), null
+						StateError(ErrorCodes.GENERAL_NETWORK_FAILURE, dccHolder = dccHolder), null
 					)
 				)
 			} else {
 				mutableVerificationStateFlow.emit(
 					VerificationState.ERROR(
-						Error(ErrorCodes.GENERAL_OFFLINE, dccHolder = dccHolder), null
+						StateError(ErrorCodes.GENERAL_OFFLINE, dccHolder = dccHolder), null
 					)
 				)
 			}

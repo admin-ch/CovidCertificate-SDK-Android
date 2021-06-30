@@ -10,7 +10,7 @@
 
 package ch.admin.bag.covidcertificate.eval.models
 
-import ch.admin.bag.covidcertificate.eval.models.products.ValueSet
+import ch.admin.bag.covidcertificate.sdk.core.models.products.ValueSet
 import com.squareup.moshi.JsonClass
 
 @JsonClass(generateAdapter = true)

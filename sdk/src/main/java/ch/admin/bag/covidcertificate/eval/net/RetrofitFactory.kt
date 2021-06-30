@@ -13,7 +13,7 @@ package ch.admin.bag.covidcertificate.eval.net
 import android.content.Context
 import ch.admin.bag.covidcertificate.eval.CovidCertificateSdk
 import ch.admin.bag.covidcertificate.eval.data.Config
-import ch.admin.bag.covidcertificate.eval.data.moshi.RawJsonStringAdapter
+import ch.admin.bag.covidcertificate.sdk.core.data.moshi.RawJsonStringAdapter
 import ch.admin.bag.covidcertificate.eval.net.interceptor.ApiKeyInterceptor
 import ch.admin.bag.covidcertificate.eval.net.interceptor.JwsInterceptor
 import ch.admin.bag.covidcertificate.eval.net.interceptor.UserAgentInterceptor

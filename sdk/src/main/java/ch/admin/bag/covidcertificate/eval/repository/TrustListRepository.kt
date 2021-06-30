@@ -11,8 +11,8 @@
 package ch.admin.bag.covidcertificate.eval.repository
 
 import ch.admin.bag.covidcertificate.eval.data.TrustListStore
-import ch.admin.bag.covidcertificate.eval.models.trustlist.Jwks
-import ch.admin.bag.covidcertificate.eval.models.trustlist.TrustList
+import ch.admin.bag.covidcertificate.sdk.core.models.trustlist.Jwks
+import ch.admin.bag.covidcertificate.sdk.core.models.trustlist.TrustList
 import ch.admin.bag.covidcertificate.eval.net.service.CertificateService
 import ch.admin.bag.covidcertificate.eval.net.service.RevocationService
 import ch.admin.bag.covidcertificate.eval.net.service.RuleSetService

@@ -11,7 +11,7 @@
 package ch.admin.bag.covidcertificate.eval.data
 
 import android.content.Context
-import ch.admin.bag.covidcertificate.eval.data.moshi.RawJsonStringAdapter
+import ch.admin.bag.covidcertificate.sdk.core.data.moshi.RawJsonStringAdapter
 import ch.admin.bag.covidcertificate.eval.models.ProductsMetadata
 import ch.admin.bag.covidcertificate.eval.utils.SingletonHolder
 import com.squareup.moshi.Moshi

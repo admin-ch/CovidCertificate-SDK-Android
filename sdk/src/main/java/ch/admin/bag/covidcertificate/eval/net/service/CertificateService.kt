@@ -10,8 +10,8 @@
 
 package ch.admin.bag.covidcertificate.eval.net.service
 
-import ch.admin.bag.covidcertificate.eval.models.trustlist.ActiveSignerCertificates
-import ch.admin.bag.covidcertificate.eval.models.trustlist.Jwks
+import ch.admin.bag.covidcertificate.sdk.core.models.trustlist.ActiveSignerCertificates
+import ch.admin.bag.covidcertificate.sdk.core.models.trustlist.Jwks
 import retrofit2.Response
 import retrofit2.http.GET
 import retrofit2.http.Headers
