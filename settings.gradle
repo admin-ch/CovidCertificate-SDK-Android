@@ -1,0 +1,4 @@
+include ':sdk', ':core'
+
+rootProject.name = 'CovidCertificate-SDK-Android'
+
