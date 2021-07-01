@@ -26,6 +26,8 @@ internal fun getInvalidSigningKeys(): List<Jwk>{
 	)
 }
 
+internal fun getCertificateLightTestKey() = Jwk.fromXY(LIGHT_TEST_KID, LIGHT_TEST_X, LIGHT_TEST_Y, use = "")
+
 internal fun getHardcodedSigningKeys(flavor: String): List<Jwk> {
 	val jwks = mutableListOf<Jwk>()
 	when (flavor) {
@@ -49,6 +51,11 @@ internal fun getHardcodedSigningKeys(flavor: String): List<Jwk> {
 	}
 	return jwks
 }
+
+/* Certificate Light Test Key */
+private const val LIGHT_TEST_KID = "AAABAQICAwM="
+private const val LIGHT_TEST_X = "ceBrQgj3RwWzoxkv8/vApqkB7yJGfpBC9TjeIiXUR0U="
+private const val LIGHT_TEST_Y = "g9ufnhfjFLVIiQYeQWmQATN/CMiVbfAgFp/08+Qqv2s="
 
 /* Switzerland's public keys */
 private const val CH_DEV_KID = "mmrfzpMU6xc="

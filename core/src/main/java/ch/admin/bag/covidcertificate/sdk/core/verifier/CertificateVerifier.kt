@@ -96,9 +96,12 @@ class CertificateVerifier(private val nationalRulesVerifier: NationalRulesVerifi
 	 */
 	private suspend fun checkSignature(dccHolder: DccHolder, signatures: Jwks) = withContext(Dispatchers.Default) {
 		try {
-			// Check that certificate type and signature timestamps are valid
-			val type = dccHolder.certType ?: return@withContext CheckSignatureState.INVALID(ErrorCodes.SIGNATURE_TYPE_INVALID)
+			// Check that the certificate type is valid
+			if (dccHolder.certType == null) {
+				return@withContext CheckSignatureState.INVALID(ErrorCodes.SIGNATURE_TYPE_INVALID)
+			}
 
+			// Check that the signature timestamps are valid
 			val timestampError = TimestampService.decode(dccHolder)
 			if (timestampError != null) {
 				return@withContext CheckSignatureState.INVALID(timestampError)

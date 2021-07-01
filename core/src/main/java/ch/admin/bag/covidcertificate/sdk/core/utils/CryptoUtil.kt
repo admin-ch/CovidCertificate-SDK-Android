@@ -22,13 +22,13 @@ internal object CryptoUtil {
 			if (field == null) {
 				val ecParameters = ECGenParameterSpec("prime256v1")
 				field = try {
-					val algorithmParameters = AlgorithmParameters.getInstance("EC")
+					val algorithmParameters = AlgorithmParameters.getInstance("ECDSA")
 					algorithmParameters.init(ecParameters)
 
 					algorithmParameters.getParameterSpec(ECParameterSpec::class.java)
 				} catch (e: Exception) {
 					// This is a work-around for getting the ECParameterSpec since EC is only available in AlgorithmParameters on API 26+
-					val kpg = KeyPairGenerator.getInstance("EC")
+					val kpg = KeyPairGenerator.getInstance("ECDSA")
 					kpg.initialize(ecParameters, SecureRandom())
 					val keyPair = kpg.generateKeyPair()
 					(keyPair.public as ECPublicKey).params
@@ -49,7 +49,7 @@ internal object CryptoUtil {
 		val ecPoint = ECPoint(x, y)
 		val ecKeySpec = ECPublicKeySpec(ecPoint, ecParameterSpec)
 
-		val keyFactory = KeyFactory.getInstance("EC")
+		val keyFactory = KeyFactory.getInstance("ECDSA")
 		return keyFactory.generatePublic(ecKeySpec)
 	}
 
