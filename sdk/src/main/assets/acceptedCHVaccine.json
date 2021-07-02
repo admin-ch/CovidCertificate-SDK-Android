@@ -1,46 +1,116 @@
 {
 	"Id": "Covid 19 Vaccines",
-	"Date": "2021-05-05",
-	"Version": "1.0.0",
+	"Date": "2021-06-29",
+	"Version": "1.0.4",
 	"entries": [
-		{
-			"name": "Comirnaty",
-			"code": "EU/1/20/1528",
-			"prophylaxis": "COVID-19 mRNA vaccine",
-			"prophylaxis_code": "1119349007",
-			"auth_holder": "BioNTech Manufacturing GmbH",
-			"auth_holder_code": "ORG-100030215",
-			"total_dosis_number": 2,
-			"active": true
-		},
-		{
-			"name": "COVID-19 Vaccine Moderna",
-			"code": "EU/1/20/1507",
-			"prophylaxis": "COVID-19 mRNA vaccine",
-			"prophylaxis_code": "1119349007",
-			"auth_holder": "Moderna Biotech Spain, S.L.",
-			"auth_holder_code": "ORG-100031184",
-			"total_dosis_number": 2,
-			"active": true
-		},
 		{
 			"name": "Vaxzevria",
 			"code": "EU/1/21/1529",
-			"prophylaxis": "COVID-19 Vaccine",
+			"prophylaxis": "COVID-19 vaccines",
 			"prophylaxis_code": "J07BX03",
 			"auth_holder": "AstraZeneca AB",
 			"auth_holder_code": "ORG-100001699",
 			"total_dosis_number": 2,
+			"issueable": false,
+			"active": true
+		},
+		{
+			"name": "Comirnaty",
+			"code": "EU/1/20/1528",
+			"prophylaxis": "SARS-CoV-2 mRNA vaccine",
+			"prophylaxis_code": "1119349007",
+			"auth_holder": "Biontech Manufacturing GmbH",
+			"auth_holder_code": "ORG-100030215",
+			"total_dosis_number": 2,
+			"issueable": true,
 			"active": true
 		},
 		{
 			"name": "COVID-19 Vaccine Janssen",
 			"code": "EU/1/20/1525",
-			"prophylaxis": "COVID-19 Vaccine",
+			"prophylaxis": "COVID-19 vaccines",
 			"prophylaxis_code": "J07BX03",
-			"auth_holder": "Janssen-Cilag International NV",
+			"auth_holder": "Janssen-Cilag International",
 			"auth_holder_code": "ORG-100001417",
 			"total_dosis_number": 1,
+			"issueable": true,
+			"active": true
+		},
+		{
+			"name": "COVID-19 Vaccine Moderna",
+			"code": "EU/1/20/1507",
+			"prophylaxis": "SARS-CoV-2 mRNA vaccine",
+			"prophylaxis_code": "1119349007",
+			"auth_holder": "Moderna Biotech Spain S.L.",
+			"auth_holder_code": "ORG-100031184",
+			"total_dosis_number": 2,
+			"issueable": true,
+			"active": true
+		},
+		{
+			"name": "Comirnaty",
+			"code": "EU/1/20/1528",
+			"prophylaxis": "SARS-CoV-2 mRNA vaccine",
+			"prophylaxis_code": "1119349007",
+			"auth_holder": "Pfizer AG",
+			"auth_holder_code": "ORG-100010337",
+			"total_dosis_number": 2,
+			"issueable": false,
+			"active": true
+		},
+		{
+			"name": "COVID-19 Vaccine Janssen",
+			"code": "EU/1/20/1525",
+			"prophylaxis": "COVID-19 vaccines",
+			"prophylaxis_code": "J07BX03",
+			"auth_holder": "Janssen-Cilag AG",
+			"auth_holder_code": "ORG-100002552",
+			"total_dosis_number": 1,
+			"issueable": false,
+			"active": true
+		},
+		{
+			"name": "COVID-19 Vaccine Moderna",
+			"code": "EU/1/20/1507",
+			"prophylaxis": "SARS-CoV-2 mRNA vaccine",
+			"prophylaxis_code": "1119349007",
+			"auth_holder": "Moderna Switzerland GmbH",
+			"auth_holder_code": "ORG-100033151",
+			"total_dosis_number": 2,
+			"issueable": false,
+			"active": true
+		},
+		{
+			"name": "BBIBP-CorV",
+			"code": "BBIBP-CorV",
+			"prophylaxis": "COVID-19 vaccines",
+			"prophylaxis_code": "J07BX03",
+			"auth_holder": "China Sinopharm International Corp. - Beijing location",
+			"auth_holder_code": "ORG-100020693",
+			"total_dosis_number": 2,
+			"issueable": false,
+			"active": true
+		},
+		{
+			"name": "CoronaVac",
+			"code": "CoronaVac",
+			"prophylaxis": "COVID-19 vaccines",
+			"prophylaxis_code": "J07BX03",
+			"auth_holder": "Sinovac Biotech",
+			"auth_holder_code": "Sinovac-Biotech",
+			"total_dosis_number": 2,
+			"issueable": false,
+			"active": true
+		},
+		{
+			"name": "Covishield",
+			"code": "Covishield",
+			"prophylaxis": "COVID-19 vaccines",
+			"prophylaxis_code": "J07BX03",
+			"auth_holder": "Serum Institute of India",
+			"auth_holder_code": "Serum-Institute-of-India",
+			"total_dosis_number": 2,
+			"issueable": false,
 			"active": true
 		}
 	]

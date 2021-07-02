@@ -606,7 +606,23 @@
                     "active": true,
                     "system": "https://covid-19-diagnostics.jrc.ec.europa.eu/devices",
                     "version": "2021-05-10 13:18:20 CET"
-                }
+                },
+                "1228":
+                {
+                    "display": "Shenzhen Microprofit Biotech Co., Ltd, SARS-CoV-2 Spike Protein Test Kit (Fluorescence Immunoassay)",
+                    "lang": "en",
+                    "active": true,
+                    "system": "https://covid-19-diagnostics.jrc.ec.europa.eu/devices",
+                    "version": "2021-05-10 01:04:00 CET"
+                },
+				"1988":
+				{
+					"display": "Inzek International trading, Biozek covid-19 Antigen Rapidtest BCOV-502",
+					"lang": "en",
+					"active": true,
+					"system": "https://covid-19-diagnostics.jrc.ec.europa.eu/devices",
+					"version": "2021-05-10 01:04:00 CET"
+				}
             }
         }
     },
@@ -634,6 +650,14 @@
                     "system": "https://spor.ema.europa.eu/v1/organisations",
                     "version": ""
                 },
+                "ORG-100010337":
+                {
+                    "display": "Pfizer AG",
+                    "lang": "en",
+                    "active": true,
+                    "system": "https://spor.ema.europa.eu/v1/organisations",
+                    "version": ""
+                },
                 "ORG-100001417":
                 {
                     "display": "Janssen-Cilag International",
@@ -642,9 +666,24 @@
                     "system": "https://spor.ema.europa.eu/v1/organisations",
                     "version": ""
                 },
+                "ORG-100002552": {
+                    "display": "Janssen-Cilag AG",
+                    "lang": "en",
+                    "active": true,
+                    "system": "https://spor.ema.europa.eu/v1/organisations",
+                    "version": ""
+                },
                 "ORG-100031184":
                 {
                     "display": "Moderna Biotech Spain S.L.",
+                    "lang": "en",
+                    "active": true,
+                    "system": "https://spor.ema.europa.eu/v1/organisations",
+                    "version": ""
+                },
+                "ORG-100033151":
+                {
+                    "display": "Moderna Switzerland GmbH",
                     "lang": "en",
                     "active": true,
                     "system": "https://spor.ema.europa.eu/v1/organisations",
