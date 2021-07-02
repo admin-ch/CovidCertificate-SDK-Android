@@ -13,7 +13,7 @@ package ch.admin.bag.covidcertificate.sdk.android.verification
 import android.net.ConnectivityManager
 import ch.admin.bag.covidcertificate.sdk.android.utils.NetworkUtil
 import ch.admin.bag.covidcertificate.sdk.core.data.ErrorCodes
-import ch.admin.bag.covidcertificate.sdk.core.models.healthcert.DccHolder
+import ch.admin.bag.covidcertificate.sdk.core.models.healthcert.CertificateHolder
 import ch.admin.bag.covidcertificate.sdk.core.models.state.StateError
 import ch.admin.bag.covidcertificate.sdk.core.models.state.VerificationState
 import ch.admin.bag.covidcertificate.sdk.core.models.trustlist.TrustList
@@ -24,12 +24,12 @@ import kotlinx.coroutines.flow.asStateFlow
 /**
  * A task to verify a specifc DCC holder.
  *
- * @param dccHolder The DCC holder (containing the EuDgc data) to verify
+ * @param certificateHolder The certificate holder (containing the certificate data) to verify
  * @param connectivityManager The Android connectivity service used to check if the device is offline or not
  * @param ignoreLocalTrustList True to ignore the local trust list during verification and force either an offline or network error
  */
 class CertificateVerificationTask(
-	val dccHolder: DccHolder,
+	val certificateHolder: CertificateHolder,
 	val connectivityManager: ConnectivityManager,
 	val ignoreLocalTrustList: Boolean = false
 ) {
@@ -42,20 +42,20 @@ class CertificateVerificationTask(
 	 */
 	internal suspend fun execute(verifier: CertificateVerifier, trustList: TrustList?) {
 		if (trustList != null && !ignoreLocalTrustList) {
-			val state = verifier.verify(dccHolder, trustList)
+			val state = verifier.verify(certificateHolder, trustList)
 			mutableVerificationStateFlow.emit(state)
 		} else {
 			val hasNetwork = NetworkUtil.isNetworkAvailable(connectivityManager)
 			if (hasNetwork) {
 				mutableVerificationStateFlow.emit(
 					VerificationState.ERROR(
-						StateError(ErrorCodes.GENERAL_NETWORK_FAILURE, dccHolder = dccHolder), null
+						StateError(ErrorCodes.GENERAL_NETWORK_FAILURE, certificateHolder = certificateHolder), null
 					)
 				)
 			} else {
 				mutableVerificationStateFlow.emit(
 					VerificationState.ERROR(
-						StateError(ErrorCodes.GENERAL_OFFLINE, dccHolder = dccHolder), null
+						StateError(ErrorCodes.GENERAL_OFFLINE, certificateHolder = certificateHolder), null
 					)
 				)
 			}
