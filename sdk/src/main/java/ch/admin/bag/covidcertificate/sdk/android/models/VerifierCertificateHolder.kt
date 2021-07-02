@@ -12,7 +12,8 @@ package ch.admin.bag.covidcertificate.sdk.android.models
 
 import ch.admin.bag.covidcertificate.sdk.core.models.healthcert.CertificateHolder
 import ch.admin.bag.covidcertificate.sdk.core.models.healthcert.CovidCertificate
+import java.io.Serializable
 
 class VerifierCertificateHolder(
 	internal val certificateHolder: CertificateHolder
-) : CovidCertificate by certificateHolder.certificate
+) : CovidCertificate by certificateHolder.certificate, Serializable
