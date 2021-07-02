@@ -24,6 +24,16 @@ data class DccHolder internal constructor(
 	val issuer: String? = null,
 ) : Serializable {
 
+	init {
+		if (euDGC == null && dccLight == null) {
+			throw IllegalArgumentException("DccHolder must contain either EuDgc or DccLight")
+		}
+
+		if (euDGC != null && dccLight != null) {
+			throw IllegalArgumentException("DccHolder must not contain both EuDgc and DccLight")
+		}
+	}
+
 	var certType: CertType? = null
 		internal set
 

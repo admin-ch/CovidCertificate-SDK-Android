@@ -27,7 +27,7 @@ object CertificateDecoder {
 	 *
 	 * Does not do any validity checks. Simply checks whether the data is decodable.
 	 *
-	 * @param qrCodeData content of the scanned qr code, of the format "HC1:base45(...)"
+	 * @param qrCodeData content of the scanned qr code, of the format "HC1:base45(...)" or "LT1:base45(...)"
 	 */
 	fun decode(qrCodeData: String): DecodeState {
 
@@ -41,7 +41,7 @@ object CertificateDecoder {
 
 		val bagdgc = CborService.decode(cbor, qrCodeData) ?: return DecodeState.ERROR(StateError(ErrorCodes.DECODE_CBOR))
 
-		bagdgc.certType = CertTypeService.decode(bagdgc.euDGC!!)
+		bagdgc.certType = CertTypeService.decode(bagdgc)
 
 		return DecodeState.SUCCESS(bagdgc)
 	}

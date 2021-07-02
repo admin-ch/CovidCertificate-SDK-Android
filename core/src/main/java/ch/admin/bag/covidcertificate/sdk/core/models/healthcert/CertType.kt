@@ -19,4 +19,5 @@ enum class CertType(val use: String) {
 	VACCINATION("v"),
 	TEST("t"),
 	RECOVERY("r"),
+	LIGHT("l"),
 }

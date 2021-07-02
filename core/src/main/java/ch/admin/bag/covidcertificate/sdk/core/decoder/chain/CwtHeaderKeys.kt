@@ -27,4 +27,5 @@ internal sealed class CwtHeaderKeys private constructor(value: Int) {
 	object CWT_ID : CwtHeaderKeys(7)
 
 	object HCERT : CwtHeaderKeys(-260)
+	object LIGHT : CwtHeaderKeys(-250)
 }
