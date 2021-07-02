@@ -11,6 +11,7 @@
 package ch.admin.bag.covidcertificate.sdk.android
 
 import android.content.Context
+import android.net.ConnectivityManager
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleObserver
 import androidx.lifecycle.OnLifecycleEvent
@@ -19,6 +20,7 @@ import ch.admin.bag.covidcertificate.sdk.android.data.AcceptedVaccineProvider
 import ch.admin.bag.covidcertificate.sdk.android.data.CertificateSecureStorage
 import ch.admin.bag.covidcertificate.sdk.android.data.MetadataStorage
 import ch.admin.bag.covidcertificate.sdk.android.metadata.ProductMetadataController
+import ch.admin.bag.covidcertificate.sdk.android.models.VerifierCertificateHolder
 import ch.admin.bag.covidcertificate.sdk.android.net.RetrofitFactory
 import ch.admin.bag.covidcertificate.sdk.android.net.service.CertificateService
 import ch.admin.bag.covidcertificate.sdk.android.net.service.MetadataService
@@ -27,13 +29,18 @@ import ch.admin.bag.covidcertificate.sdk.android.net.service.RuleSetService
 import ch.admin.bag.covidcertificate.sdk.android.repository.MetadataRepository
 import ch.admin.bag.covidcertificate.sdk.android.repository.TrustListRepository
 import ch.admin.bag.covidcertificate.sdk.android.verification.CertificateVerificationController
-import ch.admin.bag.covidcertificate.sdk.android.verification.CertificateVerificationTask
+import ch.admin.bag.covidcertificate.sdk.android.verification.state.VerifierDecodeState
+import ch.admin.bag.covidcertificate.sdk.android.verification.task.VerifierCertificateVerificationTask
+import ch.admin.bag.covidcertificate.sdk.android.verification.task.WalletCertificateVerificationTask
 import ch.admin.bag.covidcertificate.sdk.core.decoder.CertificateDecoder
+import ch.admin.bag.covidcertificate.sdk.core.models.healthcert.CertificateHolder
 import ch.admin.bag.covidcertificate.sdk.core.models.state.DecodeState
+import ch.admin.bag.covidcertificate.sdk.core.models.state.VerificationState
 import ch.admin.bag.covidcertificate.sdk.core.verifier.CertificateVerifier
 import ch.admin.bag.covidcertificate.sdk.core.verifier.nationalrules.NationalRulesVerifier
 import ch.admin.bag.covidcertificate.verifier.sdk.android.BuildConfig
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.flow.Flow
 import java.security.cert.CertificateFactory
 import java.security.cert.X509Certificate
 import java.util.*
@@ -49,6 +56,7 @@ object CovidCertificateSdk {
 
 	private lateinit var certificateVerificationController: CertificateVerificationController
 	private lateinit var productMetadataController: ProductMetadataController
+	private lateinit var connectivityManager: ConnectivityManager
 	private var isInitialized = false
 	private var trustListRefreshTimer: Timer? = null
 	private var sdkLifecycleObserver: SdkLifecycleObserver? = null
@@ -72,6 +80,8 @@ object CovidCertificateSdk {
 		val metadataRepository = MetadataRepository(metadataService, metadataStorage)
 		productMetadataController = ProductMetadataController(metadataRepository)
 
+		connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+
 		isInitialized = true
 	}
 
@@ -94,15 +104,6 @@ object CovidCertificateSdk {
 		certificateVerificationController.refreshTrustList(coroutineScope, onCompletionCallback, onErrorCallback)
 	}
 
-	fun decode(qrCodeData: String): DecodeState {
-		return CertificateDecoder.decode(qrCodeData)
-	}
-
-	fun verify(task: CertificateVerificationTask, coroutineScope: CoroutineScope) {
-		requireInitialized()
-		certificateVerificationController.enqueue(task, coroutineScope)
-	}
-
 	fun getRootCa(context: Context): X509Certificate {
 		val certificateFactory = CertificateFactory.getInstance(ROOT_CA_TYPE)
 		val inputStream = context.assets.open(ASSET_PATH_ROOT_CA)
@@ -114,6 +115,50 @@ object CovidCertificateSdk {
 	private fun requireInitialized() {
 		if (!isInitialized) {
 			throw IllegalStateException("CovidCertificateSdk must be initialized by calling init(context)")
+		}
+	}
+
+	object Verifier {
+		fun decode(encodedData: String): VerifierDecodeState {
+			requireInitialized()
+			val decodeState = CertificateDecoder.decode(encodedData)
+			return when (decodeState) {
+				is DecodeState.SUCCESS -> {
+					val certificateHolder = decodeState.certificateHolder
+					val verifierCertificateHolder = VerifierCertificateHolder(certificateHolder)
+					VerifierDecodeState.SUCCESS(verifierCertificateHolder)
+				}
+				is DecodeState.ERROR -> VerifierDecodeState.ERROR(decodeState.error)
+			}
+		}
+
+		fun verify(
+			certificateHolder: VerifierCertificateHolder,
+			coroutineScope: CoroutineScope,
+			ignoreLocalTrustList: Boolean = false
+		): Flow<VerificationState> {
+			requireInitialized()
+			val task = VerifierCertificateVerificationTask(certificateHolder, connectivityManager, ignoreLocalTrustList)
+			certificateVerificationController.enqueue(task, coroutineScope)
+			return task.verificationStateFlow
+		}
+	}
+
+	object Wallet {
+		fun decode(encodedData: String): DecodeState {
+			requireInitialized()
+			return CertificateDecoder.decode(encodedData)
+		}
+
+		fun verify(
+			certificateHolder: CertificateHolder,
+			coroutineScope: CoroutineScope,
+			ignoreLocalTrustList: Boolean = false
+		): Flow<VerificationState> {
+			requireInitialized()
+			val task = WalletCertificateVerificationTask(certificateHolder, connectivityManager, ignoreLocalTrustList)
+			certificateVerificationController.enqueue(task, coroutineScope)
+			return task.verificationStateFlow
 		}
 	}
 
