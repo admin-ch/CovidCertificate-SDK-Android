@@ -39,12 +39,16 @@ internal class VerifierCertificateVerificationTask(
 			is VerificationState.INVALID -> {
 				// Strip out all information that identifies the national rule that failed for verifier apps
 				when (val nationalRulesState = verificationState.nationalRulesState) {
+					is CheckNationalRulesState.SUCCESS -> {
+						val strippedNationalRulesState = nationalRulesState.copy(validityRange = null)
+						verificationState.copy(nationalRulesState = strippedNationalRulesState)
+					}
 					is CheckNationalRulesState.NOT_YET_VALID -> {
-						val strippedNationalRulesState = nationalRulesState.copy(ruleId = null)
+						val strippedNationalRulesState = nationalRulesState.copy(validityRange = null, ruleId = null)
 						verificationState.copy(nationalRulesState = strippedNationalRulesState)
 					}
 					is CheckNationalRulesState.NOT_VALID_ANYMORE -> {
-						val strippedNationalRulesState = nationalRulesState.copy(ruleId = null)
+						val strippedNationalRulesState = nationalRulesState.copy(validityRange = null, ruleId = null)
 						verificationState.copy(nationalRulesState = strippedNationalRulesState)
 					}
 					is CheckNationalRulesState.INVALID -> {
