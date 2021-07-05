@@ -11,9 +11,11 @@
 package ch.admin.bag.covidcertificate.sdk.android.models
 
 import ch.admin.bag.covidcertificate.sdk.core.models.healthcert.CertificateHolder
-import ch.admin.bag.covidcertificate.sdk.core.models.healthcert.CovidCertificate
 import java.io.Serializable
 
 class VerifierCertificateHolder(
-	internal val certificateHolder: CertificateHolder
-) : CovidCertificate by certificateHolder.certificate, Serializable
+	internal val internalCertificateHolder: CertificateHolder
+) : Serializable {
+	fun getPersonName() = internalCertificateHolder.certificate.getPersonName()
+	fun getDateOfBirth() = internalCertificateHolder.certificate.getDateOfBirth()
+}

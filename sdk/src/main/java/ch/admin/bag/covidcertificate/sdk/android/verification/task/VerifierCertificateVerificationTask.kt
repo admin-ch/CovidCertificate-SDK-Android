@@ -32,7 +32,7 @@ internal class VerifierCertificateVerificationTask(
 ) : CertificateVerificationTask(connectivityManager, ignoreLocalTrustList) {
 
 	override suspend fun verify(verifier: CertificateVerifier, trustList: TrustList): VerificationState {
-		val verificationState = verifier.verify(certificateHolder.certificateHolder, trustList)
+		val verificationState = verifier.verify(certificateHolder.internalCertificateHolder, trustList)
 		return when (verificationState) {
 			is VerificationState.LOADING -> verificationState
 			is VerificationState.SUCCESS -> verificationState
