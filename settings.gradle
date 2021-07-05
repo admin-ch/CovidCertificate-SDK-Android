@@ -8,7 +8,7 @@
  * SPDX-License-Identifier: MPL-2.0
  */
 
-include ':sdk', ':core'
+include ':sdk'
 
 rootProject.name = 'CovidCertificate-SDK-Android'
 

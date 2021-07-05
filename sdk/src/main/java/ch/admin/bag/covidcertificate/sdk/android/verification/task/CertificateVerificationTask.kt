@@ -8,12 +8,11 @@
  * SPDX-License-Identifier: MPL-2.0
  */
 
-package ch.admin.bag.covidcertificate.sdk.android.verification
+package ch.admin.bag.covidcertificate.sdk.android.verification.task
 
 import android.net.ConnectivityManager
 import ch.admin.bag.covidcertificate.sdk.android.utils.NetworkUtil
 import ch.admin.bag.covidcertificate.sdk.core.data.ErrorCodes
-import ch.admin.bag.covidcertificate.sdk.core.models.healthcert.DccHolder
 import ch.admin.bag.covidcertificate.sdk.core.models.state.StateError
 import ch.admin.bag.covidcertificate.sdk.core.models.state.VerificationState
 import ch.admin.bag.covidcertificate.sdk.core.models.trustlist.TrustList
@@ -22,16 +21,14 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
 /**
- * A task to verify a specifc DCC holder.
+ * The base task class to verify a certificate.
  *
- * @param dccHolder The DCC holder (containing the EuDgc data) to verify
  * @param connectivityManager The Android connectivity service used to check if the device is offline or not
  * @param ignoreLocalTrustList True to ignore the local trust list during verification and force either an offline or network error
  */
-class CertificateVerificationTask(
-	val dccHolder: DccHolder,
-	val connectivityManager: ConnectivityManager,
-	val ignoreLocalTrustList: Boolean = false
+internal abstract class CertificateVerificationTask(
+	private val connectivityManager: ConnectivityManager,
+	private val ignoreLocalTrustList: Boolean = false
 ) {
 
 	private val mutableVerificationStateFlow = MutableStateFlow<VerificationState>(VerificationState.LOADING)
@@ -40,26 +37,25 @@ class CertificateVerificationTask(
 	/**
 	 * Execute this verification task with the specified verifier and trust list
 	 */
-	internal suspend fun execute(verifier: CertificateVerifier, trustList: TrustList?) {
+	suspend fun execute(verifier: CertificateVerifier, trustList: TrustList?) {
+		mutableVerificationStateFlow.emit(VerificationState.LOADING)
 		if (trustList != null && !ignoreLocalTrustList) {
-			val state = verifier.verify(dccHolder, trustList)
-			mutableVerificationStateFlow.emit(state)
+			val verificationState = verify(verifier, trustList)
+			mutableVerificationStateFlow.emit(verificationState)
 		} else {
 			val hasNetwork = NetworkUtil.isNetworkAvailable(connectivityManager)
 			if (hasNetwork) {
-				mutableVerificationStateFlow.emit(
-					VerificationState.ERROR(
-						StateError(ErrorCodes.GENERAL_NETWORK_FAILURE, dccHolder = dccHolder), null
-					)
-				)
+				mutableVerificationStateFlow.emit(VerificationState.ERROR(StateError(ErrorCodes.GENERAL_NETWORK_FAILURE), null))
 			} else {
-				mutableVerificationStateFlow.emit(
-					VerificationState.ERROR(
-						StateError(ErrorCodes.GENERAL_OFFLINE, dccHolder = dccHolder), null
-					)
-				)
+				mutableVerificationStateFlow.emit(VerificationState.ERROR(StateError(ErrorCodes.GENERAL_OFFLINE), null))
 			}
 		}
 	}
+
+	/**
+	 * Execute the actual verification and return the verification state, so that the individual subclasses can do additional
+	 * processing on the verification state, such as stripping some sensitive information.
+	 */
+	protected abstract suspend fun verify(verifier: CertificateVerifier, trustList: TrustList): VerificationState
 
 }

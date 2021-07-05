@@ -12,6 +12,7 @@ package ch.admin.bag.covidcertificate.sdk.android.verification
 
 import android.util.Log
 import ch.admin.bag.covidcertificate.sdk.android.repository.TrustListRepository
+import ch.admin.bag.covidcertificate.sdk.android.verification.task.CertificateVerificationTask
 import ch.admin.bag.covidcertificate.sdk.core.verifier.CertificateVerifier
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
