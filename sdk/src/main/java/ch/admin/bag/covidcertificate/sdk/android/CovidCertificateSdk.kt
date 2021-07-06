@@ -19,6 +19,7 @@ import androidx.lifecycle.coroutineScope
 import ch.admin.bag.covidcertificate.sdk.android.data.AcceptedVaccineProvider
 import ch.admin.bag.covidcertificate.sdk.android.data.CertificateSecureStorage
 import ch.admin.bag.covidcertificate.sdk.android.data.MetadataStorage
+import ch.admin.bag.covidcertificate.sdk.android.data.base64.AndroidUtilBase64
 import ch.admin.bag.covidcertificate.sdk.android.metadata.ProductMetadataController
 import ch.admin.bag.covidcertificate.sdk.android.models.VerifierCertificateHolder
 import ch.admin.bag.covidcertificate.sdk.android.net.RetrofitFactory
@@ -32,6 +33,7 @@ import ch.admin.bag.covidcertificate.sdk.android.verification.CertificateVerific
 import ch.admin.bag.covidcertificate.sdk.android.verification.state.VerifierDecodeState
 import ch.admin.bag.covidcertificate.sdk.android.verification.task.VerifierCertificateVerificationTask
 import ch.admin.bag.covidcertificate.sdk.android.verification.task.WalletCertificateVerificationTask
+import ch.admin.bag.covidcertificate.sdk.core.data.base64.Base64Impl
 import ch.admin.bag.covidcertificate.sdk.core.decoder.CertificateDecoder
 import ch.admin.bag.covidcertificate.sdk.core.models.healthcert.CertificateHolder
 import ch.admin.bag.covidcertificate.sdk.core.models.state.DecodeState
@@ -62,6 +64,10 @@ object CovidCertificateSdk {
 	private var sdkLifecycleObserver: SdkLifecycleObserver? = null
 
 	fun init(context: Context) {
+		// Replace the java.util.Base64 based provider in the core SDK with the android.util.Base64 provider because the Java one
+		// was added in Android SDK level 26 and would lead to a ClassNotFoundException on earlier versions
+		Base64Impl.setBase64Provider(AndroidUtilBase64())
+
 		val retrofit = RetrofitFactory().create(context)
 		val certificateService = retrofit.create(CertificateService::class.java)
 		val revocationService = retrofit.create(RevocationService::class.java)
