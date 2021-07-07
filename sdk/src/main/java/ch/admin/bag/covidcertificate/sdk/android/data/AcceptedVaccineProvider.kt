@@ -21,40 +21,25 @@ import okio.buffer
 import okio.source
 import java.io.IOException
 
-class AcceptedVaccineProvider private constructor(context: Context) :
-	ch.admin.bag.covidcertificate.sdk.core.data.AcceptedVaccineProvider {
+class AcceptedVaccineProvider private constructor(context: Context) {
 
-	companion object : SingletonHolder<AcceptedVaccineProvider, Context>(::AcceptedVaccineProvider) {
-		// for national rules validation
-		private const val ACCEPTED_VACCINE_FILE_NAME = "acceptedCHVaccine.json"
-	}
+	companion object : SingletonHolder<AcceptedVaccineProvider, Context>(::AcceptedVaccineProvider)
 
-	private val acceptedVaccine: AcceptedVaccine
 	private val metadataStorage = MetadataStorage.getInstance(context)
 
-	init {
-		val acceptedVaccineAdapter: JsonAdapter<AcceptedVaccine> = Moshi.Builder().build().adapter(AcceptedVaccine::class.java)
-		acceptedVaccine = acceptedVaccineAdapter.fromJson(context.assets.open(ACCEPTED_VACCINE_FILE_NAME).source().buffer())
-			?: throw IOException()
-	}
-
-	override fun getVaccineName(vaccinationEntry: VaccinationEntry): String {
+	fun getVaccineName(vaccinationEntry: VaccinationEntry): String {
 		return metadataStorage.productsMetadata.vaccine.medicinalProduct.valueSetValues[vaccinationEntry.medicinialProduct]?.display
 			?: vaccinationEntry.medicinialProduct
 	}
 
-	override fun getProphylaxis(vaccinationEntry: VaccinationEntry): String {
+	fun getProphylaxis(vaccinationEntry: VaccinationEntry): String {
 		return metadataStorage.productsMetadata.vaccine.prophylaxis.valueSetValues[vaccinationEntry.vaccine]?.display
 			?: vaccinationEntry.vaccine
 	}
 
-	override fun getAuthHolder(vaccinationEntry: VaccinationEntry): String {
+	fun getAuthHolder(vaccinationEntry: VaccinationEntry): String {
 		return metadataStorage.productsMetadata.vaccine.mahManf.valueSetValues[vaccinationEntry.marketingAuthorizationHolder]?.display
 			?: vaccinationEntry.marketingAuthorizationHolder
-	}
-
-	override fun getVaccineDataFromList(vaccinationEntry: VaccinationEntry): Vaccine? {
-		return acceptedVaccine.entries.firstOrNull { entry -> entry.code == vaccinationEntry.medicinialProduct }
 	}
 
 }
