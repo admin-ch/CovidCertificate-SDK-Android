@@ -17,5 +17,5 @@ class VerifierCertificateHolder(
 	internal val internalCertificateHolder: CertificateHolder
 ) : Serializable {
 	fun getPersonName() = internalCertificateHolder.certificate.getPersonName()
-	fun getDateOfBirth() = internalCertificateHolder.certificate.getDateOfBirth()
+	fun getFormattedDateOfBirth() = internalCertificateHolder.certificate.getFormattedDateOfBirth()
 }
