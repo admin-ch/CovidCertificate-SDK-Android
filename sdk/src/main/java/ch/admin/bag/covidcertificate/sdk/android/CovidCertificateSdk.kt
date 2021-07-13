@@ -16,7 +16,6 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleObserver
 import androidx.lifecycle.OnLifecycleEvent
 import androidx.lifecycle.coroutineScope
-import ch.admin.bag.covidcertificate.sdk.android.data.AcceptedVaccineProvider
 import ch.admin.bag.covidcertificate.sdk.android.data.CertificateSecureStorage
 import ch.admin.bag.covidcertificate.sdk.android.data.MetadataStorage
 import ch.admin.bag.covidcertificate.sdk.android.data.base64.AndroidUtilBase64
@@ -39,7 +38,6 @@ import ch.admin.bag.covidcertificate.sdk.core.models.healthcert.CertificateHolde
 import ch.admin.bag.covidcertificate.sdk.core.models.state.DecodeState
 import ch.admin.bag.covidcertificate.sdk.core.models.state.VerificationState
 import ch.admin.bag.covidcertificate.sdk.core.verifier.CertificateVerifier
-import ch.admin.bag.covidcertificate.sdk.core.verifier.nationalrules.NationalRulesVerifier
 import ch.admin.bag.covidcertificate.verifier.sdk.android.BuildConfig
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
@@ -76,9 +74,7 @@ object CovidCertificateSdk {
 		val certificateStorage = CertificateSecureStorage.getInstance(context)
 		val trustListRepository = TrustListRepository(certificateService, revocationService, ruleSetService, certificateStorage)
 
-		val acceptedVaccineProvider = AcceptedVaccineProvider.getInstance(context)
-		val nationalRulesVerifier = NationalRulesVerifier(acceptedVaccineProvider)
-		val certificateVerifier = CertificateVerifier(nationalRulesVerifier)
+		val certificateVerifier = CertificateVerifier()
 		certificateVerificationController = CertificateVerificationController(trustListRepository, certificateVerifier)
 
 		val metadataService = retrofit.create(MetadataService::class.java)
