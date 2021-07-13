@@ -13,6 +13,7 @@ plugins {
 	id 'kotlin-android'
 	id 'kotlin-kapt'
 	id 'kotlinx-serialization'
+	id 'com.vanniktech.maven.publish' version '0.17.0'
 }
 
 android {
@@ -62,7 +63,7 @@ android {
 dependencies {
 	coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:1.1.5'
 
-	api fileTree(dir: 'libs', include: ['*.jar'])
+	implementation "ch.admin.bag.covidcertificate:sdk-core:1.1.1"
 
 	implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
 	implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.4.2'
@@ -98,4 +99,9 @@ dependencies {
 	androidTestImplementation 'androidx.test.ext:junit:1.1.2'
 	androidTestImplementation 'androidx.test.espresso:espresso-core:3.3.0'
 	androidTestImplementation "com.google.code.gson:gson:2.8.6"
+}
+
+mavenPublish {
+	sonatypeHost = "S01"
+	androidVariantToPublish = ANDROID_VARIANT_TO_PUBLISH
 }
