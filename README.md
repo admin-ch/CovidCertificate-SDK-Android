@@ -5,7 +5,7 @@
 ## Introduction
 
 This is the implementation of
-the [Electronic Health Certificates (EHN)](https://github.com/ehn-digital-green-development/hcert-spec)
+the [Electronic Health Certificates (HCERT)](https://github.com/ehn-digital-green-development/hcert-spec)
 and [Swiss Certificate Light](https://www.bag.admin.ch/bag/en/home/krankheiten/ausbrueche-epidemien-pandemien/aktuelle-ausbrueche-epidemien/novel-cov/covid-zertifikat.html#-518758716)
 specification used to verify the validity of COVID
 Certificates [in Switzerland](https://github.com/admin-ch/CovidCertificate-App-Android).
