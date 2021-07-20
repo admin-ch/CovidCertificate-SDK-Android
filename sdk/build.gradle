@@ -28,18 +28,9 @@ android {
 	}
 
 	productFlavors {
-		dev {
-			buildConfigField "String", "BASE_URL_TRUST_LIST", '"https://www.cc-d.bit.admin.ch/trust/v1/"'
-			buildConfigField "String", "LEAF_CERT_CN", '"CH01-AppContentCertificate-ref"'
-		}
-		abn {
-			buildConfigField "String", "BASE_URL_TRUST_LIST", '"https://www.cc-a.bit.admin.ch/trust/v1/"'
-			buildConfigField "String", "LEAF_CERT_CN", '"CH01-AppContentCertificate-abn"'
-		}
-		prod {
-			buildConfigField "String", "BASE_URL_TRUST_LIST", '"https://www.cc.bit.admin.ch/trust/v1/"'
-			buildConfigField "String", "LEAF_CERT_CN", '"CH01-AppContentCertificate"'
-		}
+		dev {}
+		abn {}
+		prod {}
 	}
 
 	flavorDimensions "version"

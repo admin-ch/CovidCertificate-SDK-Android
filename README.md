@@ -72,7 +72,7 @@ to get a token assigned.
 Config.appToken = "YOUR-APP-TOKEN"
 Config.userAgent = UserAgentInterceptor.UserAgentGenerator { "YOUR-USER-AGENT" }
 
-CovidCertificateSdk.init(applicationContext)
+CovidCertificateSdk.init(applicationContext, SdkEnvironment.PROD)
 ```
 
 After initialization, the SDK can also be registered with the application lifecycle to automatically update the trust list once
