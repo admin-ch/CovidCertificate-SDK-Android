@@ -12,6 +12,7 @@ package ch.admin.bag.covidcertificate.sdk.android.net
 
 import android.content.Context
 import ch.admin.bag.covidcertificate.sdk.android.CovidCertificateSdk
+import ch.admin.bag.covidcertificate.sdk.android.SdkEnvironment
 import ch.admin.bag.covidcertificate.sdk.android.data.Config
 import ch.admin.bag.covidcertificate.sdk.android.net.interceptor.ApiKeyInterceptor
 import ch.admin.bag.covidcertificate.sdk.android.net.interceptor.JwsInterceptor
@@ -26,7 +27,7 @@ import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
 import retrofit2.converter.scalars.ScalarsConverterFactory
 
-internal class RetrofitFactory {
+internal class RetrofitFactory(private val environment: SdkEnvironment) {
 
 	companion object {
 		private const val CACHE_SIZE = 5 * 1024 * 1024 // 5 MB
@@ -50,7 +51,7 @@ internal class RetrofitFactory {
 		}
 
 		return Retrofit.Builder()
-			.baseUrl(BuildConfig.BASE_URL_TRUST_LIST)
+			.baseUrl(environment.trustListBaseUrl)
 			.client(okHttpBuilder.build())
 			.addConverterFactory(ScalarsConverterFactory.create())
 			.addConverterFactory(MoshiConverterFactory.create(Moshi.Builder().add(RawJsonStringAdapter()).build()))

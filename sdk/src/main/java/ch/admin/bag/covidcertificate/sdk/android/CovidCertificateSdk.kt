@@ -52,21 +52,27 @@ object CovidCertificateSdk {
 	private const val ROOT_CA_TYPE = "X.509"
 	private const val ASSET_PATH_ROOT_CA = "swiss_governmentrootcaii.der"
 
-	private val TRUST_LIST_REFRESH_INTERVAL = TimeUnit.HOURS.toMillis(1L)
-
+	private lateinit var environment: SdkEnvironment
 	private lateinit var certificateVerificationController: CertificateVerificationController
 	private lateinit var productMetadataController: ProductMetadataController
 	private lateinit var connectivityManager: ConnectivityManager
 	private var isInitialized = false
-	private var trustListRefreshTimer: Timer? = null
 	private var sdkLifecycleObserver: SdkLifecycleObserver? = null
 
-	fun init(context: Context) {
+	/**
+	 * Initialize the CovidCertificate SDK
+	 *
+	 * @param context The application context
+	 * @param environment The environment the application is using. This determines which trust list is loaded
+	 */
+	fun init(context: Context, environment: SdkEnvironment) {
 		// Replace the java.util.Base64 based provider in the core SDK with the android.util.Base64 provider because the Java one
 		// was added in Android SDK level 26 and would lead to a ClassNotFoundException on earlier versions
 		Base64Impl.setBase64Provider(AndroidUtilBase64())
 
-		val retrofit = RetrofitFactory().create(context)
+		this.environment = environment
+
+		val retrofit = RetrofitFactory(environment).create(context)
 		val certificateService = retrofit.create(CertificateService::class.java)
 		val revocationService = retrofit.create(RevocationService::class.java)
 		val ruleSetService = retrofit.create(RuleSetService::class.java)
@@ -87,6 +93,11 @@ object CovidCertificateSdk {
 		isInitialized = true
 	}
 
+	/**
+	 * Register the SDK with a lifecycle in order to automatically refresh the trust list in the background while the application is running.
+	 *
+	 * @param lifecycle The lifecycle to register the SDK with. The background refresh will take place between STARTED and STOPPED
+	 */
 	fun registerWithLifecycle(lifecycle: Lifecycle) {
 		requireInitialized()
 
@@ -94,6 +105,11 @@ object CovidCertificateSdk {
 		sdkLifecycleObserver?.register(lifecycle)
 	}
 
+	/**
+	 * Unregister the SDK from a lifecycle. This will cancel any background tasks that were scheduled and running.
+	 *
+	 * @param lifecycle The lifecycle to unregister the SDK from.
+	 */
 	fun unregisterWithLifecycle(lifecycle: Lifecycle) {
 		requireInitialized()
 
@@ -101,18 +117,36 @@ object CovidCertificateSdk {
 		sdkLifecycleObserver = null
 	}
 
+	/**
+	 * Trigger a force refresh of the trust list
+	 *
+	 * @param coroutineScope The coroutine scope within which the trust list request coroutines are started
+	 * @param onCompletionCallback A callback for when the trust list has been refreshed
+	 * @param onErrorCallback A callback for when refreshing the trust list failed
+	 */
 	fun refreshTrustList(coroutineScope: CoroutineScope, onCompletionCallback: () -> Unit = {}, onErrorCallback: () -> Unit = {}) {
 		requireInitialized()
 		certificateVerificationController.refreshTrustList(coroutineScope, onCompletionCallback, onErrorCallback)
 	}
 
+	/**
+	 * Get the root certificate of the backend endpoints
+	 *
+	 * @param context The application context
+	 * @return The root certificate as a X.509 certificate
+	 */
 	fun getRootCa(context: Context): X509Certificate {
 		val certificateFactory = CertificateFactory.getInstance(ROOT_CA_TYPE)
 		val inputStream = context.assets.open(ASSET_PATH_ROOT_CA)
 		return certificateFactory.generateCertificate(inputStream) as X509Certificate
 	}
 
-	fun getExpectedCommonName() = BuildConfig.LEAF_CERT_CN
+	/**
+	 * Get the expected common name of the leaf certificate
+	 *
+	 * @return The leaf certificate common name
+	 */
+	fun getExpectedCommonName() = environment.leafCertificateCommonName
 
 	private fun requireInitialized() {
 		if (!isInitialized) {
@@ -165,12 +199,19 @@ object CovidCertificateSdk {
 	}
 
 	internal class SdkLifecycleObserver(private val lifecycle: Lifecycle) : LifecycleObserver {
+		companion object {
+			private val TRUST_LIST_REFRESH_INTERVAL = TimeUnit.HOURS.toMillis(1L)
+		}
+
+		private var trustListRefreshTimer: Timer? = null
+
 		fun register(lifecycle: Lifecycle) {
 			lifecycle.addObserver(this)
 		}
 
 		fun unregister(lifecycle: Lifecycle) {
 			lifecycle.removeObserver(this)
+			trustListRefreshTimer?.cancel()
 		}
 
 		@OnLifecycleEvent(Lifecycle.Event.ON_START)
