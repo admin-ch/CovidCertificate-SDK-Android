@@ -22,6 +22,7 @@ internal interface TrustListStore {
 
 	var revokedCertificatesValidUntil: Long
 	var revokedCertificates: RevokedCertificates?
+	var revokedCertificatesSinceHeader: String?
 
 	var rulesetValidUntil: Long
 	var ruleset: RuleSet?

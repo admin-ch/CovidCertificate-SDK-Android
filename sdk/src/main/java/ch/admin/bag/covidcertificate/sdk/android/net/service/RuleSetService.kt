@@ -18,7 +18,7 @@ import retrofit2.http.Headers
 internal interface RuleSetService {
 
 	@Headers("Accept: application/json+jws")
-	@GET("verificationRules")
+	@GET("v1/verificationRules")
 	suspend fun getRuleset() : Response<RuleSet>
 
 }

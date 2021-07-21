@@ -14,11 +14,12 @@ import ch.admin.bag.covidcertificate.sdk.core.models.trustlist.RevokedCertificat
 import retrofit2.Response
 import retrofit2.http.GET
 import retrofit2.http.Headers
+import retrofit2.http.Query
 
 internal interface RevocationService {
 
 	@Headers("Accept: application/json+jws")
-	@GET("revocationList")
-	suspend fun getRevokedCertificates(): Response<RevokedCertificates>
+	@GET("v2/revocationList")
+	suspend fun getRevokedCertificates(@Query("since") since: String? = null): Response<RevokedCertificates>
 
 }

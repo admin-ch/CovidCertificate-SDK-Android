@@ -14,7 +14,7 @@ enum class SdkEnvironment(
 	internal val trustListBaseUrl: String,
 	internal val leafCertificateCommonName: String
 ) {
-	DEV("https://www.cc-d.bit.admin.ch/trust/v1/", "CH01-AppContentCertificate-ref"),
-	ABN("https://www.cc-a.bit.admin.ch/trust/v1/", "CH01-AppContentCertificate-abn"),
-	PROD("https://www.cc.bit.admin.ch/trust/v1/", "CH01-AppContentCertificate");
+	DEV("https://www.cc-d.bit.admin.ch/trust/", "CH01-AppContentCertificate-ref"),
+	ABN("https://www.cc-a.bit.admin.ch/trust/", "CH01-AppContentCertificate-abn"),
+	PROD("https://www.cc.bit.admin.ch/trust/", "CH01-AppContentCertificate");
 }

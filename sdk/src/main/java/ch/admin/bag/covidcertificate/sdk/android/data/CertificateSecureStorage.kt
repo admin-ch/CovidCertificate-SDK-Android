@@ -31,6 +31,7 @@ internal class CertificateSecureStorage private constructor(private val context:
 		private const val KEY_CERTIFICATE_SIGNATURES_VALID_UNTIL = "KEY_CERTIFICATE_SIGNATURES_VALID_UNTIL"
 		private const val KEY_CERTIFICATE_SIGNATURES_SINCE_HEADER = "KEY_CERTIFICATE_SIGNATURES_SINCE_HEADER"
 		private const val KEY_REVOKED_CERTIFICATES_VALID_UNTIL = "KEY_REVOKED_CERTIFICATES_VALID_UNTIL"
+		private const val KEY_REVOKED_CERTIFICATES_SINCE_HEADER = "KEY_REVOKED_CERTIFICATES_SINCE_HEADER"
 		private const val KEY_RULESET_VALID_UNTIL = "KEY_RULESET_VALID_UNTIL"
 
 		private val moshi = Moshi.Builder().add(RawJsonStringAdapter()).build()
@@ -85,6 +86,12 @@ internal class CertificateSecureStorage private constructor(private val context:
 		set(value) {
 			revocationFileStorage.write(context, revokedCertificatesAdapter.toJson(value))
 			field = value
+		}
+
+	override var revokedCertificatesSinceHeader: String?
+		get() = preferences.getString(KEY_REVOKED_CERTIFICATES_SINCE_HEADER, null)
+		set(value) {
+			preferences.edit().putString(KEY_REVOKED_CERTIFICATES_SINCE_HEADER, value).apply()
 		}
 
 	override var rulesetValidUntil: Long
