@@ -18,7 +18,7 @@ import retrofit2.http.Headers
 internal interface MetadataService {
 
 	@Headers("Accept: application/json+jws")
-	@GET("metadata")
+	@GET("v1/metadata")
 	suspend fun getMetadata(): Response<ProductsMetadata>
 
 }

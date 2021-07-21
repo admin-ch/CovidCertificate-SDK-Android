@@ -16,6 +16,7 @@ import ch.admin.bag.covidcertificate.sdk.core.models.trustlist.TrustList
 import ch.admin.bag.covidcertificate.sdk.android.net.service.CertificateService
 import ch.admin.bag.covidcertificate.sdk.android.net.service.RevocationService
 import ch.admin.bag.covidcertificate.sdk.android.net.service.RuleSetService
+import ch.admin.bag.covidcertificate.sdk.core.models.trustlist.RevokedCertificates
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
@@ -68,8 +69,7 @@ internal class TrustListRepository(
 		}
 	}
 
-	private suspend fun refreshCertificateSignatures(forceRefresh: Boolean): Unit =
-		withContext(Dispatchers.IO) {
+	private suspend fun refreshCertificateSignatures(forceRefresh: Boolean) = withContext(Dispatchers.IO) {
 			val shouldLoadSignatures = forceRefresh || !store.areSignaturesValid()
 			if (shouldLoadSignatures) {
 				// Load the active certificate key IDs
@@ -112,11 +112,33 @@ internal class TrustListRepository(
 	private suspend fun refreshRevokedCertificates(forceRefresh: Boolean) = withContext(Dispatchers.IO) {
 		val shouldLoadRevokedCertificates = forceRefresh || !store.areRevokedCertificatesValid()
 		if (shouldLoadRevokedCertificates) {
-			val response = revocationService.getRevokedCertificates()
-			val body = response.body()
-			if (response.isSuccessful && body != null) {
-				store.revokedCertificates = body
-				val newValidUntil = Instant.now().plus(body.validDuration, ChronoUnit.MILLIS).toEpochMilli()
+			val allRevokedCertificates = store.revokedCertificates?.revokedCerts?.toMutableList() ?: mutableListOf()
+			var since = store.revokedCertificatesSinceHeader
+			var validDuration: Long? = null
+
+			// Get the revocation list as long as the request is successful
+			var count = 0
+			var revocationListResponse = revocationService.getRevokedCertificates(since)
+			while (revocationListResponse.isSuccessful) {
+				// Add all revoked certificates from the response to the list and save the validity duration of this response
+				allRevokedCertificates.addAll(revocationListResponse.body()?.revokedCerts.orEmpty())
+				validDuration = revocationListResponse.body()?.validDuration
+
+				// Check if the request returns an up to date header, the next since has changed or we reached a loop count threshold
+				val isUpToDate = revocationListResponse.headers()[HEADER_UP_TO_DATE].toBoolean()
+				since = revocationListResponse.headers()[HEADER_NEXT_SINCE]
+				if (isUpToDate || count >= 20) break
+
+				count++
+				revocationListResponse = revocationService.getRevokedCertificates(since)
+			}
+
+			// If the valid duration is not null (meaning at least one paging request was successful), update the revocation list in the storage
+			if (validDuration != null) {
+				store.revokedCertificatesSinceHeader = since
+				store.revokedCertificates = RevokedCertificates(allRevokedCertificates.distinct(), validDuration)
+
+				val newValidUntil = Instant.now().plus(validDuration, ChronoUnit.MILLIS).toEpochMilli()
 				store.revokedCertificatesValidUntil = newValidUntil
 			}
 		}
