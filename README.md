@@ -1,6 +1,7 @@
 # CovidCertificate-SDK-Android
 
 [![License: MPL 2.0](https://img.shields.io/badge/License-MPL%202.0-brightgreen.svg)](https://github.com/admin-ch/CovidCertificate-SDK-iOS/blob/main/LICENSE)
+[![Maven Central](https://img.shields.io/maven-central/v/ch.admin.bag.covidcertificate/sdk-android.svg?label=Maven%20Central)](https://search.maven.org/search?q=g:%22ch.admin.bag.covidcertificate%22%20AND%20a:%22sdk-android%22)
 
 ## Introduction
 
@@ -30,8 +31,12 @@ source code.
 
 ## Installation
 
-This SDK currently needs to be included as a Git submodule in the application project. A Maven Central release is planned for the
-future.
+For a change log, check out the [releases](https://github.com/admin-ch/CovidCertificate-SDK-Android/releases) page.
+
+The latest release is available on [Maven Central](https://search.maven.org/artifact/ch.admin.bag.covidcertificate/sdk-android/).
+```groovy
+implementation 'ch.admin.bag.covidcertificate:sdk-android:1.2.0'
+```
 
 ## How It Works
 
