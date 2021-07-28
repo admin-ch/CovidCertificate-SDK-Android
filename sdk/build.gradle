@@ -66,7 +66,7 @@ dependencies {
 	// Crypto
 	implementation "com.augustcellars.cose:cose-java:1.1.0"
 	implementation 'androidx.security:security-crypto:1.0.0'
-	implementation 'org.bouncycastle:bcprov-jdk15on:1.65'
+	implementation 'org.bouncycastle:bcprov-jdk15on:1.69'
 
 	// Networking
 	api 'com.squareup.retrofit2:retrofit:2.9.0'
