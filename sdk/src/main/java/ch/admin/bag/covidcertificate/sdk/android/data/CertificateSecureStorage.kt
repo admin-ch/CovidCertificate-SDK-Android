@@ -30,6 +30,7 @@ internal class CertificateSecureStorage private constructor(private val context:
 
 		private const val KEY_CERTIFICATE_SIGNATURES_VALID_UNTIL = "KEY_CERTIFICATE_SIGNATURES_VALID_UNTIL"
 		private const val KEY_CERTIFICATE_SIGNATURES_SINCE_HEADER = "KEY_CERTIFICATE_SIGNATURES_SINCE_HEADER"
+		private const val KEY_CERTIFICATE_SIGNATURES_UP_TO_HEADER = "KEY_CERTIFICATE_SIGNATURES_UP_TO_HEADER"
 		private const val KEY_REVOKED_CERTIFICATES_VALID_UNTIL = "KEY_REVOKED_CERTIFICATES_VALID_UNTIL"
 		private const val KEY_REVOKED_CERTIFICATES_SINCE_HEADER = "KEY_REVOKED_CERTIFICATES_SINCE_HEADER"
 		private const val KEY_RULESET_VALID_UNTIL = "KEY_RULESET_VALID_UNTIL"
@@ -68,6 +69,12 @@ internal class CertificateSecureStorage private constructor(private val context:
 		get() = preferences.getString(KEY_CERTIFICATE_SIGNATURES_SINCE_HEADER, null)
 		set(value) {
 			preferences.edit().putString(KEY_CERTIFICATE_SIGNATURES_SINCE_HEADER, value).apply()
+		}
+
+	override var certificatesUpToHeader: Long
+		get() = preferences.getLong(KEY_CERTIFICATE_SIGNATURES_UP_TO_HEADER, 0L)
+		set(value) {
+			preferences.edit().putLong(KEY_CERTIFICATE_SIGNATURES_UP_TO_HEADER, value).apply()
 		}
 
 	override var revokedCertificatesValidUntil: Long

@@ -20,10 +20,10 @@ import retrofit2.http.Query
 internal interface CertificateService {
 
 	@Headers("Accept: application/json+jws")
-	@GET("v1/keys/list")
+	@GET("v2/keys/list")
 	suspend fun getActiveSignerCertificateKeyIds(): Response<ActiveSignerCertificates>
 
 	@Headers("Accept: application/json+jws")
-	@GET("v1/keys/updates?certFormat=ANDROID")
-	suspend fun getSignerCertificates(@Query("since") since: String? = null): Response<Jwks>
+	@GET("v2/keys/updates?certFormat=ANDROID")
+	suspend fun getSignerCertificates(@Query("upTo") upTo: Long, @Query("since") since: String? = null): Response<Jwks>
 }

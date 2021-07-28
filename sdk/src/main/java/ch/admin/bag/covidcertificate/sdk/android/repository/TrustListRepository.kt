@@ -32,6 +32,7 @@ internal class TrustListRepository(
 ) {
 
 	companion object {
+		private const val HEADER_UP_TO = "up-to"
 		private const val HEADER_UP_TO_DATE = "up-to-date"
 		private const val HEADER_NEXT_SINCE = "X-Next-Since"
 	}
@@ -78,10 +79,11 @@ internal class TrustListRepository(
 				if (activeCertificatesResponse.isSuccessful && activeCertificatesBody != null) {
 					val allCertificates = store.certificateSignatures?.certs?.toMutableList() ?: mutableListOf()
 					var since = store.certificatesSinceHeader
+					val upTo = activeCertificatesResponse.headers()[HEADER_UP_TO]?.toLongOrNull() ?: 0
 
 					// Get the signer certificates as long as there are entries in the response list
 					var count = 0
-					var certificatesResponse = certificateService.getSignerCertificates(since)
+					var certificatesResponse = certificateService.getSignerCertificates(upTo, since)
 					while (certificatesResponse.isSuccessful && certificatesResponse.body()?.certs?.isNullOrEmpty() == false) {
 						allCertificates.addAll(certificatesResponse.body()?.certs ?: emptyList())
 
@@ -91,7 +93,7 @@ internal class TrustListRepository(
 						if (isUpToDate || count >= 20) break
 
 						count++
-						certificatesResponse = certificateService.getSignerCertificates(since)
+						certificatesResponse = certificateService.getSignerCertificates(upTo, since)
 					}
 
 					// Filter only active certificates and store them
@@ -100,6 +102,7 @@ internal class TrustListRepository(
 
 					// Only replace the stored certificates if the list sizes match
 					store.certificatesSinceHeader = since
+					store.certificatesUpToHeader = upTo
 					store.certificateSignatures = Jwks(activeCertificates)
 
 					val validDuration = activeCertificatesBody.validDuration
