@@ -25,31 +25,19 @@ object EncryptedSharedPreferencesUtil {
 	private val TAG = EncryptedSharedPreferencesUtil::class.java.simpleName
 
 	@Synchronized
+	@kotlin.jvm.Throws(CorruptedEncryptedSharedPreferencesException::class)
 	fun initializeSharedPreferences(context: Context, preferencesName: String): SharedPreferences {
 		return try {
 			createEncryptedSharedPreferences(context, preferencesName)
 		} catch (e: Exception) {
-			// Try to recreate the shared preferences. This will cause any previous data to be lost.
-			return try {
-				if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-					// Try to delete the shared preferences file via the API
-					context.deleteSharedPreferences(preferencesName)
-				} else {
-					// Try to manually delete the shared preferences file
-					tryToDeleteSharedPreferencesFile(context, preferencesName)
-				}
-				createEncryptedSharedPreferences(context, preferencesName)
-			} catch (e2: Exception) {
-				// Tried to delete and recreate shared preferences, cannot recover
-				throw RuntimeException(e2)
-			}
+			e.printStackTrace()
+			throw CorruptedEncryptedSharedPreferencesException(preferencesName, "Failed to create preferences $preferencesName", e)
 		}
 	}
 
 	/**
-	 * Create or obtain an encrypted SharedPreferences instance. Note that this method is synchronized because the AndroidX
-	 * Security
-	 * library is not thread-safe.
+	 * Create or obtain an encrypted SharedPreferences instance.
+	 * Note that this method is synchronized because the AndroidX Security library is not thread-safe.
 	 * @see [https://developer.android.com/topic/security/data](https://developer.android.com/topic/security/data)
 	 */
 	@Synchronized
@@ -65,12 +53,29 @@ object EncryptedSharedPreferencesUtil {
 		)
 	}
 
-	private fun tryToDeleteSharedPreferencesFile(context: Context, preferencesName: String) {
-		val sharedPreferencesFile = File(context.applicationInfo.dataDir + "/shared_prefs/" + preferencesName + ".xml")
-		if (sharedPreferencesFile.exists()) {
-			if (!sharedPreferencesFile.delete()) {
-				Log.e(TAG, "Failed to delete $sharedPreferencesFile")
+	/**
+	 * Try to recreate the shared preferences. This will cause any previous data to be lost.
+	 */
+	fun tryToDeleteSharedPreferencesFile(context: Context, preferencesName: String) {
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+			// Try to delete the shared preferences file via the API
+			context.deleteSharedPreferences(preferencesName)
+		} else {
+			// Try to manually delete the shared preferences file
+			val sharedPreferencesFile = File(context.applicationInfo.dataDir + "/shared_prefs/" + preferencesName + ".xml")
+			if (sharedPreferencesFile.exists()) {
+				if (!sharedPreferencesFile.delete()) {
+					Log.e(TAG, "Failed to delete $sharedPreferencesFile")
+				}
 			}
 		}
 	}
 }
+
+/**
+ * Thrown when the EncryptedSharedPreferences experience an error that we cannot recover from
+ * (other than deleting and re-creating them).
+ */
+class CorruptedEncryptedSharedPreferencesException(
+	val preferencesName: String, message: String, cause: Throwable
+) : Exception(message, cause)

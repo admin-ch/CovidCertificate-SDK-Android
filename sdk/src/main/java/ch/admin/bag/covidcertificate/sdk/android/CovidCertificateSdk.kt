@@ -28,6 +28,7 @@ import ch.admin.bag.covidcertificate.sdk.android.net.service.RevocationService
 import ch.admin.bag.covidcertificate.sdk.android.net.service.RuleSetService
 import ch.admin.bag.covidcertificate.sdk.android.repository.MetadataRepository
 import ch.admin.bag.covidcertificate.sdk.android.repository.TrustListRepository
+import ch.admin.bag.covidcertificate.sdk.android.utils.CorruptedEncryptedSharedPreferencesException
 import ch.admin.bag.covidcertificate.sdk.android.verification.CertificateVerificationController
 import ch.admin.bag.covidcertificate.sdk.android.verification.state.VerifierDecodeState
 import ch.admin.bag.covidcertificate.sdk.android.verification.task.VerifierCertificateVerificationTask
@@ -64,7 +65,10 @@ object CovidCertificateSdk {
 	 *
 	 * @param context The application context
 	 * @param environment The environment the application is using. This determines which trust list is loaded
+	 *
+	 * @throws CorruptedEncryptedSharedPreferencesException If the internal CertificateSecureStorage is unrecoverably corrupted.
 	 */
+	@kotlin.jvm.Throws(CorruptedEncryptedSharedPreferencesException::class)
 	fun init(context: Context, environment: SdkEnvironment) {
 		// Replace the java.util.Base64 based provider in the core SDK with the android.util.Base64 provider because the Java one
 		// was added in Android SDK level 26 and would lead to a ClassNotFoundException on earlier versions
