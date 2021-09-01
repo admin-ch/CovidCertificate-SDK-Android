@@ -26,6 +26,17 @@ object CertificatePinning {
 		.build()
 
 	val pinner: CertificatePinner
-		get() = if (BuildConfig.DEBUG) CERTIFICATE_PINNER_DISABLED else CERTIFICATE_PINNER_LIVE
+		get() = if (enabled) CERTIFICATE_PINNER_LIVE else CERTIFICATE_PINNER_DISABLED
+
+	/**
+	 * Enabled/disable the certificate pinner.
+	 *
+	 * Per default certificate pinning is enabled on non-debug (i.e. release) builds.
+	 *
+	 * Setting this field only affects what is returned when getting the `pinner`.
+	 * Hence you want to call this early in the app's lifecycle to make sure all Retrofit instances are initialised as intended.
+	 * Also note that this pinner only applies to OkHttp, the network-security-config still applies.
+	 */
+	var enabled: Boolean = !BuildConfig.DEBUG
 
 }
