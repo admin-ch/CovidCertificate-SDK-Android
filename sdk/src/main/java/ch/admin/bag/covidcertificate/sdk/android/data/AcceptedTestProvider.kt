@@ -45,6 +45,7 @@ class AcceptedTestProvider private constructor(context: Context) {
 			return testEntry.naaTestName ?: "PCR"
 		} else if (testEntry.type == TestType.RAT.code) {
 			return metadataStorage.productsMetadata.test.manf.valueSetValues[testEntry.ratTestNameAndManufacturer]?.display
+				?: testEntry.ratTestNameAndManufacturer
 		}
 		return null
 	}
