@@ -11,9 +11,9 @@
 package ch.admin.bag.covidcertificate.sdk.android.data
 
 import android.content.Context
-import ch.admin.bag.covidcertificate.sdk.core.models.healthcert.eu.TestEntry
 import ch.admin.bag.covidcertificate.sdk.android.utils.SingletonHolder
 import ch.admin.bag.covidcertificate.sdk.core.data.TestType
+import ch.admin.bag.covidcertificate.sdk.core.models.healthcert.eu.TestEntry
 
 class AcceptedTestProvider private constructor(context: Context) {
 
@@ -40,25 +40,13 @@ class AcceptedTestProvider private constructor(context: Context) {
 		return false
 	}
 
-	fun getTestName(testEntry: TestEntry): String? {
+	fun getManufacturesAndNameLabelIfExists(testEntry: TestEntry): String? {
 		if (testEntry.type == TestType.PCR.code) {
 			return testEntry.naaTestName ?: "PCR"
 		} else if (testEntry.type == TestType.RAT.code) {
-			return testEntry.naaTestName
+			return metadataStorage.productsMetadata.test.manf.valueSetValues[testEntry.ratTestNameAndManufacturer]?.display
+				?: testEntry.ratTestNameAndManufacturer
 		}
 		return null
-	}
-
-	fun getManufacturesIfExists(testEntry: TestEntry): String? {
-		var ma = metadataStorage.productsMetadata.test.manf.valueSetValues[testEntry.ratTestNameAndManufacturer]?.display
-		testEntry.naaTestName?.let { nm ->
-			ma = ma?.replace(nm, "")?.trim()?.removeSuffix(",")
-		}
-
-		return if (ma.isNullOrEmpty()) {
-			null
-		} else {
-			ma
-		}
 	}
 }
