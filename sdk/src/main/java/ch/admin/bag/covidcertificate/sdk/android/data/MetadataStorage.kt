@@ -11,9 +11,9 @@
 package ch.admin.bag.covidcertificate.sdk.android.data
 
 import android.content.Context
-import ch.admin.bag.covidcertificate.sdk.core.data.moshi.RawJsonStringAdapter
 import ch.admin.bag.covidcertificate.sdk.android.models.ProductsMetadata
 import ch.admin.bag.covidcertificate.sdk.android.utils.SingletonHolder
+import ch.admin.bag.covidcertificate.sdk.core.data.moshi.RawJsonStringAdapter
 import com.squareup.moshi.Moshi
 import okio.IOException
 import okio.buffer
@@ -37,8 +37,15 @@ internal class MetadataStorage private constructor(private val context: Context)
 			field = value
 		}
 
-	private fun loadProductsMetadata(): ProductsMetadata =
-		metadataFileStorage.read(context)?.let { metadataAdapter.fromJson(it) }
-			?: metadataAdapter.fromJson(context.assets.open(ASSET_PATH_FALLBACK_PRODUCTS_METADATA).source().buffer())
-			?: throw IOException()
+	private fun loadProductsMetadata(): ProductsMetadata {
+		return try {
+			// First try to read the products metadata from the file storage
+			metadataFileStorage.read(context)?.let { metadataAdapter.fromJson(it) }
+				?: throw IOException("Failed to read stored products metadata")
+		} catch (e: Exception) {
+			// If the stored products metadata could not be read (corrupt JSON or empty/non-existing file), fallback to the pre-packaged products metadata
+			metadataAdapter.fromJson(context.assets.open(ASSET_PATH_FALLBACK_PRODUCTS_METADATA).source().buffer())
+				?: throw IOException("Failed to read fallback products metadata")
+		}
+	}
 }
