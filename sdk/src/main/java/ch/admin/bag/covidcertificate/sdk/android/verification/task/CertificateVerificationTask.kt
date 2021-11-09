@@ -24,11 +24,9 @@ import kotlinx.coroutines.flow.asStateFlow
  * The base task class to verify a certificate.
  *
  * @param connectivityManager The Android connectivity service used to check if the device is offline or not
- * @param ignoreLocalTrustList True to ignore the local trust list during verification and force either an offline or network error
  */
 internal abstract class CertificateVerificationTask(
-	private val connectivityManager: ConnectivityManager,
-	private val ignoreLocalTrustList: Boolean = false
+	private val connectivityManager: ConnectivityManager
 ) {
 
 	private val mutableVerificationStateFlow = MutableStateFlow<VerificationState>(VerificationState.LOADING)
@@ -39,7 +37,7 @@ internal abstract class CertificateVerificationTask(
 	 */
 	suspend fun execute(verifier: CertificateVerifier, trustList: TrustList?) {
 		mutableVerificationStateFlow.emit(VerificationState.LOADING)
-		if (trustList != null && !ignoreLocalTrustList) {
+		if (trustList != null) {
 			val verificationState = verify(verifier, trustList)
 			mutableVerificationStateFlow.emit(verificationState)
 		} else {
