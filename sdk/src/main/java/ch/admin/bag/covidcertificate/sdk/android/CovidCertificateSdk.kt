@@ -38,7 +38,6 @@ import ch.admin.bag.covidcertificate.sdk.core.models.healthcert.CertificateHolde
 import ch.admin.bag.covidcertificate.sdk.core.models.state.DecodeState
 import ch.admin.bag.covidcertificate.sdk.core.models.state.VerificationState
 import ch.admin.bag.covidcertificate.sdk.core.verifier.CertificateVerifier
-import ch.admin.bag.covidcertificate.verifier.sdk.android.BuildConfig
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
 import java.security.cert.CertificateFactory
@@ -65,7 +64,7 @@ object CovidCertificateSdk {
 	 * @param context The application context
 	 * @param environment The environment the application is using. This determines which trust list is loaded
 	 */
-	fun init(context: Context, environment: SdkEnvironment) {
+	fun init(context: Context, environment: SdkEnvironment, defaultAllowedServerTimeDiff: Long = 2 * 60 * 60 * 1000L) {
 		// Replace the java.util.Base64 based provider in the core SDK with the android.util.Base64 provider because the Java one
 		// was added in Android SDK level 26 and would lead to a ClassNotFoundException on earlier versions
 		Base64Impl.setBase64Provider(AndroidUtilBase64())
@@ -78,7 +77,13 @@ object CovidCertificateSdk {
 		val ruleSetService = retrofit.create(RuleSetService::class.java)
 
 		val certificateStorage = CertificateSecureStorage.getInstance(context)
-		val trustListRepository = TrustListRepository(certificateService, revocationService, ruleSetService, certificateStorage)
+		val trustListRepository = TrustListRepository(
+			certificateService,
+			revocationService,
+			ruleSetService,
+			certificateStorage,
+			defaultAllowedServerTimeDiff
+		)
 
 		val certificateVerifier = CertificateVerifier()
 		certificateVerificationController = CertificateVerificationController(trustListRepository, certificateVerifier)
@@ -124,7 +129,11 @@ object CovidCertificateSdk {
 	 * @param onCompletionCallback A callback for when the trust list has been refreshed
 	 * @param onErrorCallback A callback for when refreshing the trust list failed
 	 */
-	fun refreshTrustList(coroutineScope: CoroutineScope, onCompletionCallback: () -> Unit = {}, onErrorCallback: () -> Unit = {}) {
+	fun refreshTrustList(
+		coroutineScope: CoroutineScope,
+		onCompletionCallback: () -> Unit = {},
+		onErrorCallback: (String) -> Unit = {}
+	) {
 		requireInitialized()
 		certificateVerificationController.refreshTrustList(coroutineScope, onCompletionCallback, onErrorCallback)
 	}

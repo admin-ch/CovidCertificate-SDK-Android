@@ -11,8 +11,10 @@
 package ch.admin.bag.covidcertificate.sdk.android.net.service
 
 import ch.admin.bag.covidcertificate.sdk.core.models.trustlist.RevokedCertificates
+import okhttp3.CacheControl
 import retrofit2.Response
 import retrofit2.http.GET
+import retrofit2.http.Header
 import retrofit2.http.Headers
 import retrofit2.http.Query
 
@@ -20,6 +22,6 @@ internal interface RevocationService {
 
 	@Headers("Accept: application/json+jws")
 	@GET("v2/revocationList")
-	suspend fun getRevokedCertificates(@Query("since") since: String? = null): Response<RevokedCertificates>
+	suspend fun getRevokedCertificates( @Header("Cache-Control") cacheControl: String?, @Query("since") since: String? = null): Response<RevokedCertificates>
 
 }

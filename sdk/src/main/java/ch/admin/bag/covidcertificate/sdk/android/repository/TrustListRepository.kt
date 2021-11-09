@@ -11,16 +11,17 @@
 package ch.admin.bag.covidcertificate.sdk.android.repository
 
 import ch.admin.bag.covidcertificate.sdk.android.data.TrustListStore
-import ch.admin.bag.covidcertificate.sdk.core.models.trustlist.Jwks
-import ch.admin.bag.covidcertificate.sdk.core.models.trustlist.TrustList
 import ch.admin.bag.covidcertificate.sdk.android.net.service.CertificateService
 import ch.admin.bag.covidcertificate.sdk.android.net.service.RevocationService
 import ch.admin.bag.covidcertificate.sdk.android.net.service.RuleSetService
+import ch.admin.bag.covidcertificate.sdk.core.models.trustlist.Jwks
 import ch.admin.bag.covidcertificate.sdk.core.models.trustlist.RevokedCertificates
+import ch.admin.bag.covidcertificate.sdk.core.models.trustlist.TrustList
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import retrofit2.Response
 import java.time.Instant
 import java.time.temporal.ChronoUnit
 
@@ -29,12 +30,15 @@ internal class TrustListRepository(
 	private val revocationService: RevocationService,
 	private val ruleSetService: RuleSetService,
 	private val store: TrustListStore,
+	private val defaultAllowedServerTimeDiff: Long
 ) {
 
 	companion object {
 		private const val HEADER_UP_TO = "up-to"
 		private const val HEADER_UP_TO_DATE = "up-to-date"
 		private const val HEADER_NEXT_SINCE = "X-Next-Since"
+		private const val HEADER_DATE = "Date"
+		private const val HEADER_AGE = "Age"
 	}
 
 	/**
@@ -71,46 +75,49 @@ internal class TrustListRepository(
 	}
 
 	private suspend fun refreshCertificateSignatures(forceRefresh: Boolean) = withContext(Dispatchers.IO) {
-			val shouldLoadSignatures = forceRefresh || !store.areSignaturesValid()
-			if (shouldLoadSignatures) {
-				// Load the active certificate key IDs
-				val activeCertificatesResponse = certificateService.getActiveSignerCertificateKeyIds()
-				val activeCertificatesBody = activeCertificatesResponse.body()
-				if (activeCertificatesResponse.isSuccessful && activeCertificatesBody != null) {
-					val allCertificates = store.certificateSignatures?.certs?.toMutableList() ?: mutableListOf()
-					var since = store.certificatesSinceHeader
-					val upTo = activeCertificatesResponse.headers()[HEADER_UP_TO]?.toLongOrNull() ?: 0
+		val shouldLoadSignatures = forceRefresh || !store.areSignaturesValid()
+		if (shouldLoadSignatures) {
+			// Load the active certificate key IDs
+			val activeCertificatesResponse = certificateService.getActiveSignerCertificateKeyIds()
+			val activeCertificatesBody = activeCertificatesResponse.body()
+			if (activeCertificatesResponse.isSuccessful && activeCertificatesBody != null) {
+				val allCertificates = store.certificateSignatures?.certs?.toMutableList() ?: mutableListOf()
+				var since = store.certificatesSinceHeader
+				val upTo = activeCertificatesResponse.headers()[HEADER_UP_TO]?.toLongOrNull() ?: 0
 
-					// Get the signer certificates as long as there are entries in the response list
-					var count = 0
-					var certificatesResponse = certificateService.getSignerCertificates(upTo, since)
-					while (certificatesResponse.isSuccessful && certificatesResponse.body()?.certs?.isNullOrEmpty() == false) {
-						allCertificates.addAll(certificatesResponse.body()?.certs ?: emptyList())
+				// Get the signer certificates as long as there are entries in the response list
+				var count = 0
+				var certificatesResponse = certificateService.getSignerCertificates(getCacheControlParameter(forceRefresh), upTo,  since)
+				while (certificatesResponse.isSuccessful && certificatesResponse.body()?.certs?.isNullOrEmpty() == false) {
+					allCertificates.addAll(certificatesResponse.body()?.certs ?: emptyList())
 
-						// Check if the request returns an up to date header, the next since has changed or we reached a loop count threshold
-						val isUpToDate = certificatesResponse.headers()[HEADER_UP_TO_DATE].toBoolean()
-						since = certificatesResponse.headers()[HEADER_NEXT_SINCE]
-						if (isUpToDate || count >= 20) break
+					// Check if the request returns an up to date header, the next since has changed or we reached a loop count threshold
+					val isUpToDate = certificatesResponse.headers()[HEADER_UP_TO_DATE].toBoolean()
+					since = certificatesResponse.headers()[HEADER_NEXT_SINCE]
 
-						count++
-						certificatesResponse = certificateService.getSignerCertificates(upTo, since)
-					}
+					detectTimeshift(certificatesResponse)
 
-					// Filter only active certificates and store them
-					val activeCertificateKeyIds = activeCertificatesBody.activeKeyIds
-					val activeCertificates = allCertificates.filter { activeCertificateKeyIds.contains(it.keyId) }
+					if (isUpToDate || count >= 20) break
 
-					// Only replace the stored certificates if the list sizes match
-					store.certificatesSinceHeader = since
-					store.certificatesUpToHeader = upTo
-					store.certificateSignatures = Jwks(activeCertificates)
-
-					val validDuration = activeCertificatesBody.validDuration
-					val newValidUntil = Instant.now().plus(validDuration, ChronoUnit.MILLIS).toEpochMilli()
-					store.certificateSignaturesValidUntil = newValidUntil
+					count++
+					certificatesResponse = certificateService.getSignerCertificates(getCacheControlParameter(forceRefresh), upTo, since)
 				}
+
+				// Filter only active certificates and store them
+				val activeCertificateKeyIds = activeCertificatesBody.activeKeyIds
+				val activeCertificates = allCertificates.filter { activeCertificateKeyIds.contains(it.keyId) }
+
+				// Only replace the stored certificates if the list sizes match
+				store.certificatesSinceHeader = since
+				store.certificatesUpToHeader = upTo
+				store.certificateSignatures = Jwks(activeCertificates)
+
+				val validDuration = activeCertificatesBody.validDuration
+				val newValidUntil = Instant.now().plus(validDuration, ChronoUnit.MILLIS).toEpochMilli()
+				store.certificateSignaturesValidUntil = newValidUntil
 			}
 		}
+	}
 
 	private suspend fun refreshRevokedCertificates(forceRefresh: Boolean) = withContext(Dispatchers.IO) {
 		val shouldLoadRevokedCertificates = forceRefresh || !store.areRevokedCertificatesValid()
@@ -121,7 +128,7 @@ internal class TrustListRepository(
 
 			// Get the revocation list as long as the request is successful
 			var count = 0
-			var revocationListResponse = revocationService.getRevokedCertificates(since)
+			var revocationListResponse = revocationService.getRevokedCertificates(getCacheControlParameter(forceRefresh),since)
 			while (revocationListResponse.isSuccessful) {
 				// Add all revoked certificates from the response to the list and save the validity duration of this response
 				allRevokedCertificates.addAll(revocationListResponse.body()?.revokedCerts.orEmpty())
@@ -130,10 +137,13 @@ internal class TrustListRepository(
 				// Check if the request returns an up to date header, the next since has changed or we reached a loop count threshold
 				val isUpToDate = revocationListResponse.headers()[HEADER_UP_TO_DATE].toBoolean()
 				since = revocationListResponse.headers()[HEADER_NEXT_SINCE]
+
+				detectTimeshift(revocationListResponse)
+
 				if (isUpToDate || count >= 20) break
 
 				count++
-				revocationListResponse = revocationService.getRevokedCertificates(since)
+				revocationListResponse = revocationService.getRevokedCertificates(getCacheControlParameter(forceRefresh), since)
 			}
 
 			// If the valid duration is not null (meaning at least one paging request was successful), update the revocation list in the storage
@@ -150,14 +160,30 @@ internal class TrustListRepository(
 	private suspend fun refreshRuleSet(forceRefresh: Boolean) = withContext(Dispatchers.IO) {
 		val shouldLoadRuleSet = forceRefresh || !store.areRuleSetsValid()
 		if (shouldLoadRuleSet) {
-			val response = ruleSetService.getRuleset()
+			val response = ruleSetService.getRuleset(getCacheControlParameter(forceRefresh))
 			val body = response.body()
 			if (response.isSuccessful && body != null) {
 				store.ruleset = body
 				val newValidUntil = Instant.now().plus(body.validDuration, ChronoUnit.MILLIS).toEpochMilli()
 				store.rulesetValidUntil = newValidUntil
+				detectTimeshift(response)
 			}
 		}
 	}
 
+	private fun detectTimeshift(response: Response<out Any>) {
+		val serverTime = response.headers().getInstant(HEADER_DATE)
+		val ageString: String? = response.headers()[HEADER_AGE]
+		if (serverTime == null) return
+		val age: Long = if (ageString != null) 1000 * ageString.toLong() else 0
+		val liveServerTime = serverTime.toEpochMilli() + age
+		val systemTime = System.currentTimeMillis()
+		if (Math.abs(systemTime - liveServerTime) > defaultAllowedServerTimeDiff) {
+			throw ServerTimeOffsetException()
+		}
+	}
+
+	private fun getCacheControlParameter(forceRefresh: Boolean): String? = if (forceRefresh) "no-cache" else null
 }
+
+class ServerTimeOffsetException() : Exception()
