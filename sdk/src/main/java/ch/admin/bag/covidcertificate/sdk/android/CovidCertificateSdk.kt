@@ -170,11 +170,10 @@ object CovidCertificateSdk {
 
 		fun verify(
 			certificateHolder: VerifierCertificateHolder,
-			coroutineScope: CoroutineScope,
-			ignoreLocalTrustList: Boolean = false
+			coroutineScope: CoroutineScope
 		): Flow<VerificationState> {
 			requireInitialized()
-			val task = VerifierCertificateVerificationTask(certificateHolder, connectivityManager, ignoreLocalTrustList)
+			val task = VerifierCertificateVerificationTask(certificateHolder, connectivityManager)
 			certificateVerificationController.enqueue(task, coroutineScope)
 			return task.verificationStateFlow
 		}
@@ -188,11 +187,10 @@ object CovidCertificateSdk {
 
 		fun verify(
 			certificateHolder: CertificateHolder,
-			coroutineScope: CoroutineScope,
-			ignoreLocalTrustList: Boolean = false
+			coroutineScope: CoroutineScope
 		): Flow<VerificationState> {
 			requireInitialized()
-			val task = WalletCertificateVerificationTask(certificateHolder, connectivityManager, ignoreLocalTrustList)
+			val task = WalletCertificateVerificationTask(certificateHolder, connectivityManager)
 			certificateVerificationController.enqueue(task, coroutineScope)
 			return task.verificationStateFlow
 		}

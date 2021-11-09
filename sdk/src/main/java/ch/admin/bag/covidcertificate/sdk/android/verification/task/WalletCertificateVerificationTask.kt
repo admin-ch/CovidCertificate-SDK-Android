@@ -22,13 +22,11 @@ import ch.admin.bag.covidcertificate.sdk.core.verifier.CertificateVerifier
  *
  * @param certificateHolder The verifier certificate holder (containing the certificate data) to verify
  * @param connectivityManager The Android connectivity service used to check if the device is offline or not
- * @param ignoreLocalTrustList True to ignore the local trust list during verification and force either an offline or network error
  */
 internal class WalletCertificateVerificationTask(
 	private val certificateHolder: CertificateHolder,
-	connectivityManager: ConnectivityManager,
-	ignoreLocalTrustList: Boolean = false
-) : CertificateVerificationTask(connectivityManager, ignoreLocalTrustList) {
+	connectivityManager: ConnectivityManager
+) : CertificateVerificationTask(connectivityManager) {
 
 	override suspend fun verify(verifier: CertificateVerifier, trustList: TrustList): VerificationState {
 		return verifier.verify(certificateHolder, trustList)
