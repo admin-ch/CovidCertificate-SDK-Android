@@ -83,7 +83,9 @@ internal class TrustListRepository(
 			if (activeCertificatesResponse.isSuccessful && activeCertificatesBody != null) {
 				val allCertificates = store.certificateSignatures?.certs?.toMutableList() ?: mutableListOf()
 				var since = store.certificatesSinceHeader
-				val upTo = activeCertificatesResponse.headers()[HEADER_UP_TO]?.toLongOrNull() ?: 0
+				val upTo = activeCertificatesResponse.body()?.upTo?.toLong()
+					?:activeCertificatesResponse.headers()[HEADER_UP_TO]?.toLongOrNull()
+					?: 0
 
 				// Get the signer certificates as long as there are entries in the response list
 				var count = 0

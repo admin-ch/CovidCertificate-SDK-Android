@@ -26,6 +26,7 @@ import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
 import retrofit2.converter.scalars.ScalarsConverterFactory
+import java.util.concurrent.TimeUnit
 
 internal class RetrofitFactory(private val environment: SdkEnvironment) {
 
@@ -41,6 +42,9 @@ internal class RetrofitFactory(private val environment: SdkEnvironment) {
 			.addInterceptor(JwsInterceptor(rootCa, expectedCommonName))
 			.addInterceptor(ApiKeyInterceptor())
 			.addInterceptor(UserAgentInterceptor(Config.userAgent))
+			.connectTimeout(10, TimeUnit.SECONDS)
+			.writeTimeout(10, TimeUnit.SECONDS)
+			.readTimeout(10, TimeUnit.SECONDS)
 
 		val cache = Cache(context.cacheDir, CACHE_SIZE.toLong())
 		okHttpBuilder.cache(cache)
