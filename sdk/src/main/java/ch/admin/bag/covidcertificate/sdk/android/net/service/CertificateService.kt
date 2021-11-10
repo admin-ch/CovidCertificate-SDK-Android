@@ -14,6 +14,7 @@ import ch.admin.bag.covidcertificate.sdk.core.models.trustlist.ActiveSignerCerti
 import ch.admin.bag.covidcertificate.sdk.core.models.trustlist.Jwks
 import retrofit2.Response
 import retrofit2.http.GET
+import retrofit2.http.Header
 import retrofit2.http.Headers
 import retrofit2.http.Query
 
@@ -25,5 +26,5 @@ internal interface CertificateService {
 
 	@Headers("Accept: application/json+jws")
 	@GET("v2/keys/updates?certFormat=ANDROID")
-	suspend fun getSignerCertificates(@Query("upTo") upTo: Long, @Query("since") since: String? = null): Response<Jwks>
+	suspend fun getSignerCertificates(@Header("Cache-Control") cacheControl: String?, @Query("upTo") upTo: Long,   @Query("since") since: String? = null): Response<Jwks>
 }
