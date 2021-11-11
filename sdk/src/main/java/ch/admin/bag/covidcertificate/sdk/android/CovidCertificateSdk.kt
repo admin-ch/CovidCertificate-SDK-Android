@@ -59,6 +59,7 @@ object CovidCertificateSdk {
 	private lateinit var connectivityManager: ConnectivityManager
 	private var isInitialized = false
 	private var sdkLifecycleObserver: SdkLifecycleObserver? = null
+	private var timeShiftDetectionConfig = TimeShiftDetectionConfig(false)
 
 	/**
 	 * Initialize the CovidCertificate SDK
@@ -68,8 +69,7 @@ object CovidCertificateSdk {
 	 */
 	fun init(
 		context: Context,
-		environment: SdkEnvironment,
-		timeShiftDetectionConfig: TimeShiftDetectionConfig = TimeShiftDetectionConfig(false)
+		environment: SdkEnvironment
 	) {
 		// Replace the java.util.Base64 based provider in the core SDK with the android.util.Base64 provider because the Java one
 		// was added in Android SDK level 26 and would lead to a ClassNotFoundException on earlier versions
@@ -83,13 +83,12 @@ object CovidCertificateSdk {
 		val ruleSetService = retrofit.create(RuleSetService::class.java)
 
 		val certificateStorage = CertificateSecureStorage.getInstance(context)
-		val trustListRepository = TrustListRepository(
+		val  trustListRepository = TrustListRepository(
 			certificateService,
 			revocationService,
 			ruleSetService,
-			certificateStorage,
-			timeShiftDetectionConfig
-		)
+			certificateStorage
+		) { timeShiftDetectionConfig }
 
 		val certificateVerifier = CertificateVerifier()
 		certificateVerificationController = CertificateVerificationController(trustListRepository, certificateVerifier)
@@ -114,6 +113,10 @@ object CovidCertificateSdk {
 
 		sdkLifecycleObserver = SdkLifecycleObserver(lifecycle)
 		sdkLifecycleObserver?.register(lifecycle)
+	}
+
+	fun setTimeShiftDetectingConfig(timeShiftDetectionConfig: TimeShiftDetectionConfig){
+		this.timeShiftDetectionConfig = timeShiftDetectionConfig
 	}
 
 	/**
