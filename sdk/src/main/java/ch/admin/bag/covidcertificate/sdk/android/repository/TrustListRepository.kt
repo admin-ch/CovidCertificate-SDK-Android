@@ -30,7 +30,7 @@ internal class TrustListRepository(
 	private val revocationService: RevocationService,
 	private val ruleSetService: RuleSetService,
 	private val store: TrustListStore,
-	private val timeShiftDetectionConfig: TimeShiftDetectionConfig
+	private val provider: () -> TimeShiftDetectionConfig
 ) {
 
 	companion object {
@@ -173,6 +173,7 @@ internal class TrustListRepository(
 	}
 
 	private fun detectTimeshift(response: Response<out Any>) {
+		val timeShiftDetectionConfig = provider()
 		if (timeShiftDetectionConfig.enabled) {
 			val serverTime = response.headers().getInstant(HEADER_DATE)
 			val ageString: String? = response.headers()[HEADER_AGE]
