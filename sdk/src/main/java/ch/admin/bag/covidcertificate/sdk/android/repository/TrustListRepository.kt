@@ -30,7 +30,7 @@ internal class TrustListRepository(
 	private val revocationService: RevocationService,
 	private val ruleSetService: RuleSetService,
 	private val store: TrustListStore,
-	private val defaultAllowedServerTimeDiff: Long
+	private val timeShiftDetectionConfig: TimeShiftDetectionConfig
 ) {
 
 	companion object {
@@ -84,12 +84,13 @@ internal class TrustListRepository(
 				val allCertificates = store.certificateSignatures?.certs?.toMutableList() ?: mutableListOf()
 				var since = store.certificatesSinceHeader
 				val upTo = activeCertificatesResponse.body()?.upTo?.toLong()
-					?:activeCertificatesResponse.headers()[HEADER_UP_TO]?.toLongOrNull()
+					?: activeCertificatesResponse.headers()[HEADER_UP_TO]?.toLongOrNull()
 					?: 0
 
 				// Get the signer certificates as long as there are entries in the response list
 				var count = 0
-				var certificatesResponse = certificateService.getSignerCertificates(getCacheControlParameter(forceRefresh), upTo,  since)
+				var certificatesResponse =
+					certificateService.getSignerCertificates(getCacheControlParameter(forceRefresh), upTo, since)
 				while (certificatesResponse.isSuccessful && certificatesResponse.body()?.certs?.isNullOrEmpty() == false) {
 					allCertificates.addAll(certificatesResponse.body()?.certs ?: emptyList())
 
@@ -97,12 +98,11 @@ internal class TrustListRepository(
 					val isUpToDate = certificatesResponse.headers()[HEADER_UP_TO_DATE].toBoolean()
 					since = certificatesResponse.headers()[HEADER_NEXT_SINCE]
 
-					detectTimeshift(certificatesResponse)
-
 					if (isUpToDate || count >= 20) break
 
 					count++
-					certificatesResponse = certificateService.getSignerCertificates(getCacheControlParameter(forceRefresh), upTo, since)
+					certificatesResponse =
+						certificateService.getSignerCertificates(getCacheControlParameter(forceRefresh), upTo, since)
 				}
 
 				// Filter only active certificates and store them
@@ -130,7 +130,7 @@ internal class TrustListRepository(
 
 			// Get the revocation list as long as the request is successful
 			var count = 0
-			var revocationListResponse = revocationService.getRevokedCertificates(getCacheControlParameter(forceRefresh),since)
+			var revocationListResponse = revocationService.getRevokedCertificates(getCacheControlParameter(forceRefresh), since)
 			while (revocationListResponse.isSuccessful) {
 				// Add all revoked certificates from the response to the list and save the validity duration of this response
 				allRevokedCertificates.addAll(revocationListResponse.body()?.revokedCerts.orEmpty())
@@ -168,24 +168,31 @@ internal class TrustListRepository(
 				store.ruleset = body
 				val newValidUntil = Instant.now().plus(body.validDuration, ChronoUnit.MILLIS).toEpochMilli()
 				store.rulesetValidUntil = newValidUntil
-				detectTimeshift(response)
 			}
 		}
 	}
 
 	private fun detectTimeshift(response: Response<out Any>) {
-		val serverTime = response.headers().getInstant(HEADER_DATE)
-		val ageString: String? = response.headers()[HEADER_AGE]
-		if (serverTime == null) return
-		val age: Long = if (ageString != null) 1000 * ageString.toLong() else 0
-		val liveServerTime = serverTime.toEpochMilli() + age
-		val systemTime = System.currentTimeMillis()
-		if (Math.abs(systemTime - liveServerTime) > defaultAllowedServerTimeDiff) {
-			throw ServerTimeOffsetException()
+		if (timeShiftDetectionConfig.enabled) {
+			val serverTime = response.headers().getInstant(HEADER_DATE)
+			val ageString: String? = response.headers()[HEADER_AGE]
+			if (serverTime == null) return
+			val age: Long = if (ageString != null) 1000 * ageString.toLong() else 0
+			val liveServerTime = serverTime.toEpochMilli() + age
+			val systemTime = System.currentTimeMillis()
+			if (Math.abs(systemTime - liveServerTime) > timeShiftDetectionConfig.allowedServerTimeDiff) {
+				throw ServerTimeOffsetException()
+			}
 		}
 	}
 
 	private fun getCacheControlParameter(forceRefresh: Boolean): String? = if (forceRefresh) "no-cache" else null
+}
+
+data class TimeShiftDetectionConfig(var enabled: Boolean, var allowedServerTimeDiff: Long = DEFAULT_ALLOWED_SERVER_TIME_DIFF) {
+	companion object {
+		const val DEFAULT_ALLOWED_SERVER_TIME_DIFF = 2 * 60 * 60 * 1000L; //2h
+	}
 }
 
 class ServerTimeOffsetException() : Exception()
