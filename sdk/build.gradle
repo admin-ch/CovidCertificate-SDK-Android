@@ -25,6 +25,14 @@ android {
 		targetSdkVersion 30
 
 		testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+		javaCompileOptions {
+			annotationProcessorOptions {
+				arguments += [
+						"room.schemaLocation":"$projectDir/schemas".toString(),
+						"room.incremental":"true",
+						"room.expandProjection":"true"]
+			}
+		}
 	}
 
 	productFlavors {
@@ -84,6 +92,10 @@ dependencies {
 
 	// National rules
 	implementation 'com.fasterxml.jackson.core:jackson-databind:2.12.3'
+
+	//Room
+	implementation "androidx.room:room-ktx:2.3.0"
+	kapt "androidx.room:room-compiler:2.3.0"
 
 	// Tests
 	testImplementation 'junit:junit:4.13.2'

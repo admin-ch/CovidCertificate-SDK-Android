@@ -11,7 +11,7 @@
 package ch.admin.bag.covidcertificate.sdk.android.data
 
 import ch.admin.bag.covidcertificate.sdk.core.models.trustlist.Jwks
-import ch.admin.bag.covidcertificate.sdk.core.models.trustlist.RevokedCertificates
+import ch.admin.bag.covidcertificate.sdk.core.models.trustlist.RevokedCertificatesStore
 import ch.admin.bag.covidcertificate.sdk.core.models.trustlist.RuleSet
 
 internal interface TrustListStore {
@@ -22,7 +22,7 @@ internal interface TrustListStore {
 	var certificatesUpToHeader: Long
 
 	var revokedCertificatesValidUntil: Long
-	var revokedCertificates: RevokedCertificates?
+	var revokedCertificates: RevokedCertificatesStore
 	var revokedCertificatesSinceHeader: String?
 
 	var rulesetValidUntil: Long
