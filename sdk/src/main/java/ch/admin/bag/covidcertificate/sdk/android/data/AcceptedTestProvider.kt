@@ -22,7 +22,6 @@ class AcceptedTestProvider private constructor(context: Context) {
 	private val metadataStorage = MetadataStorage.getInstance(context)
 
 	fun getTestType(testEntry: TestEntry): String {
-		metadataStorage.productsMetadata.test.type
 		return metadataStorage.productsMetadata.test.type.valueSetValues[testEntry.type]?.display ?: testEntry.type
 	}
 
