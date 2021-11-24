@@ -31,7 +31,7 @@ internal class CertificateSecureStorage private constructor(private val context:
 		private const val KEY_CERTIFICATE_SIGNATURES_VALID_UNTIL = "KEY_CERTIFICATE_SIGNATURES_VALID_UNTIL"
 		private const val KEY_CERTIFICATE_SIGNATURES_SINCE_HEADER = "KEY_CERTIFICATE_SIGNATURES_SINCE_HEADER"
 		private const val KEY_CERTIFICATE_SIGNATURES_UP_TO_HEADER = "KEY_CERTIFICATE_SIGNATURES_UP_TO_HEADER"
-		private const val KEY_REVOKED_CERTIFICATES_VALID_UNTIL = "KEY_REVOKED_CERTIFICATES_VALID_UNTIL"
+		private const val KEY_REVOKED_CERTIFICATES_VALID_UNTIL = "KEY_REVOKED_CERTIFICATES_VALID_UNTIL_V2"
 		private const val KEY_REVOKED_CERTIFICATES_SINCE_HEADER = "KEY_REVOKED_CERTIFICATES_SINCE_HEADER_V2"
 		private const val KEY_RULESET_VALID_UNTIL = "KEY_RULESET_VALID_UNTIL"
 
@@ -45,7 +45,7 @@ internal class CertificateSecureStorage private constructor(private val context:
 
 	private val preferences = EncryptedSharedPreferencesUtil.initializeSharedPreferences(context, PREFERENCES_NAME)
 
-	override var revokedCertificates: RevokedCertificatesStore =  RevokedCertificatesDb.getInstance(context)
+	override var revokedCertificates: RevokedCertificatesStore = RevokedCertificatesDb.getInstance(context)
 
 	override var certificateSignaturesValidUntil: Long
 		get() = preferences.getLong(KEY_CERTIFICATE_SIGNATURES_VALID_UNTIL, 0L)
@@ -84,7 +84,10 @@ internal class CertificateSecureStorage private constructor(private val context:
 		}
 
 	override var revokedCertificatesSinceHeader: String?
-		get() = preferences.getString(KEY_REVOKED_CERTIFICATES_SINCE_HEADER, null)
+		get() = preferences.getString(
+			KEY_REVOKED_CERTIFICATES_SINCE_HEADER,
+			PrepopulatedRevokedCertificatesDbConfig.prepopulatedSinceHeader
+		)
 		set(value) {
 			preferences.edit().putString(KEY_REVOKED_CERTIFICATES_SINCE_HEADER, value).apply()
 		}
