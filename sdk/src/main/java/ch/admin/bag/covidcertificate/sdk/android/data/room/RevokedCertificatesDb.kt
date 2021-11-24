@@ -14,6 +14,7 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import ch.admin.bag.covidcertificate.sdk.android.data.PrepopulatedRevokedCertificatesDbConfig
 import ch.admin.bag.covidcertificate.sdk.android.utils.SingletonHolder
 import ch.admin.bag.covidcertificate.sdk.core.models.trustlist.RevokedCertificatesStore
 
@@ -23,7 +24,9 @@ class RevokedCertificatesDb private constructor(context: Context) : RevokedCerti
 
 	private val revokedCertificatesDao by lazy {
 		Room.databaseBuilder(context, RevokedCertificatesDatabase::class.java, "revoked-certificates-db")
-			.build().revokedCertificatesDao()
+			.createFromAsset(PrepopulatedRevokedCertificatesDbConfig.prepopulatedRevokedCertificatesDbPath)
+			.build()
+			.revokedCertificatesDao()
 	}
 
 	override fun addCertificates(certificates: List<String>) =
