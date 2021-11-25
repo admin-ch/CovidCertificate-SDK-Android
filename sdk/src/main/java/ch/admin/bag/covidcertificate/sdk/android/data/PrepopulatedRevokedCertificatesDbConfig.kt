@@ -10,7 +10,9 @@
 
 package ch.admin.bag.covidcertificate.sdk.android.data
 
+import ch.admin.bag.covidcertificate.verifier.sdk.android.BuildConfig
+
 object PrepopulatedRevokedCertificatesDbConfig {
 	const val prepopulatedRevokedCertificatesDbPath = "revoked_certificates_db.db"
-	const val prepopulatedSinceHeader = "11667563"
+	val prepopulatedSinceHeader = if (BuildConfig.FLAVOR == "prod") "11667563" else "0"
 }
