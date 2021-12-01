@@ -12,6 +12,7 @@ package ch.admin.bag.covidcertificate.sdk.android.verification.task
 
 import android.net.ConnectivityManager
 import ch.admin.bag.covidcertificate.sdk.core.models.healthcert.CertificateHolder
+import ch.admin.bag.covidcertificate.sdk.core.models.healthcert.CheckMode
 import ch.admin.bag.covidcertificate.sdk.core.models.state.VerificationState
 import ch.admin.bag.covidcertificate.sdk.core.models.trustlist.TrustList
 import ch.admin.bag.covidcertificate.sdk.core.verifier.CertificateVerifier
@@ -25,10 +26,11 @@ import ch.admin.bag.covidcertificate.sdk.core.verifier.CertificateVerifier
  */
 internal class WalletCertificateVerificationTask(
 	private val certificateHolder: CertificateHolder,
+	private val checkMode: CheckMode,
 	connectivityManager: ConnectivityManager
 ) : CertificateVerificationTask(connectivityManager) {
 
 	override suspend fun verify(verifier: CertificateVerifier, trustList: TrustList): VerificationState {
-		return verifier.verify(certificateHolder, trustList)
+		return verifier.verify(certificateHolder, trustList, checkMode)
 	}
 }

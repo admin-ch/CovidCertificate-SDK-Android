@@ -28,20 +28,28 @@ import ch.admin.bag.covidcertificate.sdk.android.net.service.RevocationService
 import ch.admin.bag.covidcertificate.sdk.android.net.service.RuleSetService
 import ch.admin.bag.covidcertificate.sdk.android.repository.MetadataRepository
 import ch.admin.bag.covidcertificate.sdk.android.repository.TimeShiftDetectionConfig
-import ch.admin.bag.covidcertificate.sdk.android.repository.TimeShiftDetectionConfig.Companion.DEFAULT_ALLOWED_SERVER_TIME_DIFF
 import ch.admin.bag.covidcertificate.sdk.android.repository.TrustListRepository
 import ch.admin.bag.covidcertificate.sdk.android.verification.CertificateVerificationController
 import ch.admin.bag.covidcertificate.sdk.android.verification.state.VerifierDecodeState
 import ch.admin.bag.covidcertificate.sdk.android.verification.task.VerifierCertificateVerificationTask
 import ch.admin.bag.covidcertificate.sdk.android.verification.task.WalletCertificateVerificationTask
 import ch.admin.bag.covidcertificate.sdk.core.data.base64.Base64Impl
+import ch.admin.bag.covidcertificate.sdk.core.data.moshi.RawJsonStringAdapter
 import ch.admin.bag.covidcertificate.sdk.core.decoder.CertificateDecoder
 import ch.admin.bag.covidcertificate.sdk.core.models.healthcert.CertificateHolder
+import ch.admin.bag.covidcertificate.sdk.core.models.healthcert.CheckMode
 import ch.admin.bag.covidcertificate.sdk.core.models.state.DecodeState
 import ch.admin.bag.covidcertificate.sdk.core.models.state.VerificationState
 import ch.admin.bag.covidcertificate.sdk.core.verifier.CertificateVerifier
+import com.squareup.moshi.Moshi
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
+import okhttp3.OkHttpClient
+import retrofit2.Retrofit
+import retrofit2.converter.moshi.MoshiConverterFactory
+import retrofit2.converter.scalars.ScalarsConverterFactory
 import java.security.cert.CertificateFactory
 import java.security.cert.X509Certificate
 import java.util.*
@@ -80,10 +88,17 @@ object CovidCertificateSdk {
 		val retrofit = RetrofitFactory(environment).create(context)
 		val certificateService = retrofit.create(CertificateService::class.java)
 		val revocationService = retrofit.create(RevocationService::class.java)
-		val ruleSetService = retrofit.create(RuleSetService::class.java)
+		//TODO: Undo this. (For now load the ruleset from a special endpoint
+		val ruleSetService = Retrofit.Builder()
+			.baseUrl("https://ch-dgc.s3.eu-central-1.amazonaws.com/")
+			.client(OkHttpClient.Builder().build())
+			.addConverterFactory(ScalarsConverterFactory.create())
+			.addConverterFactory(MoshiConverterFactory.create(Moshi.Builder().add(RawJsonStringAdapter()).build()))
+			.build().create(RuleSetService::class.java)
+
 
 		val certificateStorage = CertificateSecureStorage.getInstance(context)
-		val  trustListRepository = TrustListRepository(
+		val trustListRepository = TrustListRepository(
 			certificateService,
 			revocationService,
 			ruleSetService,
@@ -115,7 +130,7 @@ object CovidCertificateSdk {
 		sdkLifecycleObserver?.register(lifecycle)
 	}
 
-	fun setTimeShiftDetectingConfig(timeShiftDetectionConfig: TimeShiftDetectionConfig){
+	fun setTimeShiftDetectingConfig(timeShiftDetectionConfig: TimeShiftDetectionConfig) {
 		this.timeShiftDetectionConfig = timeShiftDetectionConfig
 	}
 
@@ -188,10 +203,22 @@ object CovidCertificateSdk {
 
 		fun verify(
 			certificateHolder: VerifierCertificateHolder,
+			checkModes: Set<CheckMode>,
+			coroutineScope: CoroutineScope
+		): Flow<Map<CheckMode, VerificationState>> {
+			requireInitialized()
+			return combine(checkModes.map { checkMode ->
+				verify(certificateHolder, checkMode, coroutineScope).map { checkMode to it }
+			}) { it.toMap() }
+		}
+
+		fun verify(
+			certificateHolder: VerifierCertificateHolder,
+			checkMode: CheckMode,
 			coroutineScope: CoroutineScope
 		): Flow<VerificationState> {
 			requireInitialized()
-			val task = VerifierCertificateVerificationTask(certificateHolder, connectivityManager)
+			val task = VerifierCertificateVerificationTask(certificateHolder, checkMode, connectivityManager)
 			certificateVerificationController.enqueue(task, coroutineScope)
 			return task.verificationStateFlow
 		}
@@ -205,13 +232,26 @@ object CovidCertificateSdk {
 
 		fun verify(
 			certificateHolder: CertificateHolder,
+			checkModes: Set<CheckMode>,
+			coroutineScope: CoroutineScope
+		): Flow<Map<CheckMode, VerificationState>> {
+			requireInitialized()
+			return combine(checkModes.map { checkMode ->
+				verify(certificateHolder, checkMode, coroutineScope).map { checkMode to it }
+			}) { it.toMap() }
+		}
+
+		fun verify(
+			certificateHolder: CertificateHolder,
+			checkMode: CheckMode,
 			coroutineScope: CoroutineScope
 		): Flow<VerificationState> {
 			requireInitialized()
-			val task = WalletCertificateVerificationTask(certificateHolder, connectivityManager)
+			val task = WalletCertificateVerificationTask(certificateHolder, checkMode, connectivityManager)
 			certificateVerificationController.enqueue(task, coroutineScope)
 			return task.verificationStateFlow
 		}
+
 	}
 
 	internal class SdkLifecycleObserver(private val lifecycle: Lifecycle) : LifecycleObserver {
