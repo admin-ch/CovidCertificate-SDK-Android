@@ -37,15 +37,12 @@ import ch.admin.bag.covidcertificate.sdk.core.data.base64.Base64Impl
 import ch.admin.bag.covidcertificate.sdk.core.data.moshi.RawJsonStringAdapter
 import ch.admin.bag.covidcertificate.sdk.core.decoder.CertificateDecoder
 import ch.admin.bag.covidcertificate.sdk.core.models.healthcert.CertificateHolder
-import ch.admin.bag.covidcertificate.sdk.core.models.healthcert.CheckMode
 import ch.admin.bag.covidcertificate.sdk.core.models.state.DecodeState
 import ch.admin.bag.covidcertificate.sdk.core.models.state.VerificationState
 import ch.admin.bag.covidcertificate.sdk.core.verifier.CertificateVerifier
 import com.squareup.moshi.Moshi
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.map
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
@@ -65,6 +62,7 @@ object CovidCertificateSdk {
 	private lateinit var certificateVerificationController: CertificateVerificationController
 	private lateinit var productMetadataController: ProductMetadataController
 	private lateinit var connectivityManager: ConnectivityManager
+	private lateinit var trustListRepository: TrustListRepository
 	private var isInitialized = false
 	private var sdkLifecycleObserver: SdkLifecycleObserver? = null
 	private var timeShiftDetectionConfig = TimeShiftDetectionConfig(false)
@@ -98,7 +96,7 @@ object CovidCertificateSdk {
 
 
 		val certificateStorage = CertificateSecureStorage.getInstance(context)
-		val trustListRepository = TrustListRepository(
+		trustListRepository = TrustListRepository(
 			certificateService,
 			revocationService,
 			ruleSetService,
@@ -203,24 +201,21 @@ object CovidCertificateSdk {
 
 		fun verify(
 			certificateHolder: VerifierCertificateHolder,
-			checkModes: Set<CheckMode>,
-			coroutineScope: CoroutineScope
-		): Flow<Map<CheckMode, VerificationState>> {
-			requireInitialized()
-			return combine(checkModes.map { checkMode ->
-				verify(certificateHolder, checkMode, coroutineScope).map { checkMode to it }
-			}) { it.toMap() }
-		}
-
-		fun verify(
-			certificateHolder: VerifierCertificateHolder,
-			checkMode: CheckMode,
+			verificationMode: String,
 			coroutineScope: CoroutineScope
 		): Flow<VerificationState> {
 			requireInitialized()
-			val task = VerifierCertificateVerificationTask(certificateHolder, checkMode, connectivityManager)
+			val task = VerifierCertificateVerificationTask(certificateHolder, setOf(verificationMode), connectivityManager)
 			certificateVerificationController.enqueue(task, coroutineScope)
 			return task.verificationStateFlow
+		}
+
+		/**
+		 * Returns the currently active mode identifiers
+		 */
+		fun getActiveModes(): Set<String> {
+			requireInitialized()
+			return trustListRepository.getTrustList()?.ruleSet?.modeRules?.activeModes ?: setOf("THREE_G")
 		}
 	}
 
@@ -232,24 +227,22 @@ object CovidCertificateSdk {
 
 		fun verify(
 			certificateHolder: CertificateHolder,
-			checkModes: Set<CheckMode>,
-			coroutineScope: CoroutineScope
-		): Flow<Map<CheckMode, VerificationState>> {
-			requireInitialized()
-			return combine(checkModes.map { checkMode ->
-				verify(certificateHolder, checkMode, coroutineScope).map { checkMode to it }
-			}) { it.toMap() }
-		}
-
-		fun verify(
-			certificateHolder: CertificateHolder,
-			checkMode: CheckMode,
+			verificationModes: Set<String>,
 			coroutineScope: CoroutineScope
 		): Flow<VerificationState> {
 			requireInitialized()
-			val task = WalletCertificateVerificationTask(certificateHolder, checkMode, connectivityManager)
+			val task = WalletCertificateVerificationTask(certificateHolder, verificationModes, connectivityManager)
 			certificateVerificationController.enqueue(task, coroutineScope)
 			return task.verificationStateFlow
+		}
+
+
+		/**
+		 * Returns the currently active mode identifiers
+		 */
+		fun getActiveModes(): Set<String> {
+			requireInitialized()
+			return trustListRepository.getTrustList()?.ruleSet?.modeRules?.activeModes ?: setOf("THREE_G")
 		}
 
 	}

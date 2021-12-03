@@ -20,7 +20,7 @@ internal interface RuleSetService {
 
 	@Headers("Accept: application/json+jws")
 	//TODO: Undo this (For now load the ruleset from a special endpoint)
-	@GET("v2/gsm_rules.json")
-	suspend fun getRuleset(@Header("Cache-Control") cacheControl: String?) : Response<RuleSet>
+	@GET("nationalrules.json")
+	suspend fun getRuleset(@Header("Cache-Control") cacheControl: String?): Response<RuleSet>
 
 }
