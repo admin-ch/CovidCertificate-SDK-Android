@@ -15,6 +15,7 @@ import ch.admin.bag.covidcertificate.sdk.core.models.healthcert.CertificateHolde
 import ch.admin.bag.covidcertificate.sdk.core.models.state.VerificationState
 import ch.admin.bag.covidcertificate.sdk.core.models.trustlist.TrustList
 import ch.admin.bag.covidcertificate.sdk.core.verifier.CertificateVerifier
+import ch.admin.bag.covidcertificate.sdk.core.verifier.VerificationType
 
 /**
  * The verification task implementation specific for wallet applications. This task takes a [CertificateHolder] and returns a full
@@ -30,6 +31,6 @@ internal class WalletCertificateVerificationTask(
 ) : CertificateVerificationTask(connectivityManager) {
 
 	override suspend fun verify(verifier: CertificateVerifier, trustList: TrustList): VerificationState {
-		return verifier.verify(certificateHolder, trustList, verificationModes)
+		return verifier.verify(certificateHolder, trustList, verificationModes, VerificationType.WALLET)
 	}
 }
