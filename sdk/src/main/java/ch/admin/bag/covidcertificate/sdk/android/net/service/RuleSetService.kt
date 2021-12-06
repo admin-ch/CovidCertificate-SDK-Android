@@ -19,8 +19,7 @@ import retrofit2.http.Headers
 internal interface RuleSetService {
 
 	@Headers("Accept: application/json+jws")
-	//TODO: Undo this (For now load the ruleset from a special endpoint)
-	@GET("nationalrules.json")
+	@GET("v2/verificationRules")
 	suspend fun getRuleset(@Header("Cache-Control") cacheControl: String?): Response<RuleSet>
 
 }
