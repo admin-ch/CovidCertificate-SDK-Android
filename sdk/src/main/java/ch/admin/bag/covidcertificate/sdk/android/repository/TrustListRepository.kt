@@ -14,9 +14,11 @@ import ch.admin.bag.covidcertificate.sdk.android.data.TrustListStore
 import ch.admin.bag.covidcertificate.sdk.android.net.service.CertificateService
 import ch.admin.bag.covidcertificate.sdk.android.net.service.RevocationService
 import ch.admin.bag.covidcertificate.sdk.android.net.service.RuleSetService
+import ch.admin.bag.covidcertificate.sdk.core.models.trustlist.ActiveModes
 import ch.admin.bag.covidcertificate.sdk.core.models.trustlist.Jwks
 import ch.admin.bag.covidcertificate.sdk.core.models.trustlist.TrustList
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -40,6 +42,8 @@ internal class TrustListRepository(
 		private const val HEADER_AGE = "Age"
 	}
 
+	val activeModes = MutableStateFlow(getCurrentActiveModes())
+
 	/**
 	 * Refresh the trust list if necessary. This will check for the presence and validity of the certificate signatures,
 	 * revoked certificates and rule set and load them from the backend if necessary. Set the [forceRefresh] flag to always load
@@ -53,6 +57,11 @@ internal class TrustListRepository(
 			launch { refreshRevokedCertificates(forceRefresh) },
 			launch { refreshRuleSet(forceRefresh) }
 		).joinAll()
+		activeModes.emit(getCurrentActiveModes())
+	}
+
+	private fun getCurrentActiveModes(): List<ActiveModes> {
+		return store.ruleset?.modeRules?.activeModes ?: listOf(ActiveModes("THREE_G", "3G"))
 	}
 
 	/**

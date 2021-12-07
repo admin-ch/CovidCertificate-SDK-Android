@@ -42,6 +42,8 @@ import ch.admin.bag.covidcertificate.sdk.core.models.trustlist.ActiveModes
 import ch.admin.bag.covidcertificate.sdk.core.verifier.CertificateVerifier
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import java.security.cert.CertificateFactory
 import java.security.cert.X509Certificate
 import java.util.*
@@ -201,10 +203,9 @@ object CovidCertificateSdk {
 		/**
 		 * Returns the currently active mode identifiers
 		 */
-		fun getActiveModes(): List<ActiveModes> {
+		fun getActiveModes(): StateFlow<List<ActiveModes>> {
 			requireInitialized()
-			//TODO think about fallback
-			return trustListRepository.getTrustList()?.ruleSet?.modeRules?.activeModes ?: listOf(ActiveModes("THREE_G", "3G"))
+			return trustListRepository.activeModes.asStateFlow()
 		}
 	}
 
@@ -229,10 +230,9 @@ object CovidCertificateSdk {
 		/**
 		 * Returns the currently active mode identifiers
 		 */
-		fun getActiveModes(): List<ActiveModes> {
+		fun getActiveModes(): StateFlow<List<ActiveModes>> {
 			requireInitialized()
-			//TODO think about fallback
-			return trustListRepository.getTrustList()?.ruleSet?.modeRules?.activeModes ?: listOf(ActiveModes("THREE_G", "3G"))
+			return trustListRepository.activeModes.asStateFlow()
 		}
 
 	}
