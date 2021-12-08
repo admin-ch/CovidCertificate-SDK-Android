@@ -28,7 +28,6 @@ import ch.admin.bag.covidcertificate.sdk.android.net.service.RevocationService
 import ch.admin.bag.covidcertificate.sdk.android.net.service.RuleSetService
 import ch.admin.bag.covidcertificate.sdk.android.repository.MetadataRepository
 import ch.admin.bag.covidcertificate.sdk.android.repository.TimeShiftDetectionConfig
-import ch.admin.bag.covidcertificate.sdk.android.repository.TimeShiftDetectionConfig.Companion.DEFAULT_ALLOWED_SERVER_TIME_DIFF
 import ch.admin.bag.covidcertificate.sdk.android.repository.TrustListRepository
 import ch.admin.bag.covidcertificate.sdk.android.verification.CertificateVerificationController
 import ch.admin.bag.covidcertificate.sdk.android.verification.state.VerifierDecodeState
@@ -39,9 +38,12 @@ import ch.admin.bag.covidcertificate.sdk.core.decoder.CertificateDecoder
 import ch.admin.bag.covidcertificate.sdk.core.models.healthcert.CertificateHolder
 import ch.admin.bag.covidcertificate.sdk.core.models.state.DecodeState
 import ch.admin.bag.covidcertificate.sdk.core.models.state.VerificationState
+import ch.admin.bag.covidcertificate.sdk.core.models.trustlist.ActiveModes
 import ch.admin.bag.covidcertificate.sdk.core.verifier.CertificateVerifier
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import java.security.cert.CertificateFactory
 import java.security.cert.X509Certificate
 import java.util.*
@@ -57,6 +59,7 @@ object CovidCertificateSdk {
 	private lateinit var certificateVerificationController: CertificateVerificationController
 	private lateinit var productMetadataController: ProductMetadataController
 	private lateinit var connectivityManager: ConnectivityManager
+	private lateinit var trustListRepository: TrustListRepository
 	private var isInitialized = false
 	private var sdkLifecycleObserver: SdkLifecycleObserver? = null
 	private var timeShiftDetectionConfig = TimeShiftDetectionConfig(false)
@@ -83,7 +86,7 @@ object CovidCertificateSdk {
 		val ruleSetService = retrofit.create(RuleSetService::class.java)
 
 		val certificateStorage = CertificateSecureStorage.getInstance(context)
-		val  trustListRepository = TrustListRepository(
+		trustListRepository = TrustListRepository(
 			certificateService,
 			revocationService,
 			ruleSetService,
@@ -115,7 +118,7 @@ object CovidCertificateSdk {
 		sdkLifecycleObserver?.register(lifecycle)
 	}
 
-	fun setTimeShiftDetectingConfig(timeShiftDetectionConfig: TimeShiftDetectionConfig){
+	fun setTimeShiftDetectingConfig(timeShiftDetectionConfig: TimeShiftDetectionConfig) {
 		this.timeShiftDetectionConfig = timeShiftDetectionConfig
 	}
 
@@ -188,12 +191,21 @@ object CovidCertificateSdk {
 
 		fun verify(
 			certificateHolder: VerifierCertificateHolder,
+			verificationModeIdentifier: String,
 			coroutineScope: CoroutineScope
 		): Flow<VerificationState> {
 			requireInitialized()
-			val task = VerifierCertificateVerificationTask(certificateHolder, connectivityManager)
+			val task = VerifierCertificateVerificationTask(certificateHolder, setOf(verificationModeIdentifier), connectivityManager)
 			certificateVerificationController.enqueue(task, coroutineScope)
 			return task.verificationStateFlow
+		}
+
+		/**
+		 * Returns the currently active mode identifiers
+		 */
+		fun getActiveModes(): StateFlow<List<ActiveModes>> {
+			requireInitialized()
+			return trustListRepository.activeModes.asStateFlow()
 		}
 	}
 
@@ -205,13 +217,24 @@ object CovidCertificateSdk {
 
 		fun verify(
 			certificateHolder: CertificateHolder,
+			verificationModeIdentifiers: Set<String>,
 			coroutineScope: CoroutineScope
 		): Flow<VerificationState> {
 			requireInitialized()
-			val task = WalletCertificateVerificationTask(certificateHolder, connectivityManager)
+			val task = WalletCertificateVerificationTask(certificateHolder, verificationModeIdentifiers, connectivityManager)
 			certificateVerificationController.enqueue(task, coroutineScope)
 			return task.verificationStateFlow
 		}
+
+
+		/**
+		 * Returns the currently active mode identifiers
+		 */
+		fun getActiveModes(): StateFlow<List<ActiveModes>> {
+			requireInitialized()
+			return trustListRepository.activeModes.asStateFlow()
+		}
+
 	}
 
 	internal class SdkLifecycleObserver(private val lifecycle: Lifecycle) : LifecycleObserver {

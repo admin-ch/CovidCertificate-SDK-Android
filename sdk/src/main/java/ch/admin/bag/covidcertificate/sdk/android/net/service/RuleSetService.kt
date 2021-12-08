@@ -20,6 +20,6 @@ internal interface RuleSetService {
 
 	@Headers("Accept: application/json+jws")
 	@GET("v2/verificationRules")
-	suspend fun getRuleset(@Header("Cache-Control") cacheControl: String?) : Response<RuleSet>
+	suspend fun getRuleset(@Header("Cache-Control") cacheControl: String?): Response<RuleSet>
 
 }
