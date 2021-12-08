@@ -57,7 +57,7 @@ internal class TrustListRepository(
 			launch { refreshRevokedCertificates(forceRefresh) },
 			launch { refreshRuleSet(forceRefresh) }
 		).joinAll()
-		activeModes.emit(getCurrentActiveModes())
+		activeModes.value = getCurrentActiveModes()
 	}
 
 	private fun getCurrentActiveModes(): List<ActiveModes> {

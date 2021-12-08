@@ -191,11 +191,11 @@ object CovidCertificateSdk {
 
 		fun verify(
 			certificateHolder: VerifierCertificateHolder,
-			verificationIdentifier: String,
+			verificationModeIdentifier: String,
 			coroutineScope: CoroutineScope
 		): Flow<VerificationState> {
 			requireInitialized()
-			val task = VerifierCertificateVerificationTask(certificateHolder, setOf(verificationIdentifier), connectivityManager)
+			val task = VerifierCertificateVerificationTask(certificateHolder, setOf(verificationModeIdentifier), connectivityManager)
 			certificateVerificationController.enqueue(task, coroutineScope)
 			return task.verificationStateFlow
 		}
@@ -217,11 +217,11 @@ object CovidCertificateSdk {
 
 		fun verify(
 			certificateHolder: CertificateHolder,
-			verificationIdentifier: Set<String>,
+			verificationModeIdentifiers: Set<String>,
 			coroutineScope: CoroutineScope
 		): Flow<VerificationState> {
 			requireInitialized()
-			val task = WalletCertificateVerificationTask(certificateHolder, verificationIdentifier, connectivityManager)
+			val task = WalletCertificateVerificationTask(certificateHolder, verificationModeIdentifiers, connectivityManager)
 			certificateVerificationController.enqueue(task, coroutineScope)
 			return task.verificationStateFlow
 		}
