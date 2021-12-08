@@ -34,16 +34,23 @@ import ch.admin.bag.covidcertificate.sdk.android.verification.state.VerifierDeco
 import ch.admin.bag.covidcertificate.sdk.android.verification.task.VerifierCertificateVerificationTask
 import ch.admin.bag.covidcertificate.sdk.android.verification.task.WalletCertificateVerificationTask
 import ch.admin.bag.covidcertificate.sdk.core.data.base64.Base64Impl
+import ch.admin.bag.covidcertificate.sdk.core.data.moshi.RawJsonStringAdapter
 import ch.admin.bag.covidcertificate.sdk.core.decoder.CertificateDecoder
 import ch.admin.bag.covidcertificate.sdk.core.models.healthcert.CertificateHolder
 import ch.admin.bag.covidcertificate.sdk.core.models.state.DecodeState
 import ch.admin.bag.covidcertificate.sdk.core.models.state.VerificationState
 import ch.admin.bag.covidcertificate.sdk.core.models.trustlist.ActiveModes
 import ch.admin.bag.covidcertificate.sdk.core.verifier.CertificateVerifier
+import com.squareup.moshi.Moshi
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import okhttp3.OkHttpClient
+import okhttp3.logging.HttpLoggingInterceptor
+import retrofit2.Retrofit
+import retrofit2.converter.moshi.MoshiConverterFactory
+import retrofit2.converter.scalars.ScalarsConverterFactory
 import java.security.cert.CertificateFactory
 import java.security.cert.X509Certificate
 import java.util.*
@@ -83,7 +90,16 @@ object CovidCertificateSdk {
 		val retrofit = RetrofitFactory(environment).create(context)
 		val certificateService = retrofit.create(CertificateService::class.java)
 		val revocationService = retrofit.create(RevocationService::class.java)
-		val ruleSetService = retrofit.create(RuleSetService::class.java)
+	//	val ruleSetService = retrofit.create(RuleSetService::class.java)
+		val okHttpBuilder = OkHttpClient.Builder()
+		val httpInterceptor = HttpLoggingInterceptor().setLevel(HttpLoggingInterceptor.Level.BODY)
+		okHttpBuilder.addInterceptor(httpInterceptor)
+		val ruleSetService = Retrofit.Builder()
+			.baseUrl("https://ch-dgc.s3.eu-central-1.amazonaws.com/")
+			.client(okHttpBuilder.build())
+			.addConverterFactory(ScalarsConverterFactory.create())
+			.addConverterFactory(MoshiConverterFactory.create(Moshi.Builder().add(RawJsonStringAdapter()).build()))
+			.build().create(RuleSetService::class.java)
 
 		val certificateStorage = CertificateSecureStorage.getInstance(context)
 		trustListRepository = TrustListRepository(
