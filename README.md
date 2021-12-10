@@ -38,7 +38,7 @@ The latest release is available on [Maven Central](https://search.maven.org/arti
 implementation 'ch.admin.bag.covidcertificate:sdk-android:1.2.0'
 ```
 
-## How It Works
+## Summary: How the SDK works
 
 The SDK provides the functionality of decoding a QR code into an electronic health certificate and verifying the validity of the
 decoded certificate. It also takes care of loading and storing the latest trust list information that is required for verification.
@@ -67,11 +67,11 @@ The verification process consists of three parts that need to be successful in o
 3. The certificate details are checked based on the Swiss national rules for certificate validity. (Is the number of vaccination
    doses sufficient, is the test recent enough, how long ago was the recovery?)
 
-## Usage
+## Usage: How to use the SDK
 
-Once the SDK is added as a dependency, it needs to be initialized with an app token, a user agent and the application context. This
-is preferably within your main Android Application class. Please get in touch with the [BAG](mailto:Covid-Zertifikat@bag.admin.ch)
-to get a token assigned.
+Once the SDK is added as a dependency, it needs to be initialized with an app token, a user agent and the application context.
+This is preferably within your main Android Application class.
+Please get in touch with the [BAG](mailto:Covid-Zertifikat@bag.admin.ch) to get a token assigned.
 
 ```kotlin
 Config.appToken = "YOUR-APP-TOKEN"
@@ -101,8 +101,8 @@ If, for some reason, you suspect the locally stored trust list to be outdated, y
 CovidCertificateSdk.refreshTrustList(lifecycleScope, onCompletionCallback, onErrorCallback)
 ```
 
-CovidCertificateSDK offers a Verifier and Wallet namespace for decoding and verification. Methods in the Wallet namespace must only
-be used by the official COVID Certificate App.
+CovidCertificateSDK offers a Verifier and Wallet namespace for decoding and verification.
+Methods in the Wallet namespace must only be used by the official COVID Certificate App.
 
 ### Decoding
 
@@ -125,14 +125,13 @@ when (decodeState) {
 
 Verifying a certificate takes three parameters:
 
-* The certificate holder that contains the certificate to be verified (required)
-* The coroutine scope within which to run the verification process (required)
-* A boolean flag whether to ignore the local trust list or not. This is useful to force a network error instead of using the locally
-  stored trust list, which might be outdated. (optional)
+* The certificate holder that contains the certificate to be verified
+* The identifier of the verification mode to use (see below)
+* The coroutine scope within which to run the verification process
 
 ```kotlin
 // In your ViewModel
-val verificationStateFlow = CovidCertificateSdk.Verifier.verify(certificateHolder, viewModelScope)
+val verificationStateFlow = CovidCertificateSdk.Verifier.verify(certificateHolder, verificationModeIdentifier, viewModelScope)
 
 viewModelScope.launch {
 	verificationStateFlow.collect { verificationState ->
@@ -151,6 +150,31 @@ viewModelScope.launch {
 				// An unexpected error occurred. The state contains error information
 			}
 		}
+	}
+}
+```
+
+#### Verification Modes
+
+A verification mode collects together a set of verification rules.
+Examples of verification modes are "2G", "3G".
+
+Unlike you might expect, the SDK does NOT hardcode the different verification modes into an enum.
+Instead, they are provided dynamically by the backend.
+This in order to integrate with the CertLogic rules that drive the verification process (which are also provided dynamically).
+
+DO NOT hardcode the verification modes! If the backend changes the available modes, your app may crash!
+
+To obtain a list of currently available verification modes:
+
+```kotlin
+// In your ViewModel
+val activeModesFlow = CovidCertificateSdk.Verifier.getActiveModes()
+
+viewModelScope.launch {
+	activeModesFlow.collect { activeModes ->
+		// activeModes has type List<ActiveModes>
+		// each ActiveModes has a field `id` (that can be used in the call to verify above) and a human-readable `displayName`
 	}
 }
 ```
