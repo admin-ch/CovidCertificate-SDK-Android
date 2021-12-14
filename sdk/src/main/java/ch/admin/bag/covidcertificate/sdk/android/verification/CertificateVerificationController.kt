@@ -15,7 +15,6 @@ import ch.admin.bag.covidcertificate.sdk.android.repository.ServerTimeOffsetExce
 import ch.admin.bag.covidcertificate.sdk.android.repository.TrustListRepository
 import ch.admin.bag.covidcertificate.sdk.android.verification.task.CertificateVerificationTask
 import ch.admin.bag.covidcertificate.sdk.core.data.ErrorCodes
-import ch.admin.bag.covidcertificate.sdk.core.data.ErrorCodes.GENERAL_NETWORK_FAILURE
 import ch.admin.bag.covidcertificate.sdk.core.verifier.CertificateVerifier
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
@@ -50,12 +49,10 @@ internal class CertificateVerificationController internal constructor(
 				} catch (e: Exception) {
 					// Loading trust list failed, keep using last stored version
 					Log.e(TAG, "Manually refreshing trust list failed", e)
-					if (e is HttpException){
-						onErrorCallback.invoke("$GENERAL_NETWORK_FAILURE/${e.code()}")
-					}else if(e is ServerTimeOffsetException){
-						onErrorCallback.invoke(ErrorCodes.TIME_INCONSISTENCY)
-					}else {
-						onErrorCallback.invoke(GENERAL_NETWORK_FAILURE)
+					when (e) {
+						is HttpException -> onErrorCallback.invoke("${ErrorCodes.GENERAL_NETWORK_FAILURE}-${e.code()}")
+						is ServerTimeOffsetException -> onErrorCallback.invoke(ErrorCodes.TIME_INCONSISTENCY)
+						else -> onErrorCallback.invoke(ErrorCodes.GENERAL_NETWORK_FAILURE)
 					}
 				}
 			}

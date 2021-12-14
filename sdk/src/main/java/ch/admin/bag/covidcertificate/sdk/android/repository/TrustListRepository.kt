@@ -22,6 +22,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import retrofit2.HttpException
 import retrofit2.Response
 import java.time.Instant
 import java.time.temporal.ChronoUnit
@@ -50,6 +51,7 @@ internal class TrustListRepository(
 	 * the data from the server.
 	 *
 	 * @param forceRefresh False to only load data from the server if it is missing or outdated, true to always load from the server
+	 * @throws HttpException If [forceRefresh] is true and any of the requests returns a non-2xx HTTP response
 	 */
 	suspend fun refreshTrustList(forceRefresh: Boolean) = withContext(Dispatchers.IO) {
 		listOf(
@@ -99,6 +101,10 @@ internal class TrustListRepository(
 				var count = 0
 				var certificatesResponse =
 					certificateService.getSignerCertificates(getCacheControlParameter(forceRefresh), upTo, since)
+				if (forceRefresh && !certificatesResponse.isSuccessful) {
+					throw HttpException(certificatesResponse)
+				}
+
 				while (certificatesResponse.isSuccessful && certificatesResponse.body()?.certs?.isNullOrEmpty() == false) {
 					allCertificates.addAll(certificatesResponse.body()?.certs ?: emptyList())
 
@@ -111,6 +117,9 @@ internal class TrustListRepository(
 					count++
 					certificatesResponse =
 						certificateService.getSignerCertificates(getCacheControlParameter(forceRefresh), upTo, since)
+					if (forceRefresh && !certificatesResponse.isSuccessful) {
+						throw HttpException(certificatesResponse)
+					}
 				}
 
 				// Filter only active certificates and store them
@@ -125,6 +134,8 @@ internal class TrustListRepository(
 				val validDuration = activeCertificatesBody.validDuration
 				val newValidUntil = Instant.now().plus(validDuration, ChronoUnit.MILLIS).toEpochMilli()
 				store.certificateSignaturesValidUntil = newValidUntil
+			} else if (forceRefresh && !activeCertificatesResponse.isSuccessful) {
+				throw HttpException(activeCertificatesResponse)
 			}
 		}
 	}
@@ -136,8 +147,11 @@ internal class TrustListRepository(
 
 			// Get the revocation list as long as the request is successful
 			var revocationListResponse = revocationService.getRevokedCertificates(getCacheControlParameter(forceRefresh), since)
-			while (revocationListResponse.isSuccessful) {
+			if (forceRefresh && !revocationListResponse.isSuccessful) {
+				throw HttpException(revocationListResponse)
+			}
 
+			while (revocationListResponse.isSuccessful) {
 				val validDuration = revocationListResponse.body()?.validDuration
 
 				// Check if the request returns an up to date header, the next since has changed or we reached a loop count threshold
@@ -158,6 +172,9 @@ internal class TrustListRepository(
 				if (isUpToDate) break
 
 				revocationListResponse = revocationService.getRevokedCertificates(getCacheControlParameter(forceRefresh), since)
+				if (forceRefresh && !revocationListResponse.isSuccessful) {
+					throw HttpException(revocationListResponse)
+				}
 			}
 		}
 	}
@@ -171,6 +188,8 @@ internal class TrustListRepository(
 				store.ruleset = body
 				val newValidUntil = Instant.now().plus(body.validDuration, ChronoUnit.MILLIS).toEpochMilli()
 				store.rulesetValidUntil = newValidUntil
+			} else if (forceRefresh && !response.isSuccessful) {
+				throw HttpException(response)
 			}
 		}
 	}
@@ -195,8 +214,8 @@ internal class TrustListRepository(
 
 data class TimeShiftDetectionConfig(var enabled: Boolean, var allowedServerTimeDiff: Long = DEFAULT_ALLOWED_SERVER_TIME_DIFF) {
 	companion object {
-		const val DEFAULT_ALLOWED_SERVER_TIME_DIFF = 2 * 60 * 60 * 1000L; //2h
+		const val DEFAULT_ALLOWED_SERVER_TIME_DIFF = 2 * 60 * 60 * 1000L //2h
 	}
 }
 
-class ServerTimeOffsetException() : Exception()
+class ServerTimeOffsetException : Exception()
