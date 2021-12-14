@@ -205,7 +205,7 @@ object CovidCertificateSdk {
 		 */
 		fun getActiveModes(): StateFlow<List<ActiveModes>> {
 			requireInitialized()
-			return trustListRepository.activeModes.asStateFlow()
+			return trustListRepository.verifierActiveModes.asStateFlow()
 		}
 	}
 
@@ -232,7 +232,7 @@ object CovidCertificateSdk {
 		 */
 		fun getActiveModes(): StateFlow<List<ActiveModes>> {
 			requireInitialized()
-			return trustListRepository.activeModes.asStateFlow()
+			return trustListRepository.walletActiveModes.asStateFlow()
 		}
 
 	}
