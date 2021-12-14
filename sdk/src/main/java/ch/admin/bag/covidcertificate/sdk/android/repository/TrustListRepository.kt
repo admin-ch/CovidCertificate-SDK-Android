@@ -153,9 +153,7 @@ internal class TrustListRepository(
 
 			// Get the revocation list as long as the request is successful
 			var revocationListResponse = revocationService.getRevokedCertificates(getCacheControlParameter(forceRefresh), since)
-			if (forceRefresh && !revocationListResponse.isSuccessful) {
-				throw HttpException(revocationListResponse)
-			}
+			detectTimeshift(revocationListResponse)
 
 			while (revocationListResponse.isSuccessful) {
 				val validDuration = revocationListResponse.body()?.validDuration
@@ -178,9 +176,11 @@ internal class TrustListRepository(
 				if (isUpToDate) break
 
 				revocationListResponse = revocationService.getRevokedCertificates(getCacheControlParameter(forceRefresh), since)
-				if (forceRefresh && !revocationListResponse.isSuccessful) {
-					throw HttpException(revocationListResponse)
-				}
+			}
+
+			// If this is a force refresh and the response was not successful (and no timeshift was detected), throw an HttpException
+			if (forceRefresh && !revocationListResponse.isSuccessful) {
+				throw HttpException(revocationListResponse)
 			}
 		}
 	}
