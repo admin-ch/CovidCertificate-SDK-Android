@@ -43,7 +43,8 @@ internal class TrustListRepository(
 		private const val HEADER_AGE = "Age"
 	}
 
-	val activeModes = MutableStateFlow(getCurrentActiveModes())
+	val walletActiveModes = MutableStateFlow(getCurrentWalletActiveModes())
+	val verifierActiveModes = MutableStateFlow(getCurrentVerifierActiveModes())
 
 	/**
 	 * Refresh the trust list if necessary. This will check for the presence and validity of the certificate signatures,
@@ -59,11 +60,16 @@ internal class TrustListRepository(
 			launch { refreshRevokedCertificates(forceRefresh) },
 			launch { refreshRuleSet(forceRefresh) }
 		).joinAll()
-		activeModes.value = getCurrentActiveModes()
+		walletActiveModes.value = getCurrentWalletActiveModes()
+		verifierActiveModes.value = getCurrentVerifierActiveModes()
 	}
 
-	private fun getCurrentActiveModes(): List<ActiveModes> {
+	private fun getCurrentWalletActiveModes(): List<ActiveModes> {
 		return store.ruleset?.modeRules?.activeModes ?: listOf(ActiveModes("THREE_G", "3G"))
+	}
+
+	private fun getCurrentVerifierActiveModes(): List<ActiveModes> {
+		return store.ruleset?.modeRules?.verifierActiveModes ?: listOf(ActiveModes("THREE_G", "3G"))
 	}
 
 	/**
