@@ -20,6 +20,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import retrofit2.HttpException
+import java.net.UnknownHostException
 import java.util.*
 
 internal class CertificateVerificationController internal constructor(
@@ -47,11 +48,13 @@ internal class CertificateVerificationController internal constructor(
 					trustListLoadingJob = null
 					onCompletionCallback.invoke()
 				} catch (e: Exception) {
-					// Loading trust list failed, keep using last stored version
 					Log.e(TAG, "Manually refreshing trust list failed", e)
+
+					// Loading trust list failed, map the exception to an error code and invoke the error callback
 					when (e) {
-						is HttpException -> onErrorCallback.invoke("${ErrorCodes.GENERAL_NETWORK_FAILURE}-${e.code()}")
+						is UnknownHostException -> onErrorCallback.invoke(ErrorCodes.GENERAL_OFFLINE)
 						is ServerTimeOffsetException -> onErrorCallback.invoke(ErrorCodes.TIME_INCONSISTENCY)
+						is HttpException -> onErrorCallback.invoke("${ErrorCodes.GENERAL_NETWORK_FAILURE}-${e.code()}")
 						else -> onErrorCallback.invoke(ErrorCodes.GENERAL_NETWORK_FAILURE)
 					}
 				}
