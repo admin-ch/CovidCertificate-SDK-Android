@@ -140,7 +140,7 @@ viewModelScope.launch {
 				// The verification process is still ongoing
 			}
 			is VerificationState.SUCCESS -> {
-				// The certificate is valid. The state contains a flag if this is a Swiss light certificate or not
+				// The certificate is valid. But depending on the mode you might need to do further checks (see below)!
 			}
 			is VerificationState.INVALID -> {
 				// The certificate is not valid. The state contains multiple additional fields indicating why the certificate is invalid.
@@ -178,6 +178,41 @@ viewModelScope.launch {
 	}
 }
 ```
+
+#### Verifying under verification modes
+
+When using verification modes you will need to do some extra lifting.
+
+The `VerificationState.SUCCESS` contains a `successState.modeValidity` of the `ModeValidityState` enum type.
+The `ModeValidityState` can currently take one of the following values:
+
+| Value        | Meaning                                            |
+|--------------|----------------------------------------------------|
+| SUCCESS      | The certificate fulfills all criteria of this mode |
+| SUCCESS_2G   | The certificate fulfills the 2G part of 2G+ (i.e. vaccine/recovery) |
+| SUCCESS_2G_PLUS | The certificate fulfills the plus part of 2G+ (i.e. test) |
+| IS_LIGHT     | The certificate is a light certificate which is not valid in this mode |
+| INVALID      | The certificate is not valid under this mode       |
+| UNKNOWN_MODE | An invalid verification mode was specified         |
+| UNKNOWN      | The ModeValidityState could not be resolved        |
+
+Note that currently, in modes that require multiple certificates (e.g. 2G+), each certificate needs
+to be verified separately and it is the client's responsibility to keep track of which certificates
+have been verified.
+
+For example consider verification mode 2G+. From left to right:
+
+<img src="example_ModeValidityState.png" width="75%">
+
+1. Verifying a >4 months old vaccination certificate (at the time of writing) returns `SUCCESS_2G`.
+The client still needs to check the test certificate.
+2. Verifying a test certificate returns `SUCCESS_2G_PLUS`.
+The client still needs to check the vaccination certificate.
+3. Verifying a <4 months old vaccination certificate returns `SUCCESS`.
+No further steps needed.
+
+Note that currently the SDK does not keep state. That is, the order of scanning does not matter.
+In particular, the `ModeValidityState` will be `SUCCESS_2G_PLUS` even if you scan the test certificate first.
 
 ## License
 
