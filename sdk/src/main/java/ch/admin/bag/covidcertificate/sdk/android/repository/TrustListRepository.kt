@@ -65,11 +65,14 @@ internal class TrustListRepository(
 	}
 
 	private fun getCurrentWalletActiveModes(): List<ActiveModes> {
-		return store.ruleset?.modeRules?.activeModes ?: listOf(ActiveModes("THREE_G", "3G"))
+		return store.ruleset?.modeRules?.walletActiveModes
+			?: store.ruleset?.modeRules?.activeModes
+			?: listOf(ActiveModes("THREE_G", "3G"))
 	}
 
 	private fun getCurrentVerifierActiveModes(): List<ActiveModes> {
-		return store.ruleset?.modeRules?.verifierActiveModes ?: listOf(ActiveModes("THREE_G", "3G"))
+		return store.ruleset?.modeRules?.verifierActiveModes
+			?: listOf(ActiveModes("THREE_G", "3G"))
 	}
 
 	/**
