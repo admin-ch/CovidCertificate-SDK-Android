@@ -17,7 +17,6 @@ import ch.admin.bag.covidcertificate.sdk.core.models.state.VerificationState
 import ch.admin.bag.covidcertificate.sdk.core.models.trustlist.TrustList
 import ch.admin.bag.covidcertificate.sdk.core.verifier.CertificateVerifier
 import ch.admin.bag.covidcertificate.sdk.core.verifier.VerificationType
-import java.util.*
 
 /**
  * The verification task implementation specific for verifier applications. This task takes a [VerifierCertificateHolder] and
