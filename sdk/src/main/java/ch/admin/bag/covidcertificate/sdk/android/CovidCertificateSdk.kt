@@ -107,6 +107,14 @@ object CovidCertificateSdk {
 	}
 
 	/**
+	 * Get the environment this SDK was initialized with.
+	 */
+	fun getEnvironment(): SdkEnvironment {
+		requireInitialized()
+		return this.environment
+	}
+
+	/**
 	 * Register the SDK with a lifecycle in order to automatically refresh the trust list in the background while the application is running.
 	 *
 	 * @param lifecycle The lifecycle to register the SDK with. The background refresh will take place between STARTED and STOPPED
