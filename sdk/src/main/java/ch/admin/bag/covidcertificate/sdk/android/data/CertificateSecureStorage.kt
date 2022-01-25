@@ -11,13 +11,14 @@
 package ch.admin.bag.covidcertificate.sdk.android.data
 
 import android.content.Context
+import ch.admin.bag.covidcertificate.sdk.android.CovidCertificateSdk
 import ch.admin.bag.covidcertificate.sdk.android.data.room.RevokedCertificatesDb
-import ch.admin.bag.covidcertificate.sdk.core.data.moshi.RawJsonStringAdapter
-import ch.admin.bag.covidcertificate.sdk.core.models.trustlist.Jwks
-import ch.admin.bag.covidcertificate.sdk.core.models.trustlist.RuleSet
 import ch.admin.bag.covidcertificate.sdk.android.utils.EncryptedSharedPreferencesUtil
 import ch.admin.bag.covidcertificate.sdk.android.utils.SingletonHolder
+import ch.admin.bag.covidcertificate.sdk.core.data.moshi.RawJsonStringAdapter
+import ch.admin.bag.covidcertificate.sdk.core.models.trustlist.Jwks
 import ch.admin.bag.covidcertificate.sdk.core.models.trustlist.RevokedCertificatesStore
+import ch.admin.bag.covidcertificate.sdk.core.models.trustlist.RuleSet
 import com.squareup.moshi.Moshi
 import java.time.Instant
 
@@ -86,7 +87,7 @@ internal class CertificateSecureStorage private constructor(private val context:
 	override var revokedCertificatesSinceHeader: String?
 		get() = preferences.getString(
 			KEY_REVOKED_CERTIFICATES_SINCE_HEADER,
-			PrepopulatedRevokedCertificatesDbConfig.prepopulatedSinceHeader
+			PrepopulatedRevokedCertificatesDbConfig.getPrepopulatedSinceHeader(CovidCertificateSdk.getEnvironment())
 		)
 		set(value) {
 			preferences.edit().putString(KEY_REVOKED_CERTIFICATES_SINCE_HEADER, value).apply()
