@@ -68,7 +68,7 @@ android {
 dependencies {
 	coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:1.1.5'
 
-	api 'ch.admin.bag.covidcertificate:sdk-core:3.0.4-dev-37'
+	api 'ch.admin.bag.covidcertificate:sdk-core:3.0.4-dev-41'
 
 	implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.5.2'
 	implementation "org.jetbrains.kotlinx:kotlinx-serialization-json:1.2.0"
