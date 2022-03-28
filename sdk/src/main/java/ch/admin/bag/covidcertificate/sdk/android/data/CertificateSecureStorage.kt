@@ -12,7 +12,8 @@ package ch.admin.bag.covidcertificate.sdk.android.data
 
 import android.content.Context
 import ch.admin.bag.covidcertificate.sdk.android.CovidCertificateSdk
-import ch.admin.bag.covidcertificate.sdk.android.data.room.RevokedCertificatesDb
+import ch.admin.bag.covidcertificate.sdk.android.repository.CovidCertificateDatabaseRepository
+import ch.admin.bag.covidcertificate.sdk.android.repository.TrustListRepository
 import ch.admin.bag.covidcertificate.sdk.android.utils.EncryptedSharedPreferencesUtil
 import ch.admin.bag.covidcertificate.sdk.android.utils.SingletonHolder
 import ch.admin.bag.covidcertificate.sdk.core.data.moshi.RawJsonStringAdapter
@@ -20,6 +21,9 @@ import ch.admin.bag.covidcertificate.sdk.core.models.trustlist.Jwks
 import ch.admin.bag.covidcertificate.sdk.core.models.trustlist.RevokedCertificatesStore
 import ch.admin.bag.covidcertificate.sdk.core.models.trustlist.RuleSet
 import com.squareup.moshi.Moshi
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import java.time.Instant
 
 internal class CertificateSecureStorage private constructor(private val context: Context) : TrustListStore {
@@ -35,6 +39,8 @@ internal class CertificateSecureStorage private constructor(private val context:
 		private const val KEY_REVOKED_CERTIFICATES_VALID_UNTIL = "KEY_REVOKED_CERTIFICATES_VALID_UNTIL_V2"
 		private const val KEY_REVOKED_CERTIFICATES_SINCE_HEADER = "KEY_REVOKED_CERTIFICATES_SINCE_HEADER_V2"
 		private const val KEY_RULESET_VALID_UNTIL = "KEY_RULESET_VALID_UNTIL_V2"
+		private const val KEY_FOREIGN_RULES_COUNTRY_CODES_VALID_UNTIL = "KEY_FOREIGN_RULES_COUNTRY_CODES_VALID_UNTIL"
+		private const val KEY_FOREIGN_RULES_COUNTRY_CODES = "KEY_FOREIGN_RULES_COUNTRY_CODES"
 
 		private val moshi = Moshi.Builder().add(RawJsonStringAdapter()).build()
 		private val jwksAdapter = moshi.adapter(Jwks::class.java)
@@ -46,7 +52,8 @@ internal class CertificateSecureStorage private constructor(private val context:
 
 	private val preferences = EncryptedSharedPreferencesUtil.initializeSharedPreferences(context, PREFERENCES_NAME)
 
-	override var revokedCertificates: RevokedCertificatesStore = RevokedCertificatesDb.getInstance(context)
+	override var revokedCertificates: RevokedCertificatesStore = CovidCertificateDatabaseRepository.getInstance(context)
+	override var nationalRules: NationalRulesStore = CovidCertificateDatabaseRepository.getInstance(context)
 
 	override var certificateSignaturesValidUntil: Long
 		get() = preferences.getLong(KEY_CERTIFICATE_SIGNATURES_VALID_UNTIL, 0L)
@@ -87,28 +94,22 @@ internal class CertificateSecureStorage private constructor(private val context:
 	override var revokedCertificatesSinceHeader: String?
 		get() = preferences.getString(
 			KEY_REVOKED_CERTIFICATES_SINCE_HEADER,
-			PrepopulatedRevokedCertificatesDbConfig.getPrepopulatedSinceHeader(CovidCertificateSdk.getEnvironment())
+			CovidCertificateDatabaseRepository.getPrepopulatedSinceHeader(CovidCertificateSdk.getEnvironment())
 		)
 		set(value) {
 			preferences.edit().putString(KEY_REVOKED_CERTIFICATES_SINCE_HEADER, value).apply()
 		}
 
-	override var rulesetValidUntil: Long
-		get() = preferences.getLong(KEY_RULESET_VALID_UNTIL, 0L)
+	override var foreignRulesCountryCodesValidUntil: Long
+		get() = preferences.getLong(KEY_FOREIGN_RULES_COUNTRY_CODES_VALID_UNTIL, 0L)
 		set(value) {
-			preferences.edit().putLong(KEY_RULESET_VALID_UNTIL, value).apply()
+			preferences.edit().putLong(KEY_FOREIGN_RULES_COUNTRY_CODES_VALID_UNTIL, value).apply()
 		}
 
-	override var ruleset: RuleSet? = null
-		get() {
-			if (field == null) {
-				field = ruleSetFileStorage.read(context)?.let { rulesetAdapter.fromJson(it) }
-			}
-			return field
-		}
+	override var foreignRulesCountryCodes: Set<String>
+		get() = preferences.getStringSet(KEY_FOREIGN_RULES_COUNTRY_CODES, emptySet()) ?: emptySet()
 		set(value) {
-			ruleSetFileStorage.write(context, rulesetAdapter.toJson(value))
-			field = value
+			preferences.edit().putStringSet(KEY_FOREIGN_RULES_COUNTRY_CODES, value).apply()
 		}
 
 	override fun areSignaturesValid(): Boolean {
@@ -119,7 +120,34 @@ internal class CertificateSecureStorage private constructor(private val context:
 		return Instant.now().toEpochMilli() < revokedCertificatesValidUntil
 	}
 
-	override fun areRuleSetsValid(): Boolean {
-		return ruleset != null && Instant.now().toEpochMilli() < rulesetValidUntil
+	override fun areForeignRulesCountryCodesValid(): Boolean {
+		return foreignRulesCountryCodes.isNotEmpty() && Instant.now().toEpochMilli() < foreignRulesCountryCodesValidUntil
+	}
+
+	override suspend fun areRuleSetsValid(countryCode: String): Boolean {
+		val validUntil = nationalRules.getValidUntilForCountry(countryCode)
+		val nationalRules = nationalRules.getRuleSetForCountry(countryCode)
+		return nationalRules != null && validUntil != null && Instant.now().toEpochMilli() < validUntil
+	}
+
+	/**
+	 * Migrate the rule set data from the shared preferences (CH only) to the database (multi country)
+	 */
+	fun migrateRuleSetFromPreferencesToDatabase() {
+		if (preferences.contains(KEY_RULESET_VALID_UNTIL)) {
+			val validUntil = preferences.getLong(KEY_RULESET_VALID_UNTIL, 0L)
+			val ruleSet = ruleSetFileStorage.read(context)?.let { rulesetAdapter.fromJson(it) }
+
+			if (validUntil > 0L && ruleSet != null) {
+				// The national rules store uses a room database underneath, which should not be accessed on the main thread
+				// GlobalScope is fine here as this happens during the SDK initialization and is fine as a fire-and-forget coroutine
+				GlobalScope.launch(Dispatchers.IO) {
+					nationalRules.addRuleSetForCountry(TrustListRepository.COUNTRY_CODE_SWITZERLAND, validUntil, ruleSet)
+				}
+			}
+
+			preferences.edit().remove(KEY_RULESET_VALID_UNTIL).apply()
+			ruleSetFileStorage.delete(context)
+		}
 	}
 }

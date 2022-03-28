@@ -26,7 +26,8 @@ import kotlinx.coroutines.flow.asStateFlow
  * @param connectivityManager The Android connectivity service used to check if the device is offline or not
  */
 internal abstract class CertificateVerificationTask(
-	private val connectivityManager: ConnectivityManager
+	private val connectivityManager: ConnectivityManager,
+	val countryCode: String? = null,
 ) {
 
 	private val mutableVerificationStateFlow = MutableStateFlow<VerificationState>(VerificationState.LOADING)
@@ -42,11 +43,13 @@ internal abstract class CertificateVerificationTask(
 			mutableVerificationStateFlow.emit(verificationState)
 		} else {
 			val hasNetwork = NetworkUtil.isNetworkAvailable(connectivityManager)
-			if (hasNetwork) {
-				mutableVerificationStateFlow.emit(VerificationState.ERROR(StateError(ErrorCodes.GENERAL_NETWORK_FAILURE), null))
-			} else {
-				mutableVerificationStateFlow.emit(VerificationState.ERROR(StateError(ErrorCodes.GENERAL_OFFLINE), null))
+			val state = when {
+				countryCode != null -> VerificationState.ERROR(StateError(ErrorCodes.COUNTRY_CODE_NOT_SUPPORTED), null)
+				hasNetwork -> VerificationState.ERROR(StateError(ErrorCodes.GENERAL_NETWORK_FAILURE), null)
+				else -> VerificationState.ERROR(StateError(ErrorCodes.GENERAL_OFFLINE), null)
 			}
+
+			mutableVerificationStateFlow.emit(state)
 		}
 	}
 
