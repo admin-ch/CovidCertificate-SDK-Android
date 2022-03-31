@@ -121,9 +121,9 @@ when (decodeState) {
 }
 ```
 
-### Verification
+### Verification (Verifier)
 
-Verifying a certificate takes three parameters:
+Verifying a certificate from a check application takes three parameters:
 
 * The certificate holder that contains the certificate to be verified
 * The identifier of the verification mode to use (see below)
@@ -151,6 +151,29 @@ viewModelScope.launch {
 			}
 		}
 	}
+}
+```
+
+### Verification (Wallet)
+
+Verifying a certificate from a wallet application has two options:
+
+* The regular `verify` method taking the same three parameters as the Verifier approach (see above), which is used for verifying a certificate against the Swiss national rules
+* A second `verify` method taking the same parameters plus these additional parameters, which is used for verifying a certificate against foreign rules:
+** A country code (ISO-3166 alpha-2) to specify which country to verify against. To get a list of available country codes, call `getForeignRulesCountryCodes()` first
+** A date time to specify when the certificate should be verified against the national rules
+  
+```kotlin
+// In your ViewModel
+viewModelScope.launch {
+   val availableCountryCodes = CovidCertificateSdk.Wallet.getForeignRulesCountryCodes()
+   val countryCode = availableCountryCodes.first()
+   val checkDate = LocalDateTime.now()
+   
+   val verificationStateFlow = CovidCertificateSdk.Wallet.verify(certificateHolder, verificationModeIdentifier, countryCode, checkDate, viewModelScope)
+   
+   // Collecting the flow will be the same as in the Verifier example above
+	
 }
 ```
 
