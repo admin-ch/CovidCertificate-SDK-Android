@@ -26,9 +26,9 @@ import ch.admin.bag.covidcertificate.sdk.core.verifier.VerificationType
  * @param connectivityManager The Android connectivity service used to check if the device is offline or not
  */
 internal class VerifierCertificateVerificationTask(
+	connectivityManager: ConnectivityManager,
 	private val certificateHolder: VerifierCertificateHolder,
 	private val verificationModes: Set<String>,
-	connectivityManager: ConnectivityManager
 ) : CertificateVerificationTask(connectivityManager) {
 
 	override suspend fun verify(verifier: CertificateVerifier, trustList: TrustList): VerificationState {

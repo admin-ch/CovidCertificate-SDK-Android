@@ -57,4 +57,18 @@ internal class FileStorage(private val path: String) {
 		}
 	}
 
+	fun delete(context: Context) {
+		val file = File(context.filesDir, path)
+
+		rwl.writeLock().lock()
+
+		try {
+			file.delete()
+		} catch (e: Exception) {
+			Log.e(TAG, e.message, e)
+		} finally {
+			rwl.writeLock().unlock()
+		}
+	}
+
 }

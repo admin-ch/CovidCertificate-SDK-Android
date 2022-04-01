@@ -13,11 +13,10 @@ package ch.admin.bag.covidcertificate.sdk.android.verification.task
 import android.net.ConnectivityManager
 import ch.admin.bag.covidcertificate.sdk.core.models.healthcert.CertificateHolder
 import ch.admin.bag.covidcertificate.sdk.core.models.state.VerificationState
-import ch.admin.bag.covidcertificate.sdk.core.models.trustlist.ActiveModes
 import ch.admin.bag.covidcertificate.sdk.core.models.trustlist.TrustList
 import ch.admin.bag.covidcertificate.sdk.core.verifier.CertificateVerifier
 import ch.admin.bag.covidcertificate.sdk.core.verifier.VerificationType
-import java.util.*
+import java.time.LocalDateTime
 
 /**
  * The verification task implementation specific for wallet applications. This task takes a [CertificateHolder] and returns a full
@@ -27,12 +26,22 @@ import java.util.*
  * @param connectivityManager The Android connectivity service used to check if the device is offline or not
  */
 internal class WalletCertificateVerificationTask(
+	connectivityManager: ConnectivityManager,
+	countryCode: String?,
 	private val certificateHolder: CertificateHolder,
 	private val verificationModes: Set<String>,
-	connectivityManager: ConnectivityManager
-) : CertificateVerificationTask(connectivityManager) {
+	private val nationalRulesCheckDate: LocalDateTime? = null,
+	private val isForeignRulesCheck: Boolean = false,
+) : CertificateVerificationTask(connectivityManager, countryCode) {
 
 	override suspend fun verify(verifier: CertificateVerifier, trustList: TrustList): VerificationState {
-		return verifier.verify(certificateHolder, trustList, verificationModes, VerificationType.WALLET)
+		return verifier.verify(
+			certificateHolder,
+			trustList,
+			verificationModes,
+			VerificationType.WALLET,
+			nationalRulesCheckDate,
+			isForeignRulesCheck
+		)
 	}
 }

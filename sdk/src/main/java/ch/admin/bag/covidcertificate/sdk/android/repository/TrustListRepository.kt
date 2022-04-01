@@ -11,21 +11,21 @@
 package ch.admin.bag.covidcertificate.sdk.android.repository
 
 import ch.admin.bag.covidcertificate.sdk.android.data.TrustListStore
+import ch.admin.bag.covidcertificate.sdk.android.exceptions.ServerTimeOffsetException
 import ch.admin.bag.covidcertificate.sdk.android.net.service.CertificateService
 import ch.admin.bag.covidcertificate.sdk.android.net.service.RevocationService
 import ch.admin.bag.covidcertificate.sdk.android.net.service.RuleSetService
 import ch.admin.bag.covidcertificate.sdk.core.models.trustlist.ActiveModes
 import ch.admin.bag.covidcertificate.sdk.core.models.trustlist.Jwks
+import ch.admin.bag.covidcertificate.sdk.core.models.trustlist.RuleSet
 import ch.admin.bag.covidcertificate.sdk.core.models.trustlist.TrustList
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.joinAll
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import retrofit2.HttpException
 import retrofit2.Response
 import java.time.Instant
 import java.time.temporal.ChronoUnit
+import kotlin.math.abs
 
 internal class TrustListRepository(
 	private val certificateService: CertificateService,
@@ -36,6 +36,7 @@ internal class TrustListRepository(
 ) {
 
 	companion object {
+		const val COUNTRY_CODE_SWITZERLAND = "CH"
 		private const val HEADER_UP_TO = "up-to"
 		private const val HEADER_UP_TO_DATE = "up-to-date"
 		private const val HEADER_NEXT_SINCE = "X-Next-Since"
@@ -43,8 +44,17 @@ internal class TrustListRepository(
 		private const val HEADER_AGE = "Age"
 	}
 
-	val walletActiveModes = MutableStateFlow(getCurrentWalletActiveModes())
-	val verifierActiveModes = MutableStateFlow(getCurrentVerifierActiveModes())
+	val walletActiveModes = MutableStateFlow<List<ActiveModes>>(emptyList())
+	val verifierActiveModes = MutableStateFlow<List<ActiveModes>>(emptyList())
+
+	init {
+		// The national rules store uses a room database underneath, which should not be accessed on the main thread
+		// GlobalScope is fine here as this happens during the SDK initialization and is fine as a fire-and-forget coroutine
+		GlobalScope.launch(Dispatchers.IO) {
+			val switzerlandRuleSet = store.nationalRules.getRuleSetForCountry(COUNTRY_CODE_SWITZERLAND)
+			updateActiveModes(switzerlandRuleSet)
+		}
+	}
 
 	/**
 	 * Refresh the trust list if necessary. This will check for the presence and validity of the certificate signatures,
@@ -54,36 +64,50 @@ internal class TrustListRepository(
 	 * @param forceRefresh False to only load data from the server if it is missing or outdated, true to always load from the server
 	 * @throws HttpException If [forceRefresh] is true and any of the requests returns a non-2xx HTTP response
 	 */
-	suspend fun refreshTrustList(forceRefresh: Boolean) = withContext(Dispatchers.IO) {
+	suspend fun refreshTrustList(countryCode: String = COUNTRY_CODE_SWITZERLAND, forceRefresh: Boolean) = withContext(Dispatchers.IO) {
 		listOf(
 			launch { refreshCertificateSignatures(forceRefresh) },
 			launch { refreshRevokedCertificates(forceRefresh) },
-			launch { refreshRuleSet(forceRefresh) }
+			launch { refreshRuleSet(countryCode, forceRefresh) }
 		).joinAll()
-		walletActiveModes.value = getCurrentWalletActiveModes()
-		verifierActiveModes.value = getCurrentVerifierActiveModes()
+
+		val switzerlandRuleSet = store.nationalRules.getRuleSetForCountry(COUNTRY_CODE_SWITZERLAND)
+		updateActiveModes(switzerlandRuleSet)
 	}
 
-	private fun getCurrentWalletActiveModes(): List<ActiveModes> {
-		return store.ruleset?.modeRules?.walletActiveModes
-			?: store.ruleset?.modeRules?.activeModes
-			?: listOf(ActiveModes("THREE_G", "3G"))
-	}
-
-	private fun getCurrentVerifierActiveModes(): List<ActiveModes> {
-		return store.ruleset?.modeRules?.verifierActiveModes
-			?: listOf(ActiveModes("THREE_G", "3G"))
+	/**
+	 * Get the list of country codes available for foreign rules check
+	 *
+	 * @param forceRefresh False to only load data from the server if it is missing or outdated, true to always load from the server
+	 */
+	suspend fun getForeignRulesCountryCodes(forceRefresh: Boolean) = withContext(Dispatchers.IO) {
+		val shouldLoadCountryCodes = forceRefresh || !store.areForeignRulesCountryCodesValid()
+		if (shouldLoadCountryCodes) {
+			val response = ruleSetService.getForeignRulesCountryCodes(getCacheControlParameter(forceRefresh))
+			val body = response.body()
+			return@withContext if (response.isSuccessful && body != null) {
+				val countryCodes = body.countries.toSet()
+				store.foreignRulesCountryCodes = countryCodes
+				store.foreignRulesCountryCodesValidUntil = Instant.now().plus(2, ChronoUnit.DAYS).toEpochMilli() // TODO How long?
+				countryCodes
+			} else {
+				throw HttpException(response)
+			}
+		} else {
+			return@withContext store.foreignRulesCountryCodes
+		}
 	}
 
 	/**
 	 * Get the trust list from the provider or null if at least one of the values is not set
+	 * @param countryCode An optional ISO-3166 alpha-2 country code to verify against a specific country's national rules. Defaults to "CH"
 	 */
-	fun getTrustList(): TrustList? {
+	suspend fun getTrustList(countryCode: String = COUNTRY_CODE_SWITZERLAND): TrustList? {
 		return try {
-			if (store.areSignaturesValid() && store.areRevokedCertificatesValid() && store.areRuleSetsValid()) {
-				val signatures = store.certificateSignatures!!
+			if (store.areSignaturesValid() && store.areRevokedCertificatesValid() && store.areRuleSetsValid(countryCode)) {
+				val signatures = requireNotNull(store.certificateSignatures)
 				val revokedCertificates = store.revokedCertificates
-				val ruleSet = store.ruleset!!
+				val ruleSet = requireNotNull(store.nationalRules.getRuleSetForCountry(countryCode))
 				TrustList(signatures, revokedCertificates, ruleSet)
 			} else {
 				null
@@ -91,6 +115,15 @@ internal class TrustListRepository(
 		} catch (e: Exception) {
 			null
 		}
+	}
+
+	private fun updateActiveModes(ruleSet: RuleSet?) {
+		walletActiveModes.value = ruleSet?.modeRules?.walletActiveModes
+			?: ruleSet?.modeRules?.activeModes
+					?: listOf(ActiveModes("THREE_G", "3G"))
+
+		verifierActiveModes.value = ruleSet?.modeRules?.verifierActiveModes
+			?: listOf(ActiveModes("THREE_G", "3G"))
 	}
 
 	private suspend fun refreshCertificateSignatures(forceRefresh: Boolean) = withContext(Dispatchers.IO) {
@@ -188,22 +221,37 @@ internal class TrustListRepository(
 		}
 	}
 
-	private suspend fun refreshRuleSet(forceRefresh: Boolean) = withContext(Dispatchers.IO) {
-		val shouldLoadRuleSet = forceRefresh || !store.areRuleSetsValid()
+	private suspend fun refreshRuleSet(countryCode: String, forceRefresh: Boolean) = withContext(Dispatchers.IO) {
+		if (countryCode == COUNTRY_CODE_SWITZERLAND) {
+			refreshRuleSetForCountry(countryCode, forceRefresh) {
+				ruleSetService.getRuleset(getCacheControlParameter(forceRefresh = true))
+			}
+		} else {
+			refreshRuleSetForCountry(countryCode, forceRefresh) {
+				ruleSetService.getForeignRules(getCacheControlParameter(forceRefresh = true), countryCode)
+			}
+		}
+	}
+
+	private suspend fun refreshRuleSetForCountry(
+		countryCode: String,
+		forceRefresh: Boolean,
+		serviceCall: suspend () -> Response<RuleSet>
+	) {
+		val shouldLoadRuleSet = forceRefresh || !store.areRuleSetsValid(countryCode)
 		if (shouldLoadRuleSet) {
-			val response = ruleSetService.getRuleset(getCacheControlParameter(forceRefresh))
+			val response = serviceCall.invoke()
 			val body = response.body()
 			if (response.isSuccessful && body != null) {
-				store.ruleset = body
 				val newValidUntil = Instant.now().plus(body.validDuration, ChronoUnit.MILLIS).toEpochMilli()
-				store.rulesetValidUntil = newValidUntil
+				store.nationalRules.addRuleSetForCountry(countryCode, newValidUntil, body)
 			} else if (forceRefresh && !response.isSuccessful) {
 				throw HttpException(response)
 			}
 		}
 	}
 
-	private fun detectTimeshift(response: Response<out Any>) {
+	private fun detectTimeshift(response: Response<*>) {
 		val timeShiftDetectionConfig = provider()
 		if (timeShiftDetectionConfig.enabled) {
 			val serverTime = response.headers().getInstant(HEADER_DATE)
@@ -212,7 +260,7 @@ internal class TrustListRepository(
 			val age: Long = if (ageString != null) 1000 * ageString.toLong() else 0
 			val liveServerTime = serverTime.toEpochMilli() + age
 			val systemTime = System.currentTimeMillis()
-			if (Math.abs(systemTime - liveServerTime) > timeShiftDetectionConfig.allowedServerTimeDiff) {
+			if (abs(systemTime - liveServerTime) > timeShiftDetectionConfig.allowedServerTimeDiff) {
 				throw ServerTimeOffsetException()
 			}
 		}
@@ -226,5 +274,3 @@ data class TimeShiftDetectionConfig(var enabled: Boolean, var allowedServerTimeD
 		const val DEFAULT_ALLOWED_SERVER_TIME_DIFF = 2 * 60 * 60 * 1000L //2h
 	}
 }
-
-class ServerTimeOffsetException : Exception()

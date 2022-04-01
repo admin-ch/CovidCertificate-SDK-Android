@@ -12,7 +12,6 @@ package ch.admin.bag.covidcertificate.sdk.android.data
 
 import ch.admin.bag.covidcertificate.sdk.core.models.trustlist.Jwks
 import ch.admin.bag.covidcertificate.sdk.core.models.trustlist.RevokedCertificatesStore
-import ch.admin.bag.covidcertificate.sdk.core.models.trustlist.RuleSet
 
 internal interface TrustListStore {
 
@@ -25,11 +24,13 @@ internal interface TrustListStore {
 	var revokedCertificates: RevokedCertificatesStore
 	var revokedCertificatesSinceHeader: String?
 
-	var rulesetValidUntil: Long
-	var ruleset: RuleSet?
+	var nationalRules: NationalRulesStore
+	var foreignRulesCountryCodesValidUntil: Long
+	var foreignRulesCountryCodes: Set<String>
 
 	fun areSignaturesValid(): Boolean
 	fun areRevokedCertificatesValid(): Boolean
-	fun areRuleSetsValid(): Boolean
+	fun areForeignRulesCountryCodesValid(): Boolean
+	suspend fun areRuleSetsValid(countryCode: String): Boolean
 
 }

@@ -12,9 +12,9 @@ package ch.admin.bag.covidcertificate.sdk.android
 
 import android.content.Context
 import android.net.ConnectivityManager
+import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleObserver
-import androidx.lifecycle.OnLifecycleEvent
+import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.coroutineScope
 import ch.admin.bag.covidcertificate.sdk.android.data.CertificateSecureStorage
 import ch.admin.bag.covidcertificate.sdk.android.data.MetadataStorage
@@ -46,6 +46,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import java.security.cert.CertificateFactory
 import java.security.cert.X509Certificate
+import java.time.LocalDateTime
 import java.util.*
 import java.util.concurrent.TimeUnit
 import kotlin.concurrent.timer
@@ -92,6 +93,8 @@ object CovidCertificateSdk {
 			ruleSetService,
 			certificateStorage
 		) { timeShiftDetectionConfig }
+
+		certificateStorage.migrateRuleSetFromPreferencesToDatabase()
 
 		val certificateVerifier = CertificateVerifier()
 		certificateVerificationController = CertificateVerificationController(trustListRepository, certificateVerifier)
@@ -203,13 +206,13 @@ object CovidCertificateSdk {
 			coroutineScope: CoroutineScope
 		): Flow<VerificationState> {
 			requireInitialized()
-			val task = VerifierCertificateVerificationTask(certificateHolder, setOf(verificationModeIdentifier), connectivityManager)
+			val task = VerifierCertificateVerificationTask(connectivityManager, certificateHolder, setOf(verificationModeIdentifier))
 			certificateVerificationController.enqueue(task, coroutineScope)
 			return task.verificationStateFlow
 		}
 
 		/**
-		 * Returns the currently active mode identifiers
+		 * @return The currently active mode identifiers
 		 */
 		fun getActiveModes(): StateFlow<List<ActiveModes>> {
 			requireInitialized()
@@ -229,23 +232,50 @@ object CovidCertificateSdk {
 			coroutineScope: CoroutineScope
 		): Flow<VerificationState> {
 			requireInitialized()
-			val task = WalletCertificateVerificationTask(certificateHolder, verificationModeIdentifiers, connectivityManager)
+			val task = WalletCertificateVerificationTask(connectivityManager, null, certificateHolder, verificationModeIdentifiers)
 			certificateVerificationController.enqueue(task, coroutineScope)
 			return task.verificationStateFlow
 		}
 
+		fun verify(
+			certificateHolder: CertificateHolder,
+			verificationModeIdentifiers: Set<String>,
+			countryCode: String,
+			nationalRulesCheckDate: LocalDateTime,
+			coroutineScope: CoroutineScope
+		): Flow<VerificationState> {
+			requireInitialized()
+			val task = WalletCertificateVerificationTask(
+				connectivityManager,
+				countryCode,
+				certificateHolder,
+				verificationModeIdentifiers,
+				nationalRulesCheckDate,
+				isForeignRulesCheck = true
+			)
+			certificateVerificationController.enqueue(task, coroutineScope)
+			return task.verificationStateFlow
+		}
 
 		/**
-		 * Returns the currently active mode identifiers
+		 * @return The currently active mode identifiers
 		 */
 		fun getActiveModes(): StateFlow<List<ActiveModes>> {
 			requireInitialized()
 			return trustListRepository.walletActiveModes.asStateFlow()
 		}
 
+		/**
+		 * @return A list of country codes (ISO-3166 alpha-2 code) that are available to be verified against
+		 */
+		suspend fun getForeignRulesCountryCodes(forceRefresh: Boolean = false): Set<String> {
+			requireInitialized()
+			return trustListRepository.getForeignRulesCountryCodes(forceRefresh).toSortedSet()
+		}
+
 	}
 
-	internal class SdkLifecycleObserver(private val lifecycle: Lifecycle) : LifecycleObserver {
+	private class SdkLifecycleObserver(private val lifecycle: Lifecycle) : DefaultLifecycleObserver {
 		companion object {
 			private val TRUST_LIST_REFRESH_INTERVAL = TimeUnit.HOURS.toMillis(1L)
 		}
@@ -261,8 +291,8 @@ object CovidCertificateSdk {
 			trustListRefreshTimer?.cancel()
 		}
 
-		@OnLifecycleEvent(Lifecycle.Event.ON_START)
-		fun onStart() {
+		override fun onStart(owner: LifecycleOwner) {
+			super.onStart(owner)
 			// Schedule a timer on app start to periodicaly refresh the trust list while the app is in the foreground
 			trustListRefreshTimer?.cancel()
 			trustListRefreshTimer = timer(initialDelay = TRUST_LIST_REFRESH_INTERVAL, period = TRUST_LIST_REFRESH_INTERVAL) {
@@ -273,8 +303,8 @@ object CovidCertificateSdk {
 			productMetadataController.refreshProductsMetadata(lifecycle.coroutineScope)
 		}
 
-		@OnLifecycleEvent(Lifecycle.Event.ON_STOP)
-		fun onStop() {
+		override fun onStop(owner: LifecycleOwner) {
+			super.onStop(owner)
 			trustListRefreshTimer?.cancel()
 		}
 	}
