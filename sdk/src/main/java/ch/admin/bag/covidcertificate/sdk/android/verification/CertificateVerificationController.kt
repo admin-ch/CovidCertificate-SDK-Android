@@ -46,7 +46,6 @@ internal class CertificateVerificationController internal constructor(
 			trustListLoadingJobs[countryCode] = coroutineScope.launch {
 				try {
 					trustListRepository.refreshTrustList(forceRefresh = true)
-					trustListLoadingJobs.remove(countryCode)
 					onCompletionCallback.invoke()
 				} catch (e: Exception) {
 					Log.e(TAG, "Manually refreshing trust list failed", e)
@@ -58,6 +57,8 @@ internal class CertificateVerificationController internal constructor(
 						is HttpException -> onErrorCallback.invoke("${ErrorCodes.GENERAL_NETWORK_FAILURE}-${e.code()}")
 						else -> onErrorCallback.invoke(ErrorCodes.GENERAL_NETWORK_FAILURE)
 					}
+				} finally {
+					trustListLoadingJobs.remove(countryCode)
 				}
 			}
 		}
@@ -88,10 +89,11 @@ internal class CertificateVerificationController internal constructor(
 			trustListLoadingJobs[countryCode] = launch {
 				try {
 					trustListRepository.refreshTrustList(countryCode, forceRefresh = false)
-					trustListLoadingJobs.remove(countryCode)
 				} catch (e: Exception) {
 					// Loading trust list failed, keep using last stored version
 					Log.e(TAG, "Refreshing trust list for [$countryCode] as part of certificate verification task failed", e)
+				} finally {
+					trustListLoadingJobs.remove(countryCode)
 				}
 			}
 		}
