@@ -270,7 +270,7 @@ object CovidCertificateSdk {
 		 */
 		suspend fun getForeignRulesCountryCodes(forceRefresh: Boolean = false): Set<String> {
 			requireInitialized()
-			return trustListRepository.getForeignRulesCountryCodes(forceRefresh).toSortedSet()
+			return trustListRepository.getForeignRulesCountryCodes(forceRefresh)
 		}
 
 	}
