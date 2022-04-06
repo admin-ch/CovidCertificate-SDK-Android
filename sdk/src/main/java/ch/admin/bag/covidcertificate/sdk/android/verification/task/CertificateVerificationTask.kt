@@ -44,9 +44,9 @@ internal abstract class CertificateVerificationTask(
 		} else {
 			val hasNetwork = NetworkUtil.isNetworkAvailable(connectivityManager)
 			val state = when {
+				!hasNetwork -> VerificationState.ERROR(StateError(ErrorCodes.GENERAL_OFFLINE), null)
 				countryCode != null -> VerificationState.ERROR(StateError(ErrorCodes.COUNTRY_CODE_NOT_SUPPORTED), null)
-				hasNetwork -> VerificationState.ERROR(StateError(ErrorCodes.GENERAL_NETWORK_FAILURE), null)
-				else -> VerificationState.ERROR(StateError(ErrorCodes.GENERAL_OFFLINE), null)
+				else -> VerificationState.ERROR(StateError(ErrorCodes.GENERAL_NETWORK_FAILURE), null)
 			}
 
 			mutableVerificationStateFlow.emit(state)
