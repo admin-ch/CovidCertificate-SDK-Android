@@ -88,7 +88,7 @@ internal class TrustListRepository(
 			return@withContext if (response.isSuccessful && body != null) {
 				val countryCodes = body.countries.toSet()
 				store.foreignRulesCountryCodes = countryCodes
-				store.foreignRulesCountryCodesValidUntil = Instant.now().plus(2, ChronoUnit.DAYS).toEpochMilli() // TODO How long?
+				store.foreignRulesCountryCodesValidUntil = System.currentTimeMillis() + body.validDuration
 				countryCodes
 			} else {
 				throw HttpException(response)
