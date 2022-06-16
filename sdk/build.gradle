@@ -17,7 +17,7 @@ buildscript {
 plugins {
 	id 'com.android.library'
 	id 'kotlin-android'
-	id 'kotlin-kapt'
+	id 'com.google.devtools.ksp' version '1.6.10-1.0.4'
 	id 'kotlinx-serialization'
 	id 'com.vanniktech.maven.publish' version '0.17.0'
 }
@@ -31,13 +31,10 @@ android {
 		targetSdkVersion 31
 
 		testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
-		javaCompileOptions {
-			annotationProcessorOptions {
-				arguments += [
-						"room.schemaLocation":"$projectDir/schemas".toString(),
-						"room.incremental":"true",
-						"room.expandProjection":"true"]
-			}
+		ksp {
+			arg('room.schemaLocation', "$projectDir/schemas")
+			arg('room.incremental', "true")
+			arg('room.expandProjection', "true")
 		}
 	}
 
@@ -68,13 +65,12 @@ android {
 dependencies {
 	coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:1.1.5'
 
-	api 'ch.admin.bag.covidcertificate:sdk-core:3.1.0'
+	api 'ch.admin.bag.covidcertificate:sdk-core:3.2.0-dev-50'
 
-	implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.0'
+	implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.1'
 	implementation "org.jetbrains.kotlinx:kotlinx-serialization-json:1.2.0"
 
 	implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.4.1'
-	kapt 'androidx.lifecycle:lifecycle-common-java8:2.4.1'
 
 	// Crypto
 	implementation "com.augustcellars.cose:cose-java:1.1.0"
@@ -88,7 +84,7 @@ dependencies {
 	api 'com.squareup.okhttp3:logging-interceptor:4.9.3'
 	api 'com.squareup.moshi:moshi:1.13.0'
 	api 'com.squareup.moshi:moshi-adapters:1.13.0'
-	kapt "com.squareup.moshi:moshi-kotlin-codegen:1.13.0"
+	ksp "com.squareup.moshi:moshi-kotlin-codegen:1.13.0"
 
 	// JWS
 	implementation 'io.jsonwebtoken:jjwt-api:0.11.2'
@@ -100,7 +96,7 @@ dependencies {
 
 	//Room
 	implementation "androidx.room:room-ktx:2.4.2"
-	kapt "androidx.room:room-compiler:2.4.2"
+	ksp "androidx.room:room-compiler:2.4.2"
 
 	// Tests
 	testImplementation 'junit:junit:4.13.2'
