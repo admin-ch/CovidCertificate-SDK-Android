@@ -2,7 +2,6 @@ package ch.admin.bag.covidcertificate.sdk.android.repository
 
 import android.content.Context
 import androidx.room.Room
-import ch.admin.bag.covidcertificate.sdk.android.SdkEnvironment
 import ch.admin.bag.covidcertificate.sdk.android.data.NationalRulesStore
 import ch.admin.bag.covidcertificate.sdk.android.data.room.CovidCertificateDatabase
 import ch.admin.bag.covidcertificate.sdk.android.data.room.NationalRulesEntity
@@ -17,21 +16,20 @@ internal class CovidCertificateDatabaseRepository private constructor(context: C
 	NationalRulesStore {
 
 	companion object : SingletonHolder<CovidCertificateDatabaseRepository, Context>(::CovidCertificateDatabaseRepository) {
-		private const val ASSET_DB_PATH = "covid_certificate_database.db"
-
-		fun getPrepopulatedSinceHeader(environment: SdkEnvironment) = when (environment) {
-			SdkEnvironment.DEV, SdkEnvironment.ABN -> "0"
-			SdkEnvironment.PROD -> "11667563"
-		}
+		private const val ASSET_DB_PATH = "covid_certificate_database.sqlite"
 	}
 
 	private val database by lazy {
+		val path = context.getDatabasePath("revoked-certificates-db")
+		if (path.exists()) {
+			context.deleteDatabase("revoked-certificates-db")
+		}
 		// Legacy database file name because the DB initially only contained revoked certificates
-		Room.databaseBuilder(context, CovidCertificateDatabase::class.java, "revoked-certificates-db")
-			.createFromAsset(ASSET_DB_PATH)
-			.build()
+		Room.databaseBuilder(context, CovidCertificateDatabase::class.java, "certificates-db").fallbackToDestructiveMigration()
+			.createFromAsset(ASSET_DB_PATH).build()
 	}
 
+	private val metadataDao by lazy { database.metadata() }
 	private val revokedCertificatesDao by lazy { database.revokedCertificatesDao() }
 	private val nationalRulesDao by lazy { database.nationalRulesDao() }
 
@@ -42,6 +40,10 @@ internal class CovidCertificateDatabaseRepository private constructor(context: C
 
 	override fun addCertificates(certificates: List<String>) =
 		revokedCertificatesDao.insertOrReplace(certificates.map { RevokedCertificateEntity(it) })
+
+	override fun getPrepopulatedSinceHeader(isProd: Boolean): String {
+		return if (isProd) metadataDao.getMetadata()?.nextSince ?: "0" else "0"
+	}
 
 	override fun containsCertificate(certificate: String) = revokedCertificatesDao.containsCertificate(certificate)
 

@@ -11,9 +11,10 @@
 package ch.admin.bag.covidcertificate.sdk.android.data.room
 
 import androidx.room.Entity
+import androidx.room.Index
 import androidx.room.PrimaryKey
 
-@Entity(tableName = "revokedCertificates")
+@Entity(tableName = "revocations", indices = [Index("uvci")])
 data class RevokedCertificateEntity(
-	@PrimaryKey val certificate: String
+	@PrimaryKey val uvci: String
 )

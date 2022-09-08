@@ -18,11 +18,11 @@ import androidx.room.Query
 @Dao
 interface RevokedCertificatesDao {
 
-	@Query("SELECT * FROM revokedCertificates")
+	@Query("SELECT * FROM revocations")
 	fun getAllRevokedCertificates(): List<RevokedCertificateEntity>
 
-	@Query("SELECT EXISTS (SELECT 1 FROM revokedCertificates WHERE certificate=:certificate)")
-	fun containsCertificate(certificate: String): Boolean
+	@Query("SELECT EXISTS (SELECT 1 FROM revocations WHERE uvci=:uvci)")
+	fun containsCertificate(uvci: String): Boolean
 
 	@Insert(onConflict = OnConflictStrategy.REPLACE)
 	fun insertOrReplace(certificates: List<RevokedCertificateEntity>)
