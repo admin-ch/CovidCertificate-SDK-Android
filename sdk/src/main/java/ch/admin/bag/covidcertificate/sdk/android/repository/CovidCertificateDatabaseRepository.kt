@@ -17,9 +17,8 @@ internal class CovidCertificateDatabaseRepository private constructor(context: C
 
 	companion object : SingletonHolder<CovidCertificateDatabaseRepository, Context>(::CovidCertificateDatabaseRepository) {
 		private const val ASSET_DB_PATH = "covid_certificate_database.sqlite"
+		private const val LEGACY_ASSET_DB_PATH = "revoked-certificates-db"
 	}
-
-	private val LEGACY_ASSET_DB_PATH = "revoked-certificates-db"
 
 	private val database by lazy {
 		val path = context.getDatabasePath(LEGACY_ASSET_DB_PATH)
