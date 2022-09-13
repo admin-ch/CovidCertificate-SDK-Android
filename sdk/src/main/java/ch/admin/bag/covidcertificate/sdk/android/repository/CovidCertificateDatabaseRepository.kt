@@ -19,10 +19,12 @@ internal class CovidCertificateDatabaseRepository private constructor(context: C
 		private const val ASSET_DB_PATH = "covid_certificate_database.sqlite"
 	}
 
+	private val LEGACY_ASSET_DB_PATH = "revoked-certificates-db"
+
 	private val database by lazy {
-		val path = context.getDatabasePath("revoked-certificates-db")
+		val path = context.getDatabasePath(LEGACY_ASSET_DB_PATH)
 		if (path.exists()) {
-			context.deleteDatabase("revoked-certificates-db")
+			context.deleteDatabase(LEGACY_ASSET_DB_PATH)
 		}
 		// Legacy database file name because the DB initially only contained revoked certificates
 		Room.databaseBuilder(context, CovidCertificateDatabase::class.java, "certificates-db").fallbackToDestructiveMigration()
