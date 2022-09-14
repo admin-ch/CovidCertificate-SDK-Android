@@ -12,6 +12,7 @@ package ch.admin.bag.covidcertificate.sdk.android.data
 
 import android.content.Context
 import ch.admin.bag.covidcertificate.sdk.android.CovidCertificateSdk
+import ch.admin.bag.covidcertificate.sdk.android.SdkEnvironment
 import ch.admin.bag.covidcertificate.sdk.android.repository.CovidCertificateDatabaseRepository
 import ch.admin.bag.covidcertificate.sdk.android.repository.TrustListRepository
 import ch.admin.bag.covidcertificate.sdk.android.utils.EncryptedSharedPreferencesUtil
@@ -94,7 +95,7 @@ internal class CertificateSecureStorage private constructor(private val context:
 	override var revokedCertificatesSinceHeader: String?
 		get() = preferences.getString(
 			KEY_REVOKED_CERTIFICATES_SINCE_HEADER,
-			CovidCertificateDatabaseRepository.getPrepopulatedSinceHeader(CovidCertificateSdk.getEnvironment())
+			revokedCertificates.getPrepopulatedSinceHeader(CovidCertificateSdk.getEnvironment() == SdkEnvironment.PROD  )
 		)
 		set(value) {
 			preferences.edit().putString(KEY_REVOKED_CERTIFICATES_SINCE_HEADER, value).apply()

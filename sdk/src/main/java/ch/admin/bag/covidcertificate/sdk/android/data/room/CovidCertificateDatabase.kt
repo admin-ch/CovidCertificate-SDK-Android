@@ -10,18 +10,16 @@
 
 package ch.admin.bag.covidcertificate.sdk.android.data.room
 
-import androidx.room.AutoMigration
 import androidx.room.Database
 import androidx.room.RoomDatabase
 
+
 @Database(
-	entities = [RevokedCertificateEntity::class, NationalRulesEntity::class],
-	version = 2,
-	autoMigrations = [
-		AutoMigration(from = 1, to = 2),
-	]
+	entities = [MetadataEntity::class, RevokedCertificateEntity::class, NationalRulesEntity::class],
+	version = 3,//TODO upgrade version for each release
 )
 internal abstract class CovidCertificateDatabase : RoomDatabase() {
+	abstract fun metadata(): MetadataDao
 	abstract fun revokedCertificatesDao(): RevokedCertificatesDao
 	abstract fun nationalRulesDao(): NationalRulesDao
 }
