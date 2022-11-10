@@ -16,7 +16,7 @@ import androidx.room.RoomDatabase
 
 @Database(
 	entities = [MetadataEntity::class, RevokedCertificateEntity::class, NationalRulesEntity::class],
-	version = 3,//TODO upgrade version for each release
+	version = 4,//TODO upgrade db version for each release
 )
 internal abstract class CovidCertificateDatabase : RoomDatabase() {
 	abstract fun metadata(): MetadataDao
