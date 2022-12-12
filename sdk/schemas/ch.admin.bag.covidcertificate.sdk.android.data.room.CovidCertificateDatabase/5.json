@@ -1,0 +1,116 @@
+{
+  "formatVersion": 1,
+  "database": {
+    "version": 5,
+    "identityHash": "fbd026402a433c09e625d1334c2190da",
+    "entities": [
+      {
+        "tableName": "metadata",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`nextSince` TEXT NOT NULL, `validDuration` INTEGER NOT NULL, `lastDownload` INTEGER NOT NULL, PRIMARY KEY(`nextSince`, `validDuration`, `lastDownload`))",
+        "fields": [
+          {
+            "fieldPath": "nextSince",
+            "columnName": "nextSince",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "validDuration",
+            "columnName": "validDuration",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "lastDownload",
+            "columnName": "lastDownload",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "columnNames": [
+            "nextSince",
+            "validDuration",
+            "lastDownload"
+          ],
+          "autoGenerate": false
+        },
+        "indices": [],
+        "foreignKeys": []
+      },
+      {
+        "tableName": "revocations",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`uvci` TEXT NOT NULL, PRIMARY KEY(`uvci`))",
+        "fields": [
+          {
+            "fieldPath": "uvci",
+            "columnName": "uvci",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "columnNames": [
+            "uvci"
+          ],
+          "autoGenerate": false
+        },
+        "indices": [
+          {
+            "name": "index_revocations_uvci",
+            "unique": false,
+            "columnNames": [
+              "uvci"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_revocations_uvci` ON `${TABLE_NAME}` (`uvci`)"
+          }
+        ],
+        "foreignKeys": []
+      },
+      {
+        "tableName": "nationalRules",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`countryCode` TEXT NOT NULL, `validUntil` INTEGER NOT NULL, `rules` TEXT NOT NULL, `lastModified` INTEGER NOT NULL, PRIMARY KEY(`countryCode`))",
+        "fields": [
+          {
+            "fieldPath": "countryCode",
+            "columnName": "countryCode",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "validUntil",
+            "columnName": "validUntil",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "rules",
+            "columnName": "rules",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "lastModified",
+            "columnName": "lastModified",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "columnNames": [
+            "countryCode"
+          ],
+          "autoGenerate": false
+        },
+        "indices": [],
+        "foreignKeys": []
+      }
+    ],
+    "views": [],
+    "setupQueries": [
+      "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'fbd026402a433c09e625d1334c2190da')"
+    ]
+  }
+}
